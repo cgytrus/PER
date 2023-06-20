@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
-using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
 
 namespace PRR.Resources;
