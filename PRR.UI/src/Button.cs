@@ -24,7 +24,10 @@ public class Button : ClickableElement {
 
     protected override bool hotkeyPressed => hotkey.HasValue && input.KeyPressed(hotkey.Value);
 
-    public Button(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) { }
+    private Func<char, Formatting> _formatter;
+
+    public Button(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) => _formatter =
+        _ => new Formatting(Color.white, Color.transparent, style, RenderOptions.Default, effect);
 
     public static Button Clone(Button template) => new(template.renderer, template.input, template.audio) {
         enabled = template.enabled,
@@ -48,9 +51,7 @@ public class Button : ClickableElement {
     protected override void CustomUpdate(TimeSpan time) {
         if(text is null)
             return;
-        renderer.DrawText(center, text,
-            _ => new Formatting(Color.white, Color.transparent, style, RenderOptions.Default, effect),
-            HorizontalAlignment.Middle);
+        renderer.DrawText(center, text, _formatter, HorizontalAlignment.Middle);
     }
 
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {

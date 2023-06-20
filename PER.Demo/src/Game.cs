@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 
@@ -31,6 +30,7 @@ public class Game : ScreenGame {
     private BloomEffect? _bloomEffect;
     private GlitchEffect? _glitchEffect;
 
+    private readonly List<Func<char, Formatting>> _styleFormatters = new();
     private readonly List<Element> _ui = new();
     private readonly List<Element> _packSelector = new();
     private ProgressBar? _testProgressBar;
@@ -108,6 +108,11 @@ public class Game : ScreenGame {
 
         IInput input = Core.engine.input;
         IAudio audio = Core.engine.audio;
+
+        for(RenderStyle style = RenderStyle.None; style <= RenderStyle.All; style++) {
+            RenderStyle curStyle = style;
+            _styleFormatters.Add(_ => new Formatting(Color.white, Color.transparent, curStyle));
+        }
 
         _ui.Add(new FilledPanel(renderer) {
             enabled = false,
@@ -367,11 +372,8 @@ as you can see wit works!!1!
             "per-text effects test", _ => new Formatting(Color.white, Color.transparent,
                 RenderStyle.None, RenderOptions.Default, _glitchEffect));
 
-        for(RenderStyle style = RenderStyle.None; style <= RenderStyle.All; style++) {
-            RenderStyle curStyle = style;
-            renderer.DrawText(new Vector2Int(0, 5 + (int)style),
-                "styles test", _ => new Formatting(Color.white, Color.transparent, curStyle));
-        }
+        for(int i = 0; i < _styleFormatters.Count; i++)
+            renderer.DrawText(new Vector2Int(0, 5 + i), "styles test", _styleFormatters[i]);
 
         renderer.DrawText(new Vector2Int(39, 5),
             "left test even", _ => new Formatting(Color.white, Color.transparent));
