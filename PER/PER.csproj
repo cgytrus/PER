@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>enable</Nullable>
+    <Version>0.1.0</Version>
+    <Title>Press Engine Revolution</Title>
+    <Authors>ConfiG</Authors>
+    <RepositoryUrl>https://github.com/cgytrus/PER</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PER.Abstractions\PER.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NLog" Version="5.0.1" />
+  </ItemGroup>
+
+</Project>
