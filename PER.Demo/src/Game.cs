@@ -344,9 +344,11 @@ public class Game : ScreenGame {
         if(input.KeyPressed(KeyCode.F)) return;
 
         renderer.DrawText(new Vector2Int(0, 0),
-            @"hello everyone! this is cConfiG  and today i'm gonna show you my gengine !!
-as you can see wit works!!1!
-tthanks for watching  everyone, shit like, subscribe, good luck, bbye!!",
+            """
+                hello everyone! this is cConfiG  and today i'm gonna show you my gengine !!
+                as you can see wit works!!1!
+                tthanks for watching  everyone, shit like, subscribe, good luck, bbye!!
+                """,
             flag => flag switch {
                 'c' => new Formatting(new Color(0f, 1f, 0f, 1f), Color.transparent),
                 'g' => new Formatting(Color.white, Color.transparent, RenderStyle.None, RenderOptions.Default,
