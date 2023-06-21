@@ -36,7 +36,7 @@ public abstract class ClickableElement : Element {
     public IPlayable? clickSound { get; set; }
     public event EventHandler? onClick;
     public event EventHandler? onHover;
-    public event EventHandler? onHold;
+    public event EventHandler? onPush;
     public event EventHandler? onRelease;
 
     public State currentState { get; private set; } = State.None;
@@ -135,7 +135,7 @@ public abstract class ClickableElement : Element {
                 break;
             case State.Clicked when from is not State.Clicked and not State.Hotkey:
             case State.Hotkey when from is not State.Clicked and not State.Hotkey:
-                onHold?.Invoke(this, EventArgs.Empty);
+                onPush?.Invoke(this, EventArgs.Empty);
                 break;
         }
 
