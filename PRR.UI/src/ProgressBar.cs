@@ -51,7 +51,17 @@ public class ProgressBar : Element {
 
     public ProgressBar(IRenderer renderer) : base(renderer) { }
 
-    public override Element Clone() => throw new NotImplementedException();
+    public static ProgressBar Clone(ProgressBar template) => new(template.renderer) {
+        enabled = template.enabled,
+        position = template.position,
+        size = template.size,
+        effect = template.effect,
+        value = template.value,
+        lowColor = template.lowColor,
+        highColor = template.highColor
+    };
+
+    public override Element Clone() => Clone(this);
 
     private void Animate(TimeSpan time, float from, float to, Color lowColor, Color highColor) {
         int fromX = (int)MathF.Floor(size.x * MathF.Min(MathF.Max(from, 0f), 1f));
@@ -82,6 +92,10 @@ public class ProgressBar : Element {
                     effect);
     }
 
-    public override void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id,
-        string? special) => throw new NotImplementedException();
+    public override void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id, string? special) {
+        if(TryGetColor(colors, "progressBar", layoutName, id, "low", special, out Color color))
+            lowColor = color;
+        if(TryGetColor(colors, "progressBar", layoutName, id, "high", special, out color))
+            highColor = color;
+    }
 }

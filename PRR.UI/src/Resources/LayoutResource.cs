@@ -201,6 +201,54 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     }
 
     [PublicAPI]
+    protected class LayoutResourceProgressBar : LayoutResourceElement {
+        public float? value { get; }
+
+        public LayoutResourceProgressBar(bool? enabled, Vector2Int position, Vector2Int size, float? value) :
+            base(enabled, position, size) => this.value = value;
+
+        // ReSharper disable once CognitiveComplexity
+        public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
+            Dictionary<string, Color> colors, string layoutName, string id) {
+            ProgressBar element = new(renderer) {
+                position = position,
+                size = size
+            };
+            if(enabled.HasValue) element.enabled = enabled.Value;
+            if(value.HasValue) element.value = value.Value;
+            element.UpdateColors(colors, layoutName, id, null);
+            return element;
+        }
+    }
+
+    [PublicAPI]
+    protected class LayoutResourceFilledPanel : LayoutResourceElement {
+        public char? character { get; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public RenderStyle? style { get; }
+
+        public LayoutResourceFilledPanel(bool? enabled, Vector2Int position, Vector2Int size, char? character,
+            RenderStyle? style) : base(enabled, position, size) {
+            this.character = character;
+            this.style = style;
+        }
+
+        // ReSharper disable once CognitiveComplexity
+        public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
+            Dictionary<string, Color> colors, string layoutName, string id) {
+            FilledPanel element = new(renderer) {
+                position = position,
+                size = size
+            };
+            if(enabled.HasValue) element.enabled = enabled.Value;
+            if(character.HasValue) element.character = character.Value;
+            if(style.HasValue) element.style = style.Value;
+            element.UpdateColors(colors, layoutName, id, null);
+            return element;
+        }
+    }
+
+    [PublicAPI]
     protected class LayoutResourceScrollablePanel : LayoutResourceElement {
         public LayoutResourceScrollablePanel(bool? enabled, Vector2Int position, Vector2Int size) :
             base(enabled, position, size) { }
