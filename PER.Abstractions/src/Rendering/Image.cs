@@ -24,7 +24,7 @@ public readonly record struct Image(Color[,] pixels) {
     public void DrawImage(Vector2Int position, Image image) {
         for(int y = 0; y < image.height; y++)
             for(int x = 0; x < image.width; x++)
-                this[position.x + x, position.y + y] = image[x, y];
+                this[position.x + x, position.y + y] = this[position.x + x, position.y + y].Blend(image[x, y]);
     }
 
     public int width => pixels.GetLength(1);
