@@ -5,10 +5,12 @@ using System.Linq;
 
 using PER.Abstractions;
 using PER.Abstractions.Audio;
+using PER.Abstractions.Environment;
 using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
 using PER.Abstractions.UI;
+using PER.Demo.Environment;
 using PER.Demo.Screens.Templates;
 using PER.Util;
 
@@ -62,14 +64,33 @@ public class GameScreen : LayoutResource, IScreen {
 
     private ProgressBar? _testProgressBar;
 
+    private readonly IResources _resources;
+    private Level? _level;
+
     public GameScreen(Settings settings, IResources resources) {
         _settings = settings;
+        _resources = resources;
         resources.TryAddResource(ResourcePackSelectorTemplate.GlobalId,
             new ResourcePackSelectorTemplate(this, _availablePacks, _loadedPacks));
     }
 
     public override void Load(string id) {
         base.Load(id);
+
+        _level = new Level(renderer, input, audio, _resources);
+
+        _level.Add(new PlayerObject());
+        _level.Add(new WallObject { position = new Vector2Int(-5, -5) });
+        _level.Add(new WallObject { position = new Vector2Int(-4, -5) });
+        _level.Add(new WallObject { position = new Vector2Int(-3, -5) });
+        _level.Add(new WallObject { position = new Vector2Int(-2, -5) });
+        _level.Add(new WallObject { position = new Vector2Int(-1, -5) });
+        _level.Add(new WallObject { position = new Vector2Int(0, -5) });
+        _level.Add(new WallObject { position = new Vector2Int(1, -5) });
+        _level.Add(new WallObject { position = new Vector2Int(2, -5) });
+        _level.Add(new WallObject { position = new Vector2Int(3, -5) });
+        _level.Add(new WallObject { position = new Vector2Int(4, -5) });
+        _level.Add(new WallObject { position = new Vector2Int(5, -5) });
 
         for(RenderStyle style = RenderStyle.None; style <= RenderStyle.All; style++) {
             RenderStyle curStyle = style;
@@ -126,6 +147,8 @@ public class GameScreen : LayoutResource, IScreen {
     public void Close() { }
 
     public void Update(TimeSpan time) {
+        _level?.Update(time);
+
         if(input.KeyPressed(KeyCode.F))
             return;
 
@@ -185,7 +208,7 @@ public class GameScreen : LayoutResource, IScreen {
             element.Update(time);
     }
 
-    public void Tick(TimeSpan time) { }
+    public void Tick(TimeSpan time) => _level?.Tick(time);
 
     private void OpenPacks() {
         _loadedPacks.Clear();

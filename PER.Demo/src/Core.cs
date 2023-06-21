@@ -11,7 +11,7 @@ public static class Core {
     private static readonly Renderer renderer = new();
     public static Engine engine { get; } =
         new(new ResourcesManager(), new Game(), renderer, new InputManager(renderer), new AudioManager()) {
-            tickInterval = TimeSpan.FromSeconds(0.02d)
+            tickInterval = TimeSpan.FromSeconds(0.08d)
         };
 
     private static void Main() => engine.Reload();
