@@ -36,9 +36,9 @@ public class PlayerObject : LevelObject {
         int moveY = _moveY;
 
         bool isDiagonal = moveX != 0 && moveY != 0;
-        bool collidesHorizontal = moveX != 0 && level.GetObjectsAt(position + new Vector2Int(moveX, 0)).Count != 0;
-        bool collidesVertical = moveY != 0 && level.GetObjectsAt(position + new Vector2Int(0, moveY)).Count != 0;
-        bool collidesDiagonal = isDiagonal && level.GetObjectsAt(position + new Vector2Int(moveX, moveY)).Count != 0;
+        bool collidesHorizontal = moveX != 0 && level.HasObjectAt<WallObject>(position + new Vector2Int(moveX, 0));
+        bool collidesVertical = moveY != 0 && level.HasObjectAt<WallObject>(position + new Vector2Int(0, moveY));
+        bool collidesDiagonal = isDiagonal && level.HasObjectAt<WallObject>(position + new Vector2Int(moveX, moveY));
 
         if(isDiagonal &&
             (collidesHorizontal && collidesVertical || !collidesHorizontal && !collidesVertical && collidesDiagonal)) {
