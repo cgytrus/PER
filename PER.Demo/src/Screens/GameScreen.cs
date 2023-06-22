@@ -79,18 +79,34 @@ public class GameScreen : LayoutResource, IScreen {
 
         _level = new Level(renderer, input, audio, _resources);
 
+        for(int y = -20; y <= 20; y++) {
+            for(int x = -20; x <= 20; x++) {
+                _level.Add(new FloorObject { position = new Vector2Int(x, y) });
+            }
+        }
+
         _level.Add(new PlayerObject());
-        _level.Add(new WallObject { position = new Vector2Int(-5, -5) });
-        _level.Add(new WallObject { position = new Vector2Int(-4, -5) });
-        _level.Add(new WallObject { position = new Vector2Int(-3, -5) });
-        _level.Add(new WallObject { position = new Vector2Int(-2, -5) });
-        _level.Add(new WallObject { position = new Vector2Int(-1, -5) });
-        _level.Add(new WallObject { position = new Vector2Int(0, -5) });
-        _level.Add(new WallObject { position = new Vector2Int(1, -5) });
-        _level.Add(new WallObject { position = new Vector2Int(2, -5) });
-        _level.Add(new WallObject { position = new Vector2Int(3, -5) });
-        _level.Add(new WallObject { position = new Vector2Int(4, -5) });
-        _level.Add(new WallObject { position = new Vector2Int(5, -5) });
+
+        for(int i = -5; i <= 5; i++) {
+            _level.Add(new WallObject { position = new Vector2Int(i, -5) });
+        }
+        for(int i = 0; i < 100; i++) {
+            _level.Add(new WallObject { position = new Vector2Int(i, -8) });
+        }
+        for(int i = 0; i < 30; i++) {
+            _level.Add(new WallObject { position = new Vector2Int(8, i - 7) });
+        }
+
+        _level.Add(new EffectObject {
+            position = new Vector2Int(3, -10),
+            size = new Vector2Int(10, 10),
+            effect = renderer.formattingEffects["glitch"]
+        });
+        _level.Add(new EffectObject {
+            position = new Vector2Int(-12, -24),
+            size = new Vector2Int(6, 9),
+            effect = renderer.formattingEffects["glitch"]
+        });
 
         for(RenderStyle style = RenderStyle.None; style <= RenderStyle.All; style++) {
             RenderStyle curStyle = style;
