@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -18,32 +19,44 @@ public readonly struct Vector2Int : IEquatable<Vector2Int> {
         this.y = y;
     }
 
-    public bool InBounds(int minX, int minY, int maxX, int maxY) =>
-        x >= minX && x <= maxX && y >= minY && y <= maxY;
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public bool InBounds(int minX, int minY, int maxX, int maxY) => x >= minX && x <= maxX && y >= minY && y <= maxY;
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool InBounds(Vector2Int min, Vector2Int max) => InBounds(min.x, min.y, max.x, max.y);
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool InBounds(Bounds bounds) => InBounds(bounds.min, bounds.max);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Vector2Int operator +(Vector2Int left, Vector2Int right) =>
         new(left.x + right.x, left.y + right.y);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Vector2Int operator -(Vector2Int left, Vector2Int right) =>
         new(left.x - right.x, left.y - right.y);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Vector2Int operator *(Vector2Int left, int right) =>
         new(left.x * right, left.y * right);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Vector2Int operator *(int left, Vector2Int right) => right * left;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Vector2Int operator /(Vector2Int left, int right) =>
         new(left.x / right, left.y / right);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool Equals(Vector2Int other) => x == other.x && y == other.y;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public override bool Equals(object? obj) => obj is Vector2Int other && Equals(other);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public override int GetHashCode() => HashCode.Combine(x, y);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static bool operator ==(Vector2Int left, Vector2Int right) => left.Equals(right);
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static bool operator !=(Vector2Int left, Vector2Int right) => !left.Equals(right);
 
     public class JsonConverter : JsonConverter<Vector2Int> {

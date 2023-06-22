@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 using PER.Abstractions.Input;
 using PER.Util;
@@ -131,12 +132,12 @@ public class InputManager : IInput {
             mouseX - _renderer.window?.Size.X * 0.5f + _renderer.text?.imageWidth * 0.5f ?? 0f,
             mouseY - _renderer.window?.Size.Y * 0.5f + _renderer.text?.imageHeight * 0.5f ?? 0f);
         _accurateMousePosition = new Vector2(
-            pixelMousePosition.x / _renderer.font?.size.x ?? 0,
-            pixelMousePosition.y / _renderer.font?.size.y ?? 0);
-        _mousePosition = new Vector2Int((int)_accurateMousePosition.x, (int)_accurateMousePosition.y);
+            pixelMousePosition.X / _renderer.font?.size.x ?? 0,
+            pixelMousePosition.Y / _renderer.font?.size.y ?? 0);
+        _mousePosition = new Vector2Int((int)_accurateMousePosition.X, (int)_accurateMousePosition.Y);
         _normalizedMousePosition =
-            new Vector2(pixelMousePosition.x / ((_renderer.text?.imageWidth ?? 0) - 1),
-                pixelMousePosition.y / ((_renderer.text?.imageHeight ?? 0) - 1));
+            new Vector2(pixelMousePosition.X / ((_renderer.text?.imageWidth ?? 0) - 1),
+                pixelMousePosition.Y / ((_renderer.text?.imageHeight ?? 0) - 1));
     }
 
     private void ScrollMouse(float delta) => scrolled?.Invoke(this, new IInput.ScrolledEventArgs(delta));

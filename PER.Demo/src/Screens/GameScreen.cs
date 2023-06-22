@@ -202,7 +202,7 @@ public class GameScreen : LayoutResource, IScreen {
         if(_testProgressBar is not null &&
             input.mousePosition.InBounds(_testProgressBar.bounds) &&
             input.MouseButtonPressed(MouseButton.Left))
-            _testProgressBar.value = input.normalizedMousePosition.x;
+            _testProgressBar.value = input.normalizedMousePosition.X;
 
         foreach((string _, Element element) in elements)
             element.Update(time);

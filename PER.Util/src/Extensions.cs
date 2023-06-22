@@ -9,11 +9,13 @@ namespace PER.Util;
 
 [PublicAPI]
 public static class RandomExtensions {
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static float NextSingle(this Random rng, float min, float max) => rng.NextSingle() * (max - min) + min;
 }
 
 [PublicAPI]
 public static class EnumerableExtensions {
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static T ElementAtOrDefault<T>(this IList<T> list, int index, Func<T> @default) =>
         index >= 0 && index < list.Count ? list[index] : @default();
 }
@@ -38,9 +40,9 @@ public static class StringExtensions {
 public static class ConversionExtensions {
     // apparently these get inlined automatically but
     // i'm gonna leave the attributes here just in case
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static unsafe bool ToBool(this byte value) => *(bool*)&value;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static unsafe byte ToByte(this bool value) => *(byte*)&value;
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
 using JetBrains.Annotations;
@@ -16,6 +17,7 @@ public readonly struct Bounds : IEquatable<Bounds> {
         this.max = max;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     // https://stackoverflow.com/a/100165/10484146
     public bool IntersectsLine(Vector2Int point0, Vector2Int point1) {
         // Find min and max X for the segment
@@ -50,12 +52,17 @@ public readonly struct Bounds : IEquatable<Bounds> {
         return minY <= maxY;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool Equals(Bounds other) => min.Equals(other.min) && max.Equals(other.max);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public override bool Equals(object? obj) => obj is Bounds other && Equals(other);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public override int GetHashCode() => HashCode.Combine(min, max);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static bool operator ==(Bounds left, Bounds right) => left.Equals(right);
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static bool operator !=(Bounds left, Bounds right) => !left.Equals(right);
 }

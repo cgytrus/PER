@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System.Numerics;
+
+using JetBrains.Annotations;
 
 using PER.Abstractions.Rendering;
 using PER.Util;
@@ -18,7 +20,7 @@ public class GlitchEffect : IEffect {
     public GlitchEffect(IRenderer renderer) => _renderer = renderer;
 
     public void ApplyModifiers(Vector2Int at, ref Vector2 position, ref RenderCharacter character) {
-        position = new Vector2(position.x + RandomFloat() * 0.1f, position.y);
+        position.X += RandomFloat() * 0.1f;
         string mappings = _renderer.font?.mappings ?? "";
         character = new RenderCharacter(
             RandomNonNegativeFloat() <= 0.98f ? character.character : mappings[Random.Shared.Next(0, mappings.Length)],

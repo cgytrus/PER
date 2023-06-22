@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
@@ -10,25 +12,33 @@ public readonly struct Color : IEquatable<Color> {
     public static Color black => new(0f, 0f, 0f, 1f);
     public static Color white => new(1f, 1f, 1f, 1f);
 
-    public float r { get; }
-    public float g { get; }
-    public float b { get; }
-    public float a { get; }
-
-    public Color(float r, float g, float b, float a) {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.a = a;
+    public float r {
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        get => _vec.X;
     }
 
-    public Color(byte r, byte g, byte b, byte a) {
-        this.r = r / 255f;
-        this.g = g / 255f;
-        this.b = b / 255f;
-        this.a = a / 255f;
+    public float g {
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        get => _vec.Y;
     }
 
+    public float b {
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        get => _vec.Z;
+    }
+
+    public float a {
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        get => _vec.W;
+    }
+
+    private readonly Vector4 _vec;
+
+    public Color(Vector4 vec) => _vec = vec;
+    public Color(float r, float g, float b, float a) => _vec = new Vector4(r, g, b, a);
+    public Color(byte r, byte g, byte b, byte a) => _vec = new Vector4(r / 255f, g / 255f, b / 255f, a / 255f);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Color Blend(Color bottom, Color top) {
         // i've spent SO MUCH time fixing this bug_
         // so, when i tried drawing something over a character which previously had a transparent background,
@@ -41,7 +51,8 @@ public readonly struct Color : IEquatable<Color> {
         // which caused a to be 0, which caused a division by 0, which caused the RGB of the color be NaN,NaN,NaN,
         // which caused any other operation with that color return NaN, which was displaying as if it was black...
         // i wanna f---ing die.
-        if(bottom.a == 0f && top.a == 0f) return transparent;
+        if(bottom.a == 0f && top.a == 0f)
+            return transparent;
 
         float t = (1f - top.a) * bottom.a;
         float a = t + top.a;
@@ -53,35 +64,33 @@ public readonly struct Color : IEquatable<Color> {
         return new Color(r, g, b, a);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Color Blend(Color top) => Blend(this, top);
 
-    public static Color LerpColors(Color a, Color b, float t) => t <= 0f ? a :
-        t >= 1f ? b :
-        new Color(MoreMath.LerpUnclamped(a.r, b.r, t),
-            MoreMath.LerpUnclamped(a.g, b.g, t),
-            MoreMath.LerpUnclamped(a.b, b.b, t),
-            MoreMath.LerpUnclamped(a.a, b.a, t));
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static Color LerpColors(Color a, Color b, float t) =>
+        t <= 0f ? a : t >= 1f ? b : new Color(Vector4.Lerp(a._vec, b._vec, t));
 
-    public static Color operator +(Color left, Color right) =>
-        new(left.r + right.r, left.g + right.g, left.b + right.b, left.a + right.a);
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static Color operator +(Color left, Color right) => new(left._vec + right._vec);
 
-    public static Color operator -(Color left, Color right) =>
-        new(left.r - right.r, left.g - right.g, left.b - right.b, right.a);
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static Color operator -(Color left, Color right) => new(left._vec - right._vec);
 
-    public static Color operator *(Color left, float right) =>
-        new(left.r * right, left.g * right, left.b * right, left.a * right);
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static Color operator *(Color left, float right) => new(left._vec * right);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Color operator *(float left, Color right) => right * left;
 
-    public static Color operator /(Color left, float right) =>
-        new(left.r / right, left.g / right, left.b / right, left.a / right);
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static Color operator /(Color left, float right) => new(left._vec / right);
 
-    public bool Equals(Color other) =>
-        r.Equals(other.r) && g.Equals(other.g) && b.Equals(other.b) && a.Equals(other.a);
+    public bool Equals(Color other) => _vec.Equals(other._vec);
 
     public override bool Equals(object? obj) => obj is Color other && Equals(other);
 
-    public override int GetHashCode() => HashCode.Combine(r, g, b, a);
+    public override int GetHashCode() => _vec.GetHashCode();
 
     public static bool operator ==(Color left, Color right) => left.Equals(right);
     public static bool operator !=(Color left, Color right) => !left.Equals(right);

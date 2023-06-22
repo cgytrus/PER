@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 using PER.Abstractions.Rendering;
 using PER.Util;
@@ -71,7 +72,7 @@ public class Text : IDisposable {
             foreach(IEffect globalEffect in _globalModEffects)
                 globalEffect.ApplyModifiers(pos, ref modPosition, ref character);
 
-            Vector2f position = new(modPosition.x * _charWidth + offset.X, modPosition.y * _charHeight + offset.Y);
+            Vector2f position = new(modPosition.X * _charWidth + offset.X, modPosition.Y * _charHeight + offset.Y);
             Color background = SfmlConverters.ToSfmlColor(character.background);
 
             _quads[index].Position = position;

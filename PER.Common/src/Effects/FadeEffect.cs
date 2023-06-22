@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System.Numerics;
+
+using JetBrains.Annotations;
 
 using PER.Abstractions.Rendering;
 using PER.Util;
