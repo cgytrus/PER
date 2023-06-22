@@ -34,7 +34,8 @@ public class GlitchEffect : IEffect {
     public void Draw(Vector2Int position) {
         if(position.x % Random.Shared.Next(3, 10) == 0 || position.y % Random.Shared.Next(3, 10) == 0)
             _draw = RandomNonNegativeFloat() > 0.95f;
-        if(!_draw || !_renderer.IsCharacterEmpty(position)) return;
+        if(!_draw)
+            return;
         string mappings = _renderer.font?.mappings ?? "";
         _renderer.DrawCharacter(position, new RenderCharacter(
             mappings[Random.Shared.Next(0, mappings.Length)],
