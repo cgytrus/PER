@@ -14,8 +14,6 @@ public class PlayerObject : LevelObject {
     private int _moveY;
 
     public override void Update(TimeSpan time) {
-        //level.cameraPosition = position;
-
         _moveX = 0;
         _moveY = 0;
 
@@ -53,5 +51,9 @@ public class PlayerObject : LevelObject {
         }
 
         position += new Vector2Int(moveX, moveY);
+        if(Math.Abs(screenPosition.x) > 5)
+            level.cameraPosition += new Vector2Int(moveX, 0);
+        if(Math.Abs(screenPosition.y) > 5)
+            level.cameraPosition += new Vector2Int(0, moveY);
     }
 }
