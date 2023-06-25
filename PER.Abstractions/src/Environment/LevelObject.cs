@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 using JetBrains.Annotations;
 
@@ -21,12 +22,53 @@ public abstract class LevelObject : IUpdatable, ITickable {
 
     protected abstract RenderCharacter character { get; }
 
-    public Vector2Int position { get; set; }
+    internal bool added { get; set; }
+
+    public bool dirty { get; protected set; }
+
+    public Guid id {
+        get => _id;
+        set {
+            if(added)
+                throw new InvalidOperationException();
+            _id = value;
+        }
+    }
+
+    public int layer {
+        get => _layer;
+        set {
+            if(_layer != value)
+                dirty = true;
+            _layer = value;
+            if(added && Level.current is not null)
+                Level.current.Sort();
+        }
+    }
+
+    public Vector2Int position {
+        get => _position;
+        set {
+            if(_position != value)
+                dirty = true;
+            _position = value;
+        }
+    }
+
     public Vector2Int screenPosition => position - level.cameraPosition;
     public Vector2Int drawPosition => screenPosition + new Vector2Int(renderer.width / 2, renderer.height / 2);
+
+    private Guid _id = Guid.NewGuid();
+    private int _layer;
+    private Vector2Int _position;
 
     public virtual void Draw() => renderer.DrawCharacter(drawPosition, character);
 
     public abstract void Update(TimeSpan time);
     public abstract void Tick(TimeSpan time);
+
+    public virtual void CustomSerialize(BinaryWriter writer) { }
+    public virtual void CustomDeserialize(BinaryReader reader) { }
+
+    internal void ClearDirty() => dirty = false;
 }
