@@ -22,7 +22,7 @@ public abstract class ScreenGame : IGame {
     public IScreen? currentScreen { get; private set; }
     private readonly FadeEffect _screenFade = new();
 
-    public void SwitchScreen(IScreen? screen, Action? middleCallback = null) {
+    public void SwitchScreen(IScreen? screen, Func<bool>? middleCallback = null) {
         if(currentScreen is null)
             SwitchScreen(screen, StartupWaitTime, StartupFadeTime, middleCallback);
         else if(screen is null)
@@ -31,9 +31,10 @@ public abstract class ScreenGame : IGame {
             SwitchScreen(screen, FadeTime, FadeTime, middleCallback);
     }
 
-    public void SwitchScreen(IScreen? screen, float fadeOutTime, float fadeInTime, Action? middleCallback = null) =>
+    public void SwitchScreen(IScreen? screen, float fadeOutTime, float fadeInTime, Func<bool>? middleCallback = null) =>
         FadeScreen(fadeOutTime, fadeInTime, () => {
-            middleCallback?.Invoke();
+            if(middleCallback is not null && !middleCallback.Invoke())
+                return;
             currentScreen?.Close();
             currentScreen = screen;
             currentScreen?.Open();
