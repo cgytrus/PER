@@ -55,14 +55,11 @@ public abstract class LevelObject : IUpdatable, ITickable {
         }
     }
 
-    public Vector2Int screenPosition => position - level.cameraPosition;
-    public Vector2Int drawPosition => screenPosition + new Vector2Int(renderer.width / 2, renderer.height / 2);
-
     private Guid _id = Guid.NewGuid();
     private int _layer;
     private Vector2Int _position;
 
-    public virtual void Draw() => renderer.DrawCharacter(drawPosition, character);
+    public virtual void Draw() => renderer.DrawCharacter(level.LevelToScreenPosition(position), character);
 
     public abstract void Update(TimeSpan time);
     public abstract void Tick(TimeSpan time);

@@ -12,6 +12,7 @@ public interface IRenderer : IUpdatable {
     public string title { get; set; }
     public int width { get; }
     public int height { get; }
+    public Vector2Int size => new(width, height);
     public int framerate { get; set; }
     public bool fullscreen { get; set; }
     public IFont? font { get; set; }

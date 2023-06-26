@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
@@ -98,6 +99,14 @@ public class Level : IUpdatable, ITickable {
         return false;
     }
 
+    public bool HasObjectAt(Vector2Int position, Type type) {
+        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
+        foreach(LevelObject obj in _objects.Values)
+            if(obj.GetType() == type && obj.position == position)
+                return true;
+        return false;
+    }
+
     public bool HasObjectAt<T>(Vector2Int position) where T : LevelObject {
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
         foreach(LevelObject obj in _objects.Values)
@@ -127,4 +136,21 @@ public class Level : IUpdatable, ITickable {
         ret = null;
         return false;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int LevelToCameraPosition(Vector2Int levelPosition) => levelPosition - cameraPosition;
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int LevelToScreenPosition(Vector2Int levelPosition) =>
+        CameraToScreenPosition(LevelToCameraPosition(levelPosition));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int CameraToLevelPosition(Vector2Int cameraPosition) => cameraPosition + this.cameraPosition;
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int CameraToScreenPosition(Vector2Int cameraPosition) => cameraPosition + renderer.size / 2;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int ScreenToLevelPosition(Vector2Int screenPosition) =>
+        ScreenToCameraPosition(CameraToLevelPosition(screenPosition));
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int ScreenToCameraPosition(Vector2Int screenPosition) => screenPosition - renderer.size / 2;
 }
