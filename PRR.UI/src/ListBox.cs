@@ -80,8 +80,11 @@ public class ListBox<TItem> : ScrollablePanel {
     }
 
     private void DisableElementAt(int index) {
-        if(index < _elements.Count)
-            _elements[index].Disable();
+        if(index >= _elements.Count)
+            return;
+        _elements[^1].Disable();
+        for(int i = index; i < _items.Count; i++)
+            UpdateElementAt(i);
     }
 
     private void SwapElementsAt(int a, int b) {
