@@ -47,7 +47,7 @@ public class ListBox<TItem> : ScrollablePanel {
     public void Remove(TItem item) => RemoveAt(_items.IndexOf(item));
 
     public void RemoveAt(int index) {
-        if(index >= _items.Count)
+        if(index < 0 || index >= _items.Count)
             return;
         _items.RemoveAt(index);
         DisableElementAt(index);
@@ -80,7 +80,7 @@ public class ListBox<TItem> : ScrollablePanel {
     }
 
     private void DisableElementAt(int index) {
-        if(index >= _elements.Count)
+        if(index < 0 || index >= _elements.Count)
             return;
         _elements[_items.Count].Disable();
         for(int i = index; i < _items.Count; i++)
