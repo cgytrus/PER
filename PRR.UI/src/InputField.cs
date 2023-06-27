@@ -23,7 +23,7 @@ public class InputField : ClickableElement {
             if(typing)
                 StartTyping();
             else
-                StopTyping();
+                StopTyping(false);
         }
     }
 
@@ -34,9 +34,11 @@ public class InputField : ClickableElement {
             if(typing)
                 StartTyping();
             else
-                StopTyping();
+                StopTyping(false);
         }
     }
+
+    public bool typing => enabled && active && toggledSelf;
 
     public override Vector2Int size {
         get => base.size;
@@ -87,10 +89,10 @@ public class InputField : ClickableElement {
     public event EventHandler? onStartTyping;
     public event EventHandler? onTextChanged;
     public event EventHandler? onSubmit;
+    public event EventHandler? onCancel;
 
     protected override bool hotkeyPressed => false;
 
-    private bool typing => enabled && active && toggledSelf;
     private bool usePlaceholder => string.IsNullOrEmpty(value) && !typing;
 
     private Vector2Int cursorPos {
@@ -122,7 +124,7 @@ public class InputField : ClickableElement {
         if(!input.KeyPressed(KeyCode.Enter) && !input.KeyPressed(KeyCode.Escape) &&
             (currentState == State.Clicked || !input.MouseButtonPressed(MouseButton.Left)))
             return;
-        StopTyping();
+        StopTyping(input.KeyPressed(KeyCode.Enter));
     }
 
     private void StartTyping() {
@@ -134,13 +136,16 @@ public class InputField : ClickableElement {
         onStartTyping?.Invoke(this, EventArgs.Empty);
     }
 
-    private void StopTyping() {
+    private void StopTyping(bool submit) {
         toggledSelf = false;
         input.keyDown -= KeyDown;
         input.textEntered -= Type;
         input.keyRepeat = false;
         _textOffset = 0;
-        onSubmit?.Invoke(this, EventArgs.Empty);
+        if(submit)
+            onSubmit?.Invoke(this, EventArgs.Empty);
+        else
+            onCancel?.Invoke(this, EventArgs.Empty);
         PlaySound(audio, submitSound, SubmitSoundId);
     }
 
