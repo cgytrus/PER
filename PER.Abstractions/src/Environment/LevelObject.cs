@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 using JetBrains.Annotations;
 
@@ -12,8 +11,8 @@ using PER.Util;
 namespace PER.Abstractions.Environment;
 
 [PublicAPI]
-public abstract class LevelObject : IUpdatable, ITickable {
-    protected static Level level => Level.current!;
+public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel : Level {
+    protected static TLevel level => (Level.current as TLevel)!;
 
     protected static IRenderer renderer => level.renderer;
     protected static IInput input => level.input;
@@ -64,8 +63,7 @@ public abstract class LevelObject : IUpdatable, ITickable {
     public abstract void Update(TimeSpan time);
     public abstract void Tick(TimeSpan time);
 
-    public virtual void CustomSerialize(BinaryWriter writer) { }
-    public virtual void CustomDeserialize(BinaryReader reader) { }
-
     internal void ClearDirty() => dirty = false;
 }
+
+public abstract class LevelObject : LevelObject<Level<LevelObject>> { }
