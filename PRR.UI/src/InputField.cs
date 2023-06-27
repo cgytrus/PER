@@ -270,8 +270,10 @@ public class InputField : ClickableElement {
 
     private void Type(char character) {
         ReadOnlySpan<char> textSpan = value.AsSpan();
-        ReadOnlySpan<char> textLeft = cursor <= 0 ? ReadOnlySpan<char>.Empty : textSpan[..cursor];
-        ReadOnlySpan<char> textRight = cursor >= textSpan.Length ? ReadOnlySpan<char>.Empty : textSpan[cursor..];
+        ReadOnlySpan<char> textLeft =
+            cursor <= 0 || cursor >= textSpan.Length ? ReadOnlySpan<char>.Empty : textSpan[..cursor];
+        ReadOnlySpan<char> textRight =
+            cursor <= 0 || cursor >= textSpan.Length ? ReadOnlySpan<char>.Empty : textSpan[cursor..];
         value = $"{textLeft}{character}{textRight}";
         Animate();
         cursor++;
