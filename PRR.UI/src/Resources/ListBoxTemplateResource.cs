@@ -31,7 +31,7 @@ public abstract class ListBoxTemplateResource<TItem> : LayoutResource, IListBoxT
             height = resource.elements.Select(element => element.Value.bounds.max.y).Max() + 1;
         }
 
-        public override void MoveTo(Vector2Int origin, int index) {
+        public override void MoveTo(Vector2Int origin, int index, Vector2Int size) {
             int yOffset = height * index;
             foreach((string? id, Element? element) in idElements)
                 element.position = origin + offsets[id] + new Vector2Int(0, yOffset);

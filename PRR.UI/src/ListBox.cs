@@ -11,7 +11,7 @@ public interface IListBoxTemplateFactory<TItem> {
     public abstract class Template {
         public abstract IEnumerable<Element> elements { get; }
         public abstract void UpdateWithItem(int index, TItem item, int width);
-        public abstract void MoveTo(Vector2Int origin, int index);
+        public abstract void MoveTo(Vector2Int origin, int index, Vector2Int size);
         public abstract void Enable();
         public abstract void Disable();
     }
@@ -76,13 +76,13 @@ public class ListBox<TItem> : ScrollablePanel {
             throw new InvalidOperationException("wtf");
         _elements[index].Enable();
         _elements[index].UpdateWithItem(index, _items[index], size.x);
-        _elements[index].MoveTo(position + new Vector2Int(0, scroll), index);
+        _elements[index].MoveTo(position + new Vector2Int(0, scroll), index, size);
     }
 
     private void DisableElementAt(int index) {
         if(index >= _elements.Count)
             return;
-        _elements[^1].Disable();
+        _elements[_items.Count].Disable();
         for(int i = index; i < _items.Count; i++)
             UpdateElementAt(i);
     }
@@ -92,9 +92,9 @@ public class ListBox<TItem> : ScrollablePanel {
             return;
         Vector2Int offsetPosition = position - new Vector2Int(0, scroll);
         _elements[a].Enable();
-        _elements[a].MoveTo(offsetPosition, b);
+        _elements[a].MoveTo(offsetPosition, b, size);
         _elements[b].Enable();
-        _elements[b].MoveTo(offsetPosition, a);
+        _elements[b].MoveTo(offsetPosition, a, size);
         (_elements[a], _elements[b]) = (_elements[b], _elements[a]);
     }
 }
