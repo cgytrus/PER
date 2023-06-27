@@ -129,7 +129,9 @@ public class InputField : ClickableElement {
 
     private void StartTyping() {
         toggledSelf = true;
+        input.keyDown -= KeyDown;
         input.keyDown += KeyDown;
+        input.textEntered -= Type;
         input.textEntered += Type;
         input.keyRepeat = true;
         cursor = value?.Length ?? 0;
@@ -271,9 +273,9 @@ public class InputField : ClickableElement {
     private void Type(char character) {
         ReadOnlySpan<char> textSpan = value.AsSpan();
         ReadOnlySpan<char> textLeft =
-            cursor <= 0 || cursor >= textSpan.Length ? ReadOnlySpan<char>.Empty : textSpan[..cursor];
+            cursor <= 0 || cursor > textSpan.Length ? ReadOnlySpan<char>.Empty : textSpan[..cursor];
         ReadOnlySpan<char> textRight =
-            cursor <= 0 || cursor >= textSpan.Length ? ReadOnlySpan<char>.Empty : textSpan[cursor..];
+            cursor < 0 || cursor >= textSpan.Length ? ReadOnlySpan<char>.Empty : textSpan[cursor..];
         value = $"{textLeft}{character}{textRight}";
         Animate();
         cursor++;
