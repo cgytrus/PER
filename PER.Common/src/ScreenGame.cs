@@ -22,6 +22,8 @@ public abstract class ScreenGame : IGame {
     public IScreen? currentScreen { get; private set; }
     private readonly FadeEffect _screenFade = new();
 
+    private Func<char, Formatting> _frameTimeFormatter = _ => new Formatting(Color.white, Color.transparent);
+
     public void SwitchScreen(IScreen? screen, Func<bool>? middleCallback = null) {
         if(currentScreen is null)
             SwitchScreen(screen, StartupWaitTime, StartupFadeTime, middleCallback);
@@ -52,7 +54,11 @@ public abstract class ScreenGame : IGame {
     public abstract void Load();
     public abstract RendererSettings Loaded();
 
-    public virtual void Setup() => renderer.closed += (_, _) => SwitchScreen(null);
+    public virtual void Setup() {
+        renderer.closed += (_, _) => SwitchScreen(null);
+        _frameTimeFormatter = flag =>
+            frameTime is null ? new Formatting(Color.white, Color.transparent) : FrameTimeFormatter(frameTime, flag);
+    }
 
     public virtual void Update(TimeSpan time) {
         if(_screenFade.fading)
@@ -73,11 +79,9 @@ public abstract class ScreenGame : IGame {
         string frameTime = this.frameTime.frameTime.TotalMilliseconds.ToString("F2", culture);
         string avgFrameTime = this.frameTime.averageFrameTime.TotalMilliseconds.ToString("F2", culture);
         renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 2),
-            $"\f1{frameTime}\f\0/\f2{avgFrameTime}\f\0 ms", flag => FrameTimeFormatter(this.frameTime, flag),
-            HorizontalAlignment.Right);
+            $"\f1{frameTime}\f\0/\f2{avgFrameTime}\f\0 ms", _frameTimeFormatter, HorizontalAlignment.Right);
         renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 1),
-            $"\fa{fps}\f\0/\fb{avgFps}\f\0 FPS", flag => FrameTimeFormatter(this.frameTime, flag),
-            HorizontalAlignment.Right);
+            $"\fa{fps}\f\0/\fb{avgFps}\f\0 FPS", _frameTimeFormatter, HorizontalAlignment.Right);
     }
 
     protected virtual Formatting FrameTimeFormatter(FrameTime frameTime, char flag) =>
