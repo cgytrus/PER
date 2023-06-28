@@ -39,7 +39,10 @@ internal class HeadlessRenderer : IRenderer {
         set => throw new InvalidOperationException();
     }
     public bool focused => throw new InvalidOperationException();
+    // it's an interface implementation dumbass
+#pragma warning disable CS0067
     public event EventHandler? focusChanged;
+#pragma warning restore CS0067
     public event EventHandler? closed;
     public Color background {
         get => throw new InvalidOperationException();
