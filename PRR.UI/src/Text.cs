@@ -13,7 +13,9 @@ public class Text : Element {
     public HorizontalAlignment align { get; set; } = HorizontalAlignment.Left;
     public bool wrap { get; set; }
 
-    public Text(IRenderer renderer) : base(renderer) { }
+    private readonly Func<char, Formatting> _formatter;
+
+    public Text(IRenderer renderer) : base(renderer) => _formatter = flag => formatting[flag];
 
     public static Text Clone(Text template) => new(template.renderer) {
         enabled = template.enabled,
@@ -33,7 +35,7 @@ public class Text : Element {
         if(formatting.Count == 0)
             formatting.Add('\0',
                 new Formatting(Color.white, Color.transparent, RenderStyle.None, RenderOptions.Default, effect));
-        renderer.DrawText(position, text, flag => formatting[flag], align, wrap ? size.x : 0);
+        renderer.DrawText(position, text, _formatter, align, wrap ? size.x : 0);
     }
 
     public override void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id, string? special) {
