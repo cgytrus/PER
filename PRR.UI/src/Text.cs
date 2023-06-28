@@ -44,8 +44,7 @@ public class Text : Element {
         if(TryGetColor(colors, "text", layoutName, id, "bg", special, out color))
             backgroundColor = color;
         formatting['\0'] = formatting.TryGetValue('\0', out Formatting oldFormatting) ?
-            new Formatting(foregroundColor, backgroundColor, oldFormatting.style, oldFormatting.options,
-                oldFormatting.effect) :
+            oldFormatting with { foregroundColor = foregroundColor, backgroundColor = backgroundColor } :
             new Formatting(foregroundColor, backgroundColor);
     }
 }
