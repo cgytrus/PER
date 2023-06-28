@@ -50,7 +50,10 @@ public class ScrollablePanel : Element {
 
         int lowestY = int.MaxValue;
         int highestY = int.MinValue;
+        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
         foreach(Element element in elements) {
+            if(!element.enabled)
+                continue;
             if(element.bounds.min.y < lowestY)
                 lowestY = element.bounds.min.y;
             if(element.bounds.max.y > highestY)
