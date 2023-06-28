@@ -101,20 +101,6 @@ public class Game : ScreenGame {
         renderer.AddEffect(_drawTextEffect);
         renderer.AddEffect(_bloomEffect);
         base.Update(time);
-
-        // only draw cursor when using console renderer
-        if(renderer is not PRR.Console.Renderer)
-            return;
-        IInput input = Core.engine.input;
-        if(renderer.IsCharacterEmpty(input.mousePosition))
-            renderer.DrawCharacter(input.mousePosition, new RenderCharacter('\0', Color.white, Color.transparent));
-        else {
-            RenderCharacter character = renderer.GetCharacter(input.mousePosition);
-            Color bg = new(1f - character.background.r, 1f - character.background.g, 1f - character.background.b, 1f);
-            Color fg = new(1f - character.foreground.r, 1f - character.foreground.g, 1f - character.foreground.b, 1f);
-            renderer.DrawCharacter(input.mousePosition,
-                new RenderCharacter(character.character, bg, fg, character.style));
-        }
     }
 
     protected override Formatting FrameTimeFormatter(FrameTime frameTime, char flag) => flag switch {
