@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -58,6 +60,15 @@ public readonly struct Vector2Int : IEquatable<Vector2Int> {
     public static bool operator ==(Vector2Int left, Vector2Int right) => left.Equals(right);
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static bool operator !=(Vector2Int left, Vector2Int right) => !left.Equals(right);
+
+    public override string ToString() => ToString("G", CultureInfo.CurrentCulture);
+    public string ToString([StringSyntax(StringSyntaxAttribute.NumericFormat)] string? format) =>
+        ToString(format, CultureInfo.CurrentCulture);
+    public string ToString([StringSyntax(StringSyntaxAttribute.NumericFormat)] string? format,
+        IFormatProvider? formatProvider) {
+        string separator = NumberFormatInfo.GetInstance(formatProvider).NumberGroupSeparator;
+        return $"<{x.ToString(format, formatProvider)}{separator} {y.ToString(format, formatProvider)}>";
+    }
 
     public class JsonConverter : JsonConverter<Vector2Int> {
         public override Vector2Int Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
