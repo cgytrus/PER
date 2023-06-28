@@ -51,9 +51,10 @@ public class PlayerObject : LevelObject {
         }
 
         position += new Vector2Int(moveX, moveY);
-        if(Math.Abs(screenPosition.x) > 5)
+        Vector2Int cameraPosition = level.LevelToCameraPosition(position);
+        if(Math.Abs(cameraPosition.x) > 5)
             level.cameraPosition += new Vector2Int(moveX, 0);
-        if(Math.Abs(screenPosition.y) > 5)
+        if(Math.Abs(cameraPosition.y) > 5)
             level.cameraPosition += new Vector2Int(0, moveY);
     }
 }

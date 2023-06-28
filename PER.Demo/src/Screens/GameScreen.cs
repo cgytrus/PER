@@ -65,7 +65,7 @@ public class GameScreen : LayoutResource, IScreen {
     private ProgressBar? _testProgressBar;
 
     private readonly IResources _resources;
-    private Level? _level;
+    private Level<LevelObject>? _level;
 
     public GameScreen(Settings settings, IResources resources) {
         _settings = settings;
@@ -77,7 +77,7 @@ public class GameScreen : LayoutResource, IScreen {
     public override void Load(string id) {
         base.Load(id);
 
-        _level = new Level(renderer, input, audio, _resources);
+        _level = new Level<LevelObject>(renderer, input, audio, _resources);
 
         for(int y = -20; y <= 20; y++) {
             for(int x = -20; x <= 20; x++) {

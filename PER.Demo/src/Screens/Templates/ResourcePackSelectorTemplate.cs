@@ -98,7 +98,7 @@ public class ResourcePackSelectorTemplate : ListBoxTemplateResource<ResourcePack
             moveDownButton.active = canMoveDown;
         }
 
-        public override void MoveTo(Vector2Int origin, int index) {
+        public override void MoveTo(Vector2Int origin, int index, Vector2Int size) {
             int maxY = _resource._availablePacks.Count - 1;
             int y = maxY - index;
             y *= height;
