@@ -70,6 +70,13 @@ public class ListBox<TItem> : ScrollablePanel {
         SwapElementsAt(a, b);
     }
 
+    public void UpdateItem(TItem item) => UpdateItemAt(_items.IndexOf(item));
+    public void UpdateItemAt(int index) {
+        if(index < 0 || index >= _items.Count)
+            return;
+        UpdateElementAt(index);
+    }
+
     private void UpdateElementAt(int index) {
         if(index == _elements.Count) {
             IListBoxTemplateFactory<TItem>.Template template = _templateFactory.CreateTemplate();
