@@ -217,8 +217,9 @@ public class GameScreen : LayoutResource, IScreen {
             input.MouseButtonPressed(MouseButton.Left))
             _testProgressBar.value = input.normalizedMousePosition.X;
 
-        foreach((string _, Element element) in elements)
-            element.Update(time);
+        // ReSharper disable once ForCanBeConvertedToForeach
+        for(int i = 0; i < elementList.Count; i++)
+            elementList[i].Update(time);
     }
 
     public void Tick(TimeSpan time) => _level?.Tick(time);

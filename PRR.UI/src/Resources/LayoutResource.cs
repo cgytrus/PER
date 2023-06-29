@@ -198,7 +198,9 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     private Dictionary<string, Type> _elementTypes = new();
 
     protected IEnumerable<KeyValuePair<string, Element>> elements => _elements;
+    protected IReadOnlyList<Element> elementList => _elementList;
     private Dictionary<string, Element> _elements = new();
+    private List<Element> _elementList = new();
 
     public override void Preload() {
         _elementTypes.Clear();
@@ -217,10 +219,12 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
             throw new InvalidOperationException("Not all elements were loaded.");
 
         _elements.Clear();
+        _elementList.Clear();
         foreach((string elementId, LayoutResourceElement layoutElement) in layoutElements) {
             Element element =
                 layoutElement.GetElement(this, renderer, input, audio, colors.colors, layoutName, elementId);
             _elements.Add(elementId, element);
+            _elementList.Add(element);
         }
         _elementTypes.Clear();
     }
@@ -245,7 +249,10 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         }
     }
 
-    public override void Unload(string id) => _elements.Clear();
+    public override void Unload(string id) {
+        _elements.Clear();
+        _elementList.Clear();
+    }
 
     protected void AddElement<T>(string id) where T : Element {
         if(IResources.current is null || !IResources.current.loading)

@@ -50,8 +50,9 @@ public abstract class DialogBoxScreenResource : LayoutResource, IScreen {
                     new RenderCharacter(_palette.Get(x, y, size), backgroundColor, foregroundColor),
                     RenderOptions.Default, frameEffect);
 
-        foreach((string _, Element element) in elements)
-            element.Update(time);
+        // ReSharper disable once ForCanBeConvertedToForeach
+        for(int i = 0; i < elementList.Count; i++)
+            elementList[i].Update(time);
     }
 
     public abstract void Tick(TimeSpan time);
