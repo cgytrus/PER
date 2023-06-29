@@ -116,7 +116,10 @@ public class InputField : ClickableElement {
     private float[,] _animSpeeds = new float[0, 0];
     private TimeSpan[,] _animStartTimes = new TimeSpan[0, 0];
 
-    public InputField(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) { }
+    private Func<char, Formatting> _formatter;
+
+    public InputField(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) =>
+        _formatter = _ => new Formatting(Color.white, Color.transparent, style, RenderOptions.Default, effect);
 
     public override Element Clone() => throw new NotImplementedException();
 
@@ -175,9 +178,8 @@ public class InputField : ClickableElement {
         ReadOnlySpan<char> drawTextSpan = drawText.AsSpan();
         int textMin = Math.Clamp(_textOffset, 0, drawText.Length);
         int textMax = Math.Clamp(_textOffset + size.x * (wrap ? size.y : 1), 0, drawText.Length);
-        renderer.DrawText(position, drawTextSpan[textMin..textMax],
-            _ => new Formatting(Color.white, Color.transparent, style, RenderOptions.Default, effect),
-            HorizontalAlignment.Left, wrap ? size.x : 0);
+        renderer.DrawText(position, drawTextSpan[textMin..textMax], _formatter, HorizontalAlignment.Left,
+            wrap ? size.x : 0);
     }
 
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
