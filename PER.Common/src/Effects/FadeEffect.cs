@@ -30,7 +30,7 @@ public class FadeEffect : IEffect {
     private float _inTime;
     private Action? _callback;
     private readonly Stopwatch _stopwatch = new();
-    private readonly Dictionary<Vector2Int, float> _speeds = new();
+    private readonly Dictionary<Vector2Int, float> _speeds = new(128);
 
     private const float MinSpeed = 3f;
     private const float MaxSpeed = 5f;
@@ -52,12 +52,12 @@ public class FadeEffect : IEffect {
             t = 0f;
         else if(_state == State.Out)
             t = 1f - t;
-        character = new RenderCharacter(character.character,
-            new Color(character.background.r, character.background.g, character.background.b,
+        character = character with {
+            background = new Color(character.background.r, character.background.g, character.background.b,
                 MoreMath.Lerp(0f, character.background.a, t)),
-            new Color(character.foreground.r, character.foreground.g, character.foreground.b,
-                MoreMath.Lerp(0f, character.foreground.a, t)),
-            character.style);
+            foreground = new Color(character.foreground.r, character.foreground.g, character.foreground.b,
+                MoreMath.Lerp(0f, character.foreground.a, t))
+        };
     }
 
     public void Update(bool fullscreen) {
