@@ -71,17 +71,58 @@ public abstract class ScreenGame : IGame {
     }
 
     private void DrawFrameTime() {
-        if(this.frameTime is null)
+        if(frameTime is null)
             return;
-        CultureInfo culture = CultureInfo.InvariantCulture;
-        string fps = this.frameTime.fps.ToString("F1", culture);
-        string avgFps = this.frameTime.averageFps.ToString("F1", culture);
-        string frameTime = this.frameTime.frameTime.TotalMilliseconds.ToString("F2", culture);
-        string avgFrameTime = this.frameTime.averageFrameTime.TotalMilliseconds.ToString("F2", culture);
+        CultureInfo c = CultureInfo.InvariantCulture;
+        const int maxFrameTimeLength = 6;
+        const int maxFpsLength = 8;
+        Span<char> finalFrameTime = stackalloc char[12 + maxFrameTimeLength + maxFrameTimeLength];
+        Span<char> finalFps = stackalloc char[13 + maxFpsLength + maxFpsLength];
+
+        int frameTimeLength = 2;
+        finalFrameTime[0] = '\f';
+        finalFrameTime[1] = '1';
+
+        frameTime.frameTime.TotalMilliseconds.TryFormat(finalFrameTime[frameTimeLength..], out int written, "F2", c);
+        frameTimeLength += written;
+        finalFrameTime[frameTimeLength++] = '\f';
+        finalFrameTime[frameTimeLength++] = '\0';
+        finalFrameTime[frameTimeLength++] = '/';
+        finalFrameTime[frameTimeLength++] = '\f';
+        finalFrameTime[frameTimeLength++] = '2';
+
+        frameTime.averageFrameTime.TotalMilliseconds.TryFormat(finalFrameTime[frameTimeLength..], out written, "F2", c);
+        frameTimeLength += written;
+        finalFrameTime[frameTimeLength++] = '\f';
+        finalFrameTime[frameTimeLength++] = '\0';
+        finalFrameTime[frameTimeLength++] = ' ';
+        finalFrameTime[frameTimeLength++] = 'm';
+        finalFrameTime[frameTimeLength++] = 's';
+
+        int fpsLength = 2;
+        finalFps[0] = '\f';
+        finalFps[1] = 'a';
+
+        frameTime.fps.TryFormat(finalFps[fpsLength..], out written, "F1", c);
+        fpsLength += written;
+        finalFps[fpsLength++] = '\f';
+        finalFps[fpsLength++] = '\0';
+        finalFps[fpsLength++] = '/';
+        finalFps[fpsLength++] = '\f';
+        finalFps[fpsLength++] = 'b';
+
+        frameTime.averageFps.TryFormat(finalFps[fpsLength..], out written, "F1", c);
+        fpsLength += written;
+        finalFps[fpsLength++] = '\f';
+        finalFps[fpsLength++] = '\0';
+        finalFps[fpsLength++] = ' ';
+        finalFps[fpsLength++] = 'm';
+        finalFps[fpsLength++] = 's';
+
         renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 2),
-            $"\f1{frameTime}\f\0/\f2{avgFrameTime}\f\0 ms", _frameTimeFormatter, HorizontalAlignment.Right);
+            finalFrameTime[..frameTimeLength], _frameTimeFormatter, HorizontalAlignment.Right);
         renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 1),
-            $"\fa{fps}\f\0/\fb{avgFps}\f\0 FPS", _frameTimeFormatter, HorizontalAlignment.Right);
+            finalFps[..fpsLength], _frameTimeFormatter, HorizontalAlignment.Right);
     }
 
     protected virtual Formatting FrameTimeFormatter(FrameTime frameTime, char flag) =>
