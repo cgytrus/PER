@@ -22,6 +22,9 @@ public class FadeEffect : IEffect {
         _ => 0f
     };
 
+    private static readonly Stopwatch globalTimer = new();
+    private int _startTicks;
+
     private float _lastT;
     private bool _callbackThisFrame; // keep screen black for a frame after we called the callback
 
@@ -30,7 +33,6 @@ public class FadeEffect : IEffect {
     private float _inTime;
     private Action? _callback;
     private readonly Stopwatch _stopwatch = new();
-    private readonly Dictionary<Vector2Int, float> _speeds = new(128);
 
     private const float MinSpeed = 3f;
     private const float MaxSpeed = 5f;
@@ -40,14 +42,19 @@ public class FadeEffect : IEffect {
         _inTime = inTime;
         _callback = middleCallback;
         _state = State.Out;
-        _speeds.Clear();
         _stopwatch.Reset();
+        _startTicks = (int)globalTimer.ticks;
     }
 
     public void ApplyModifiers(Vector2Int at, ref Vector2 position, ref RenderCharacter character) {
-        if(!_speeds.ContainsKey(at))
-            _speeds.Add(at, Random.Shared.NextSingle(MinSpeed, MaxSpeed));
-        float t = _lastT * _speeds[at];
+        float rand;
+        unchecked {
+            // idk what im doing xd
+            int rand1 = (at.x + 691337420) ^ (at.y + 133742069) ^ (_startTicks + 123456789) ^ at.GetHashCode();
+            ushort rand2 = (ushort)rand1;
+            rand = rand2 / (float)ushort.MaxValue;
+        }
+        float t = _lastT * (rand * (MaxSpeed - MinSpeed) + MinSpeed);
         if(_callbackThisFrame)
             t = 0f;
         else if(_state == State.Out)
@@ -70,8 +77,8 @@ public class FadeEffect : IEffect {
                 _callback?.Invoke();
                 _callbackThisFrame = true;
                 _state = State.In;
-                _speeds.Clear();
                 _stopwatch.Reset();
+                _startTicks = (int)globalTimer.ticks;
                 break;
             case State.In:
                 _state = State.None;
