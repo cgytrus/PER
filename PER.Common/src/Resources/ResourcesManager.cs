@@ -42,7 +42,9 @@ public class ResourcesManager : IResources {
 
         foreach((string id, Resource resource) in _resources) {
             logger.Info("Loading resource {Id}", id);
-            resource.Preload(this);
+            IResources.current = this;
+            resource.Preload();
+            IResources.current = null;
             resource.Load(id);
             _resourcePathHashes.Add(id, resource.GetPathsHash());
         }
@@ -110,7 +112,9 @@ public class ResourcesManager : IResources {
             logger.Info("Reloading resource {Id}", id);
             resource.Unload(id);
             resource.PostUnload();
-            resource.Preload(this);
+            IResources.current = this;
+            resource.Preload();
+            IResources.current = null;
             resource.Load(id);
             _resourcePathHashes[id] = hash;
         }

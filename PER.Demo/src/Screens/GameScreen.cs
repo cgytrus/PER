@@ -47,26 +47,26 @@ public class GameScreen : LayoutResource, IScreen {
             new ResourcePackSelectorTemplate(this, _availablePacks, _loadedPacks));
     }
 
-    public override void Preload(IResources resources) {
-        base.Preload(resources);
-        AddDependency<ResourcePackSelectorTemplate>(resources, ResourcePackSelectorTemplate.GlobalId);
+    public override void Preload() {
+        base.Preload();
+        AddDependency<ResourcePackSelectorTemplate>(ResourcePackSelectorTemplate.GlobalId);
 
-        AddElement<FilledPanel>(resources, "testPanel");
-        AddElement<Text>(resources, "testText");
-        AddElement<Button>(resources, "testButton1");
-        AddElement<Button>(resources, "testButton2");
-        AddElement<Button>(resources, "testButton3");
-        AddElement<Button>(resources, "testButton4");
-        AddElement<Button>(resources, "testButton5");
-        AddElement<Button>(resources, "testButton6");
-        AddElement<Text>(resources, "testSliderText");
-        AddElement<Slider>(resources, "testSlider");
-        AddElement<ListBox<ResourcePackData>>(resources, "packs");
-        AddElement<Button>(resources, "packsButton");
-        AddElement<Button>(resources, "applyButton");
-        AddElement<Button>(resources, "reloadButton");
-        AddElement<ProgressBar>(resources, "testProgressBar");
-        AddElement<InputField>(resources, "testInputField");
+        AddElement<FilledPanel>("testPanel");
+        AddElement<Text>("testText");
+        AddElement<Button>("testButton1");
+        AddElement<Button>("testButton2");
+        AddElement<Button>("testButton3");
+        AddElement<Button>("testButton4");
+        AddElement<Button>("testButton5");
+        AddElement<Button>("testButton6");
+        AddElement<Text>("testSliderText");
+        AddElement<Slider>("testSlider");
+        AddElement<ListBox<ResourcePackData>>("packs");
+        AddElement<Button>("packsButton");
+        AddElement<Button>("applyButton");
+        AddElement<Button>("reloadButton");
+        AddElement<ProgressBar>("testProgressBar");
+        AddElement<InputField>("testInputField");
     }
 
     public override void Load(string id) {

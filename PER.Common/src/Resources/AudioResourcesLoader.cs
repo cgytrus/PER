@@ -21,10 +21,10 @@ public abstract class AudioResourcesLoader : Resource {
 
     private static string GetAudioPath(MixerDefinition mixer, AudioResource audio) =>
         $"audio/{mixer.id}/{audio.directory}/{audio.id}.{audio.extension ?? mixer.defaultExtension}";
-    public override void Preload(IResources resources) {
+    public override void Preload() {
         foreach((MixerDefinition mixerDefinition, AudioResource[] audioResources) in sounds)
             foreach(AudioResource audioResource in audioResources)
-                AddPath(resources, audioResource.id, GetAudioPath(mixerDefinition, audioResource));
+                AddPath(audioResource.id, GetAudioPath(mixerDefinition, audioResource));
     }
 
     public override void Load(string id) {

@@ -10,9 +10,9 @@ public class FontResource : Resource {
 
     public Font? font { get; private set; }
 
-    public override void Preload(IResources resources) {
-        AddPath(resources, "image", "graphics/font/font.qoi");
-        AddPath(resources, "mappings", "graphics/font/mappings.txt");
+    public override void Preload() {
+        AddPath("image", "graphics/font/font.qoi");
+        AddPath("mappings", "graphics/font/mappings.txt");
     }
 
     public override void Load(string id) {

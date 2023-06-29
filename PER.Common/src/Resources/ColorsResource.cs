@@ -13,8 +13,8 @@ public class ColorsResource : JsonResource<IDictionary<string, (string?, Color)>
 
     public Dictionary<string, Color> colors { get; } = new();
 
-    public override void Preload(IResources resources) {
-        AddPath(resources, "colors", "graphics/colors.json");
+    public override void Preload() {
+        AddPath( "colors", "graphics/colors.json");
     }
 
     public override void Load(string id) {

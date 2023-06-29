@@ -194,10 +194,10 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     protected IEnumerable<KeyValuePair<string, Element>> elements => _elements;
     private Dictionary<string, Element> _elements = new();
 
-    public override void Preload(IResources resources) {
+    public override void Preload() {
         _elementTypes.Clear();
-        AddDependency<ColorsResource>(resources, ColorsResource.GlobalId);
-        AddPath(resources, "layout", $"{layoutsPath}/{layoutName}.json");
+        AddDependency<ColorsResource>(ColorsResource.GlobalId);
+        AddPath("layout", $"{layoutsPath}/{layoutName}.json");
     }
 
     public override void Load(string id) {
@@ -241,8 +241,8 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
 
     public override void Unload(string id) => _elements.Clear();
 
-    protected void AddElement<T>(IResources resources, string id) where T : Element {
-        if(!resources.loading)
+    protected void AddElement<T>(string id) where T : Element {
+        if(IResources.current is null || !IResources.current.loading)
             throw new InvalidOperationException("Cannot add elements while resources are not loading");
         if(_elementTypes.ContainsKey(id))
             throw new InvalidOperationException($"Element with ID {id} already registered.");

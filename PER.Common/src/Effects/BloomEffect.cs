@@ -16,10 +16,10 @@ public class BloomEffect : Resource, IEffect {
     public bool hasModifiers => false;
     public bool drawable => false;
 
-    public override void Preload(IResources resources) {
-        AddPath(resources, "vertex", "graphics/shaders/default_vert.glsl");
-        AddPath(resources, "fragment", "graphics/shaders/bloom_frag.glsl");
-        AddPath(resources, "blend", "graphics/shaders/bloom-blend_frag.glsl");
+    public override void Preload() {
+        AddPath("vertex", "graphics/shaders/default_vert.glsl");
+        AddPath("fragment", "graphics/shaders/bloom_frag.glsl");
+        AddPath("blend", "graphics/shaders/bloom-blend_frag.glsl");
     }
 
     public override void Load(string id) {

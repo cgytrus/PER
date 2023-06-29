@@ -12,8 +12,8 @@ public class DialogBoxPaletteResource : Resource {
     // ReSharper disable once MemberCanBePrivate.Global
     public string palette { get; private set; } = "                ";
 
-    public override void Preload(IResources resources) {
-        AddPath(resources, "palette", "layouts/dialogBox.txt");
+    public override void Preload() {
+        AddPath("palette", "layouts/dialogBox.txt");
     }
 
     public override void Load(string id) {

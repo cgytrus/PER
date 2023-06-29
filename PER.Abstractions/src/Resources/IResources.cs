@@ -7,6 +7,8 @@ namespace PER.Abstractions.Resources;
 
 [PublicAPI]
 public interface IResources {
+    public static IResources? current { get; protected set; }
+
     public int currentVersion { get; }
     public bool loaded { get; }
     public bool loading { get; }

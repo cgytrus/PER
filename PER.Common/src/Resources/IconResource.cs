@@ -10,8 +10,8 @@ public class IconResource : Resource {
 
     public string? icon { get; private set; }
 
-    public override void Preload(IResources resources) {
-        AddPath(resources, "icon", "graphics/icon.png");
+    public override void Preload() {
+        AddPath( "icon", "graphics/icon.png");
     }
 
     public override void Load(string id) {

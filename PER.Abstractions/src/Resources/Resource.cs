@@ -22,7 +22,7 @@ public abstract class Resource {
         return builder.ToString().GetHashCode();
     }
 
-    public abstract void Preload(IResources resources);
+    public abstract void Preload();
     public abstract void Load(string id);
     public abstract void Unload(string id);
 
@@ -33,24 +33,24 @@ public abstract class Resource {
 
     public bool HasDependency(string id) => _dependencies.ContainsKey(id);
 
-    protected void AddDependency<T>(IResources resources, string id) {
-        if(!resources.loading)
+    protected void AddDependency<T>(string id) {
+        if(IResources.current is null || !IResources.current.loading)
             throw new InvalidOperationException("Cannot add dependencies while resources are not loading");
         if(_dependencies.ContainsKey(id))
             throw new InvalidOperationException($"Dependency {id} already registered.");
-        if(!resources.TryGetResource(id, out Resource? dependency))
+        if(!IResources.current.TryGetResource(id, out Resource? dependency))
             throw new InvalidOperationException($"Resource {id} does not exist.");
         if(dependency is not T)
             throw new InvalidOperationException($"Resource {id} is not {typeof(T).Name}.");
         _dependencies.Add(id, dependency);
     }
 
-    protected void AddPath(IResources resources, string id, string path) {
-        if(!resources.loading)
+    protected void AddPath(string id, string path) {
+        if(IResources.current is null || !IResources.current.loading)
             throw new InvalidOperationException("Cannot add paths while resources are not loading");
         if(_fullPaths.ContainsKey(id))
             throw new InvalidOperationException($"File with ID {id} already registered.");
-        _fullPaths.Add(id, resources.GetAllPaths(Path.Combine(path.Split('/'))));
+        _fullPaths.Add(id, IResources.current.GetAllPaths(Path.Combine(path.Split('/'))));
     }
 
     protected Resource GetDependency(string id) {
