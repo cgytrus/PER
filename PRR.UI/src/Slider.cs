@@ -6,10 +6,14 @@ using PER.Abstractions.Rendering;
 using PER.Abstractions.UI;
 using PER.Util;
 
+using PRR.UI.Resources;
+
 namespace PRR.UI;
 
 [PublicAPI]
 public class Slider : ClickableElement {
+    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceSlider);
+
     protected override string type => "slider";
 
     public const string ValueChangedSoundId = "slider";

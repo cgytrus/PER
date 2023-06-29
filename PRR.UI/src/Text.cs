@@ -4,10 +4,14 @@ using PER.Abstractions.Rendering;
 using PER.Abstractions.UI;
 using PER.Util;
 
+using PRR.UI.Resources;
+
 namespace PRR.UI;
 
 [PublicAPI]
 public class Text : Element {
+    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceText);
+
     public string? text { get; set; }
     public Dictionary<char, Formatting> formatting { get; set; } = new();
     public HorizontalAlignment align { get; set; } = HorizontalAlignment.Left;

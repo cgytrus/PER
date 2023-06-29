@@ -18,7 +18,7 @@ namespace PRR.UI.Resources;
 [PublicAPI]
 public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutResourceElement>> {
     [PublicAPI]
-    protected readonly record struct TextFormatting(string? foregroundColor, string? backgroundColor, RenderStyle? style,
+    public readonly record struct TextFormatting(string? foregroundColor, string? backgroundColor, RenderStyle? style,
         RenderOptions? options, string? effect = null) {
         public Formatting GetFormatting(Dictionary<string, Color> colors, Dictionary<string, IEffect?> effects) {
             Color foregroundColor = Color.white;
@@ -37,7 +37,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         }
     }
     [PublicAPI]
-    protected record LayoutResourceText(bool? enabled, Vector2Int position, Vector2Int size, string? text,
+    public record LayoutResourceText(bool? enabled, Vector2Int position, Vector2Int size, string? text,
         Dictionary<char, TextFormatting>? formatting, HorizontalAlignment? align, bool? wrap) :
         LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
@@ -61,7 +61,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         }
     }
     [PublicAPI]
-    protected record LayoutResourceButton(bool? enabled, Vector2Int position, Vector2Int size, string? text,
+    public record LayoutResourceButton(bool? enabled, Vector2Int position, Vector2Int size, string? text,
         RenderStyle? style, bool? active, bool? toggled) : LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
@@ -79,7 +79,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         }
     }
     [PublicAPI]
-    protected record LayoutResourceInputField(bool? enabled, Vector2Int position, Vector2Int size, string? value,
+    public record LayoutResourceInputField(bool? enabled, Vector2Int position, Vector2Int size, string? value,
         string? placeholder, bool? wrap, int? cursor, float? blinkRate, RenderStyle? style, bool? active) : LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
@@ -100,7 +100,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         }
     }
     [PublicAPI]
-    protected record LayoutResourceSlider(bool? enabled, Vector2Int position, Vector2Int size, int? width, float? value,
+    public record LayoutResourceSlider(bool? enabled, Vector2Int position, Vector2Int size, int? width, float? value,
         float? minValue, float? maxValue, bool? active) : LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
@@ -119,7 +119,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         }
     }
     [PublicAPI]
-    protected record LayoutResourceProgressBar(bool? enabled, Vector2Int position, Vector2Int size, float? value) :
+    public record LayoutResourceProgressBar(bool? enabled, Vector2Int position, Vector2Int size, float? value) :
         LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
@@ -134,7 +134,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         }
     }
     [PublicAPI]
-    protected record LayoutResourceFilledPanel(bool? enabled, Vector2Int position, Vector2Int size, char? character,
+    public record LayoutResourceFilledPanel(bool? enabled, Vector2Int position, Vector2Int size, char? character,
         RenderStyle? style) : LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
@@ -150,7 +150,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         }
     }
     [PublicAPI]
-    protected record LayoutResourceScrollablePanel(bool? enabled, Vector2Int position, Vector2Int size) :
+    public record LayoutResourceScrollablePanel(bool? enabled, Vector2Int position, Vector2Int size) :
         LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
@@ -164,7 +164,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         }
     }
     [PublicAPI]
-    protected record LayoutResourceListBox<TItem>(bool? enabled, Vector2Int position, Vector2Int size, string template) :
+    public record LayoutResourceListBox<TItem>(bool? enabled, Vector2Int position, Vector2Int size, string template) :
         LayoutResourceScrollablePanel(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
@@ -227,9 +227,11 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         if(layout is null)
             return;
 
-        foreach((string elementId, Type type) in _elementTypes) {
+        foreach((string elementId, Type elementType) in _elementTypes) {
             if(!layout.TryGetValue(elementId, out JsonElement jsonElement))
                 throw new InvalidOperationException($"Element {elementId} is missing.");
+            if(elementType.GetField("serializedType")?.GetValue(null) is not Type type)
+                throw new InvalidOperationException($"Failed to deserialize {elementId}.");
             if(jsonElement.Deserialize(type) is not LayoutResourceElement layoutElement)
                 throw new InvalidOperationException($"Failed to deserialize {elementId} as {type.Name}.");
             if(!deserialized.ContainsKey(elementId))
@@ -239,7 +241,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
 
     public override void Unload(string id) => _elements.Clear();
 
-    protected void AddElement<T>(IResources resources, string id) where T : LayoutResourceElement {
+    protected void AddElement<T>(IResources resources, string id) where T : Element {
         if(!resources.loading)
             throw new InvalidOperationException("Cannot add elements while resources are not loading");
         if(_elementTypes.ContainsKey(id))

@@ -34,9 +34,9 @@ public class ResourcePackSelectorTemplate : ListBoxTemplateResource<ResourcePack
 
     public override void Preload(IResources resources) {
         base.Preload(resources);
-        AddElement<LayoutResourceButton>(resources, "toggle");
-        AddElement<LayoutResourceButton>(resources, "up");
-        AddElement<LayoutResourceButton>(resources, "down");
+        AddElement<Button>(resources, "toggle");
+        AddElement<Button>(resources, "up");
+        AddElement<Button>(resources, "down");
     }
 
     private class Template : BasicTemplate {

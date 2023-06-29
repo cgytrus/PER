@@ -51,22 +51,22 @@ public class GameScreen : LayoutResource, IScreen {
         base.Preload(resources);
         AddDependency<ResourcePackSelectorTemplate>(resources, ResourcePackSelectorTemplate.GlobalId);
 
-        AddElement<LayoutResourceFilledPanel>(resources, "testPanel");
-        AddElement<LayoutResourceText>(resources, "testText");
-        AddElement<LayoutResourceButton>(resources, "testButton1");
-        AddElement<LayoutResourceButton>(resources, "testButton2");
-        AddElement<LayoutResourceButton>(resources, "testButton3");
-        AddElement<LayoutResourceButton>(resources, "testButton4");
-        AddElement<LayoutResourceButton>(resources, "testButton5");
-        AddElement<LayoutResourceButton>(resources, "testButton6");
-        AddElement<LayoutResourceText>(resources, "testSliderText");
-        AddElement<LayoutResourceSlider>(resources, "testSlider");
-        AddElement<LayoutResourceListBox<ResourcePackData>>(resources, "packs");
-        AddElement<LayoutResourceButton>(resources, "packsButton");
-        AddElement<LayoutResourceButton>(resources, "applyButton");
-        AddElement<LayoutResourceButton>(resources, "reloadButton");
-        AddElement<LayoutResourceProgressBar>(resources, "testProgressBar");
-        AddElement<LayoutResourceInputField>(resources, "testInputField");
+        AddElement<FilledPanel>(resources, "testPanel");
+        AddElement<Text>(resources, "testText");
+        AddElement<Button>(resources, "testButton1");
+        AddElement<Button>(resources, "testButton2");
+        AddElement<Button>(resources, "testButton3");
+        AddElement<Button>(resources, "testButton4");
+        AddElement<Button>(resources, "testButton5");
+        AddElement<Button>(resources, "testButton6");
+        AddElement<Text>(resources, "testSliderText");
+        AddElement<Slider>(resources, "testSlider");
+        AddElement<ListBox<ResourcePackData>>(resources, "packs");
+        AddElement<Button>(resources, "packsButton");
+        AddElement<Button>(resources, "applyButton");
+        AddElement<Button>(resources, "reloadButton");
+        AddElement<ProgressBar>(resources, "testProgressBar");
+        AddElement<InputField>(resources, "testInputField");
     }
 
     public override void Load(string id) {

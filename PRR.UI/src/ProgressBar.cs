@@ -4,10 +4,14 @@ using PER.Abstractions.Rendering;
 using PER.Abstractions.UI;
 using PER.Util;
 
+using PRR.UI.Resources;
+
 namespace PRR.UI;
 
 [PublicAPI]
 public class ProgressBar : Element {
+    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceProgressBar);
+
     private struct AnimatedCharacter {
         private float speed { get; set; }
         private TimeSpan startTime { get; set; }

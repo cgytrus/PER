@@ -4,10 +4,14 @@ using PER.Abstractions.Rendering;
 using PER.Abstractions.UI;
 using PER.Util;
 
+using PRR.UI.Resources;
+
 namespace PRR.UI;
 
 [PublicAPI]
 public class FilledPanel : Element {
+    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceFilledPanel);
+
     public char character { get; set; } = '\0';
     public Color foregroundColor { get; set; } = Color.white;
     public Color backgroundColor { get; set; } = Color.transparent;

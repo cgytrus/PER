@@ -5,6 +5,8 @@ using PER.Abstractions.Rendering;
 using PER.Abstractions.UI;
 using PER.Util;
 
+using PRR.UI.Resources;
+
 namespace PRR.UI;
 
 public interface IListBoxTemplateFactory<TItem> {
@@ -21,6 +23,8 @@ public interface IListBoxTemplateFactory<TItem> {
 
 [PublicAPI]
 public class ListBox<TItem> : ScrollablePanel {
+    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceListBox<TItem>);
+
     public IReadOnlyList<TItem> items => _items;
 
     public TItem this[int i] => items[i];
