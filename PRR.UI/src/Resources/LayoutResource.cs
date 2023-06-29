@@ -18,8 +18,9 @@ namespace PRR.UI.Resources;
 [PublicAPI]
 public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutResourceElement>> {
     [PublicAPI]
-    public readonly record struct TextFormatting(string? foregroundColor, string? backgroundColor, RenderStyle? style,
-        RenderOptions? options, string? effect = null) {
+    public readonly record struct TextFormatting(string? foregroundColor, string? backgroundColor,
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style,
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderOptions? options, string? effect = null) {
         public Formatting GetFormatting(Dictionary<string, Color> colors, Dictionary<string, IEffect?> effects) {
             Color foregroundColor = Color.white;
             Color backgroundColor = Color.transparent;
@@ -38,7 +39,8 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     }
     [PublicAPI]
     public record LayoutResourceText(bool? enabled, Vector2Int position, Vector2Int size, string? text,
-        Dictionary<char, TextFormatting>? formatting, HorizontalAlignment? align, bool? wrap) :
+        Dictionary<char, TextFormatting>? formatting,
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] HorizontalAlignment? align, bool? wrap) :
         LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
@@ -62,7 +64,8 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     }
     [PublicAPI]
     public record LayoutResourceButton(bool? enabled, Vector2Int position, Vector2Int size, string? text,
-        RenderStyle? style, bool? active, bool? toggled) : LayoutResourceElement(enabled, position, size) {
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style, bool? active, bool? toggled) :
+        LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
             Button element = new(renderer, input, audio) {
@@ -80,7 +83,9 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     }
     [PublicAPI]
     public record LayoutResourceInputField(bool? enabled, Vector2Int position, Vector2Int size, string? value,
-        string? placeholder, bool? wrap, int? cursor, float? blinkRate, RenderStyle? style, bool? active) : LayoutResourceElement(enabled, position, size) {
+        string? placeholder, bool? wrap, int? cursor, float? blinkRate,
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style, bool? active) :
+        LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
             InputField element = new(renderer, input, audio) {
@@ -135,7 +140,8 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     }
     [PublicAPI]
     public record LayoutResourceFilledPanel(bool? enabled, Vector2Int position, Vector2Int size, char? character,
-        RenderStyle? style) : LayoutResourceElement(enabled, position, size) {
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style) :
+        LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
             Dictionary<string, Color> colors, string layoutName, string id) {
             FilledPanel element = new(renderer) {
