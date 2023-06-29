@@ -116,8 +116,9 @@ public abstract class ScreenGame : IGame {
         finalFps[fpsLength++] = '\f';
         finalFps[fpsLength++] = '\0';
         finalFps[fpsLength++] = ' ';
-        finalFps[fpsLength++] = 'm';
-        finalFps[fpsLength++] = 's';
+        finalFps[fpsLength++] = 'F';
+        finalFps[fpsLength++] = 'P';
+        finalFps[fpsLength++] = 'S';
 
         renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 2),
             finalFrameTime[..frameTimeLength], _frameTimeFormatter, HorizontalAlignment.Right);
