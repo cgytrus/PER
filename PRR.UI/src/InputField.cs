@@ -25,9 +25,9 @@ public class InputField : ClickableElement {
         set {
             base.enabled = value;
             if(typing)
-                StartTyping();
+                StartTypingInternal();
             else
-                StopTyping(false);
+                StopTypingInternal(false);
         }
     }
 
@@ -36,9 +36,9 @@ public class InputField : ClickableElement {
         set {
             base.active = value;
             if(typing)
-                StartTyping();
+                StartTypingInternal();
             else
-                StopTyping(false);
+                StopTypingInternal(false);
         }
     }
 
@@ -128,10 +128,22 @@ public class InputField : ClickableElement {
         if(!input.KeyPressed(KeyCode.Enter) && !input.KeyPressed(KeyCode.Escape) &&
             (currentState == State.Clicked || !input.MouseButtonPressed(MouseButton.Left)))
             return;
-        StopTyping(input.KeyPressed(KeyCode.Enter));
+        StopTypingInternal(input.KeyPressed(KeyCode.Enter));
     }
 
-    private void StartTyping() {
+    public void StartTyping() {
+        if(!enabled || !active)
+            return;
+        Click();
+    }
+
+    public void StopTyping(bool submit) {
+        if(!enabled || !active)
+            return;
+        StopTypingInternal(submit);
+    }
+
+    private void StartTypingInternal() {
         toggledSelf = true;
         input.keyDown -= KeyDown;
         input.keyDown += KeyDown;
@@ -142,7 +154,7 @@ public class InputField : ClickableElement {
         onStartTyping?.Invoke(this, EventArgs.Empty);
     }
 
-    private void StopTyping(bool submit) {
+    private void StopTypingInternal(bool submit) {
         toggledSelf = false;
         input.keyDown -= KeyDown;
         input.textEntered -= Type;
@@ -196,7 +208,7 @@ public class InputField : ClickableElement {
 
     protected override void Click() {
         base.Click();
-        StartTyping();
+        StartTypingInternal();
     }
 
     private void KeyDown(object? called, IInput.KeyDownEventArgs args) {
