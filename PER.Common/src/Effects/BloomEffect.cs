@@ -12,15 +12,15 @@ namespace PER.Common.Effects;
 public class BloomEffect : Resource, IEffect {
     public const string GlobalId = "graphics/effects/bloom";
 
-    protected override IEnumerable<KeyValuePair<string, string>> paths { get; } = new Dictionary<string, string> {
-        { "vertex", "graphics/shaders/default_vert.glsl" },
-        { "fragment", "graphics/shaders/bloom_frag.glsl" },
-        { "blend", "graphics/shaders/bloom-blend_frag.glsl" }
-    };
-
     public IEnumerable<PipelineStep>? pipeline { get; private set; }
     public bool hasModifiers => false;
     public bool drawable => false;
+
+    public override void Preload(IResources resources) {
+        AddPath(resources, "vertex", "graphics/shaders/default_vert.glsl");
+        AddPath(resources, "fragment", "graphics/shaders/bloom_frag.glsl");
+        AddPath(resources, "blend", "graphics/shaders/bloom-blend_frag.glsl");
+    }
 
     public override void Load(string id) {
         string vertexPath = GetPath("vertex");

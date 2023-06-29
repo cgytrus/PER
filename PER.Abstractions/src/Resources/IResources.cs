@@ -9,6 +9,7 @@ namespace PER.Abstractions.Resources;
 public interface IResources {
     public int currentVersion { get; }
     public bool loaded { get; }
+    public bool loading { get; }
     public IReadOnlyList<ResourcePackData> loadedPacks { get; }
     public string defaultPackName { get; }
 

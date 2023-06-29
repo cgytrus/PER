@@ -8,11 +8,11 @@ namespace PER.Common.Resources;
 public class IconResource : Resource {
     public const string GlobalId = "graphics/icon";
 
-    protected override IEnumerable<KeyValuePair<string, string>> paths { get; } = new Dictionary<string, string> {
-        { "icon", "graphics/icon.png" }
-    };
-
     public string? icon { get; private set; }
+
+    public override void Preload(IResources resources) {
+        AddPath(resources, "icon", "graphics/icon.png");
+    }
 
     public override void Load(string id) {
         if(TryGetPath("icon", out string? icon))

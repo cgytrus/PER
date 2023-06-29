@@ -27,33 +27,6 @@ public class GameScreen : LayoutResource, IScreen {
     protected override IAudio audio => Core.engine.audio;
 
     protected override string layoutName => "game";
-    protected override IReadOnlyDictionary<string, Type> elementTypes { get; } = new Dictionary<string, Type> {
-        { "testPanel", typeof(LayoutResourceFilledPanel) },
-        { "testText", typeof(LayoutResourceText) },
-        { "testButton1", typeof(LayoutResourceButton) },
-        { "testButton2", typeof(LayoutResourceButton) },
-        { "testButton3", typeof(LayoutResourceButton) },
-        { "testButton4", typeof(LayoutResourceButton) },
-        { "testButton5", typeof(LayoutResourceButton) },
-        { "testButton6", typeof(LayoutResourceButton) },
-        { "testSliderText", typeof(LayoutResourceText) },
-        { "testSlider", typeof(LayoutResourceSlider) },
-        { "packs", typeof(LayoutResourceListBox<ResourcePackData>) },
-        { "packsButton", typeof(LayoutResourceButton) },
-        { "applyButton", typeof(LayoutResourceButton) },
-        { "reloadButton", typeof(LayoutResourceButton) },
-        { "testProgressBar", typeof(LayoutResourceProgressBar) },
-        { "testInputField", typeof(LayoutResourceInputField) }
-    };
-
-    protected override IEnumerable<KeyValuePair<string, Type>> dependencyTypes {
-        get {
-            foreach(KeyValuePair<string, Type> pair in base.dependencyTypes)
-                yield return pair;
-            yield return new KeyValuePair<string, Type>(ResourcePackSelectorTemplate.GlobalId,
-                typeof(ResourcePackSelectorTemplate));
-        }
-    }
 
     private readonly Settings _settings;
 
@@ -74,6 +47,28 @@ public class GameScreen : LayoutResource, IScreen {
             new ResourcePackSelectorTemplate(this, _availablePacks, _loadedPacks));
     }
 
+    public override void Preload(IResources resources) {
+        base.Preload(resources);
+        AddDependency<ResourcePackSelectorTemplate>(resources, ResourcePackSelectorTemplate.GlobalId);
+
+        AddElement<LayoutResourceFilledPanel>(resources, "testPanel");
+        AddElement<LayoutResourceText>(resources, "testText");
+        AddElement<LayoutResourceButton>(resources, "testButton1");
+        AddElement<LayoutResourceButton>(resources, "testButton2");
+        AddElement<LayoutResourceButton>(resources, "testButton3");
+        AddElement<LayoutResourceButton>(resources, "testButton4");
+        AddElement<LayoutResourceButton>(resources, "testButton5");
+        AddElement<LayoutResourceButton>(resources, "testButton6");
+        AddElement<LayoutResourceText>(resources, "testSliderText");
+        AddElement<LayoutResourceSlider>(resources, "testSlider");
+        AddElement<LayoutResourceListBox<ResourcePackData>>(resources, "packs");
+        AddElement<LayoutResourceButton>(resources, "packsButton");
+        AddElement<LayoutResourceButton>(resources, "applyButton");
+        AddElement<LayoutResourceButton>(resources, "reloadButton");
+        AddElement<LayoutResourceProgressBar>(resources, "testProgressBar");
+        AddElement<LayoutResourceInputField>(resources, "testInputField");
+    }
+
     public override void Load(string id) {
         base.Load(id);
 
@@ -81,28 +76,30 @@ public class GameScreen : LayoutResource, IScreen {
 
         for(int y = -20; y <= 20; y++) {
             for(int x = -20; x <= 20; x++) {
-                _level.Add(new FloorObject { position = new Vector2Int(x, y) });
+                _level.Add(new FloorObject { layer = -1, position = new Vector2Int(x, y) });
             }
         }
 
         _level.Add(new PlayerObject());
 
         for(int i = -5; i <= 5; i++) {
-            _level.Add(new WallObject { position = new Vector2Int(i, -5) });
+            _level.Add(new WallObject { layer = 1, position = new Vector2Int(i, -5) });
         }
         for(int i = 0; i < 100; i++) {
-            _level.Add(new WallObject { position = new Vector2Int(i, -8) });
+            _level.Add(new WallObject { layer = 1, position = new Vector2Int(i, -8) });
         }
         for(int i = 0; i < 30; i++) {
-            _level.Add(new WallObject { position = new Vector2Int(8, i - 7) });
+            _level.Add(new WallObject { layer = 1, position = new Vector2Int(8, i - 7) });
         }
 
         _level.Add(new EffectObject {
+            layer = 2,
             position = new Vector2Int(3, -10),
             size = new Vector2Int(10, 10),
             effect = renderer.formattingEffects["glitch"]
         });
         _level.Add(new EffectObject {
+            layer = 2,
             position = new Vector2Int(-12, -24),
             size = new Vector2Int(6, 9),
             effect = renderer.formattingEffects["glitch"]

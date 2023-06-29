@@ -16,13 +16,12 @@ public class ResourcesManager : IResources {
 
     public int currentVersion => 0;
     public bool loaded { get; private set; }
+    public bool loading { get; private set; }
     public IReadOnlyList<ResourcePackData> loadedPacks => _loadedPacks;
     public virtual string defaultPackName => "Default";
     protected virtual string resourcesRoot => "resources";
     protected virtual string resourcePackMeta => "metadata.json";
     protected virtual string resourcesInPack => "resources";
-
-    private bool _loading;
 
     private readonly List<ResourcePackData> _loadedPacks = new();
     private readonly List<ResourcePackData> _futureLoadedPacks = new();
@@ -30,11 +29,11 @@ public class ResourcesManager : IResources {
     private readonly Dictionary<string, int> _resourcePathHashes = new();
 
     public void Load() {
-        if(_loading)
+        if(loading)
             throw new InvalidOperationException("Already loading.");
         if(loaded)
             return;
-        _loading = true;
+        loading = true;
 
         logger.Info("Loading resources");
 
@@ -43,13 +42,12 @@ public class ResourcesManager : IResources {
 
         foreach((string id, Resource resource) in _resources) {
             logger.Info("Loading resource {Id}", id);
-            resource.ResolveDependencies(this);
-            resource.ResolvePaths(this);
+            resource.Preload(this);
             resource.Load(id);
             _resourcePathHashes.Add(id, resource.GetPathsHash());
         }
 
-        _loading = false;
+        loading = false;
         loaded = true;
 
         logger.Info("Resources loaded");
@@ -64,6 +62,7 @@ public class ResourcesManager : IResources {
         foreach((string id, Resource resource) in _resources) {
             logger.Info("Unloading resource {Id}", id);
             resource.Unload(id);
+            resource.PostUnload();
         }
 
         _loadedPacks.Clear();
@@ -77,11 +76,11 @@ public class ResourcesManager : IResources {
     }
 
     public void SoftReload() {
-        if(_loading)
+        if(loading)
             throw new InvalidOperationException("Already loading.");
         if(!loaded)
             return;
-        _loading = true;
+        loading = true;
 
         logger.Info("Reloading resources");
 
@@ -110,13 +109,13 @@ public class ResourcesManager : IResources {
 
             logger.Info("Reloading resource {Id}", id);
             resource.Unload(id);
-            resource.ResolveDependencies(this);
-            resource.ResolvePaths(this);
+            resource.PostUnload();
+            resource.Preload(this);
             resource.Load(id);
             _resourcePathHashes[id] = hash;
         }
 
-        _loading = false;
+        loading = false;
 
         logger.Info("Resources reloaded");
     }
@@ -169,7 +168,7 @@ public class ResourcesManager : IResources {
     }
 
     public bool TryAddPack(ResourcePackData data) {
-        if(_loading)
+        if(loading)
             return false;
         _futureLoadedPacks.Add(data);
         logger.Info("Enabled pack {Name}", data.name);
@@ -189,7 +188,7 @@ public class ResourcesManager : IResources {
     }
 
     public bool TryRemovePack(ResourcePackData data) {
-        if(_loading || !_futureLoadedPacks.Remove(data))
+        if(loading || !_futureLoadedPacks.Remove(data))
             return false;
         logger.Info("Disabled pack {Name}", data.name);
         return true;
@@ -201,7 +200,7 @@ public class ResourcesManager : IResources {
         !loaded && _resources.TryAdd(id, resource);
 
     public IEnumerable<string> GetAllPaths(string relativePath) {
-        if(!loaded && !_loading)
+        if(!loaded && !loading)
             yield break;
 
         for(int i = loadedPacks.Count - 1; i >= 0; i--) {

@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 using JetBrains.Annotations;
 
@@ -12,11 +11,11 @@ namespace PER.Common.Resources;
 public class ColorsResource : JsonResource<IDictionary<string, (string?, Color)>> {
     public const string GlobalId = "graphics/colors";
 
-    protected override IEnumerable<KeyValuePair<string, string>> paths { get; } = new Dictionary<string, string> {
-        { "colors", "graphics/colors.json" }
-    };
-
     public Dictionary<string, Color> colors { get; } = new();
+
+    public override void Preload(IResources resources) {
+        AddPath(resources, "colors", "graphics/colors.json");
+    }
 
     public override void Load(string id) {
         Dictionary<string, (string?, Color)> tempValues = new();

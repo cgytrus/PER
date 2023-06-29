@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -12,35 +11,8 @@ namespace PER.Abstractions.Resources;
 
 [PublicAPI]
 public abstract class Resource {
-    protected virtual IEnumerable<KeyValuePair<string, Type>> dependencyTypes =>
-        ImmutableDictionary<string, Type>.Empty;
-
-    protected virtual IEnumerable<KeyValuePair<string, string>> paths => ImmutableDictionary<string, string>.Empty;
-
     private Dictionary<string, Resource> _dependencies = new();
     private Dictionary<string, IEnumerable<string>> _fullPaths = new();
-
-    public void ResolveDependencies(IResources resources) {
-        _dependencies.Clear();
-        foreach((string id, Type type) in dependencyTypes) {
-            if(_dependencies.ContainsKey(id))
-                throw new InvalidOperationException($"Dependency {id} already registered.");
-            if(!resources.TryGetResource(id, out Resource? dependency))
-                throw new InvalidOperationException($"Resource {id} does not exist.");
-            if(dependency.GetType() != type)
-                throw new InvalidOperationException($"Resource {id} is not {type}.");
-            _dependencies.Add(id, dependency);
-        }
-    }
-
-    public void ResolvePaths(IResources resources) {
-        _fullPaths.Clear();
-        foreach((string id, string path) in paths) {
-            if(_fullPaths.ContainsKey(id))
-                throw new InvalidOperationException($"File with ID {id} already registered.");
-            _fullPaths.Add(id, resources.GetAllPaths(Path.Combine(path.Split('/'))));
-        }
-    }
 
     public int GetPathsHash() {
         StringBuilder builder = new();
@@ -50,10 +22,36 @@ public abstract class Resource {
         return builder.ToString().GetHashCode();
     }
 
+    public abstract void Preload(IResources resources);
     public abstract void Load(string id);
     public abstract void Unload(string id);
 
+    public void PostUnload() {
+        _dependencies.Clear();
+        _fullPaths.Clear();
+    }
+
     public bool HasDependency(string id) => _dependencies.ContainsKey(id);
+
+    protected void AddDependency<T>(IResources resources, string id) {
+        if(!resources.loading)
+            throw new InvalidOperationException("Cannot add dependencies while resources are not loading");
+        if(_dependencies.ContainsKey(id))
+            throw new InvalidOperationException($"Dependency {id} already registered.");
+        if(!resources.TryGetResource(id, out Resource? dependency))
+            throw new InvalidOperationException($"Resource {id} does not exist.");
+        if(dependency is not T)
+            throw new InvalidOperationException($"Resource {id} is not {typeof(T).Name}.");
+        _dependencies.Add(id, dependency);
+    }
+
+    protected void AddPath(IResources resources, string id, string path) {
+        if(!resources.loading)
+            throw new InvalidOperationException("Cannot add paths while resources are not loading");
+        if(_fullPaths.ContainsKey(id))
+            throw new InvalidOperationException($"File with ID {id} already registered.");
+        _fullPaths.Add(id, resources.GetAllPaths(Path.Combine(path.Split('/'))));
+    }
 
     protected Resource GetDependency(string id) {
         if(!_dependencies.TryGetValue(id, out Resource? dependency))

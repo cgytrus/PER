@@ -9,12 +9,12 @@ namespace PRR.UI.Resources;
 public class DialogBoxPaletteResource : Resource {
     public const string GlobalId = "layouts/dialogBoxPalette";
 
-    protected override IEnumerable<KeyValuePair<string, string>> paths { get; } = new Dictionary<string, string> {
-        { "palette", "layouts/dialogBox.txt" }
-    };
-
     // ReSharper disable once MemberCanBePrivate.Global
     public string palette { get; private set; } = "                ";
+
+    public override void Preload(IResources resources) {
+        AddPath(resources, "palette", "layouts/dialogBox.txt");
+    }
 
     public override void Load(string id) {
         if(!TryGetPath("palette", out string? palettePath))

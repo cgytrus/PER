@@ -19,9 +19,13 @@ public abstract class AudioResourcesLoader : Resource {
     protected abstract IAudio audio { get; }
     protected abstract IReadOnlyDictionary<MixerDefinition, AudioResource[]> sounds { get; }
 
-    protected override IEnumerable<KeyValuePair<string, string>> paths => sounds.SelectMany(pair =>
-        pair.Value.Select(resource => new KeyValuePair<string, string>(resource.id,
-            $"audio/{pair.Key.id}/{resource.directory}/{resource.id}.{resource.extension ?? pair.Key.defaultExtension}")));
+    private static string GetAudioPath(MixerDefinition mixer, AudioResource audio) =>
+        $"audio/{mixer.id}/{audio.directory}/{audio.id}.{audio.extension ?? mixer.defaultExtension}";
+    public override void Preload(IResources resources) {
+        foreach((MixerDefinition mixerDefinition, AudioResource[] audioResources) in sounds)
+            foreach(AudioResource audioResource in audioResources)
+                AddPath(resources, audioResource.id, GetAudioPath(mixerDefinition, audioResource));
+    }
 
     public override void Load(string id) {
         IAudioMixer master = audio.CreateMixer();

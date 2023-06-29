@@ -20,11 +20,6 @@ public class ResourcePackSelectorTemplate : ListBoxTemplateResource<ResourcePack
     protected override IInput input => Core.engine.input;
     protected override IAudio audio => Core.engine.audio;
     protected override string layoutName => "resourcePackItem";
-    protected override IReadOnlyDictionary<string, Type> elementTypes { get; } = new Dictionary<string, Type> {
-        { "toggle", typeof(LayoutResourceButton) },
-        { "up", typeof(LayoutResourceButton) },
-        { "down", typeof(LayoutResourceButton) }
-    };
 
     private readonly GameScreen _screen;
     private readonly IList<ResourcePackData> _availablePacks;
@@ -35,6 +30,13 @@ public class ResourcePackSelectorTemplate : ListBoxTemplateResource<ResourcePack
         _screen = screen;
         _availablePacks = availablePacks;
         _loadedPacks = loadedPacks;
+    }
+
+    public override void Preload(IResources resources) {
+        base.Preload(resources);
+        AddElement<LayoutResourceButton>(resources, "toggle");
+        AddElement<LayoutResourceButton>(resources, "up");
+        AddElement<LayoutResourceButton>(resources, "down");
     }
 
     private class Template : BasicTemplate {
