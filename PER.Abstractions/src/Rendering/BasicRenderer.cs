@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
@@ -149,13 +150,15 @@ public abstract class BasicRenderer : IRenderer {
     private void DrawGlobalEffects() {
         foreach(IEffect effect in globalEffects) {
             effect.Update(true);
-            if(!effect.drawable) continue;
+            if(!effect.drawable)
+                continue;
             for(int y = 0; y < height; y++)
                 for(int x = 0; x < width; x++)
                     effect.Draw(new Vector2Int(x, y));
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual void DrawCharacter(Vector2Int position, RenderCharacter character,
         RenderOptions options = RenderOptions.Default, IEffect? effect = null) {
         if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
@@ -169,13 +172,12 @@ public abstract class BasicRenderer : IRenderer {
         if((options & RenderOptions.BackgroundAlphaBlending) != 0) {
             RenderCharacter currentCharacter = GetCharacter(position);
             Color background = currentCharacter.background.Blend(character.background);
-            character = new RenderCharacter(character.character, background, character.foreground, character.style);
+            character = character with { background = background };
         }
 
         if((options & RenderOptions.InvertedBackgroundAsForegroundColor) != 0) {
             RenderCharacter currentCharacter = GetCharacter(position);
-            character = new RenderCharacter(character.character, character.background,
-                Color.white - currentCharacter.background, character.style);
+            character = character with { foreground = Color.white - currentCharacter.background };
         }
 
         if(IsCharacterEmpty(character))
@@ -188,6 +190,7 @@ public abstract class BasicRenderer : IRenderer {
         AddEffect(position, effect);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual void DrawText(Vector2Int position, ReadOnlySpan<char> text, Func<char, Formatting> formatter,
         HorizontalAlignment align = HorizontalAlignment.Left, int maxWidth = 0) {
         if(text.Length == 0) return;
@@ -215,6 +218,7 @@ public abstract class BasicRenderer : IRenderer {
                     break;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
             void DrawCurrent(ReadOnlySpan<char> allText) {
                 int x = GetAlignOffset(align, width);
                 DrawTextCharacter(position, allText, startIndex, x, y, width, formatter, ref formattingFlag);
@@ -225,6 +229,7 @@ public abstract class BasicRenderer : IRenderer {
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private void DrawTextCharacter(Vector2Int position, ReadOnlySpan<char> text, int startIndex, int x, int y,
         int width, Func<char, Formatting> formatter, ref char formattingFlag) {
         for(int i = startIndex; i < startIndex + width; i++) {
@@ -251,6 +256,7 @@ public abstract class BasicRenderer : IRenderer {
         _ => 0
     };
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual RenderCharacter GetCharacter(Vector2Int position) => IsCharacterEmpty(position) ?
         new RenderCharacter('\0', Color.transparent, Color.transparent) : display[position.y, position.x];
 
@@ -260,6 +266,7 @@ public abstract class BasicRenderer : IRenderer {
             globalModEffects.Add(effect);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual void AddEffect(Vector2Int position, IEffect? effect) {
         if(effect is null) {
             effects.Remove(position);
@@ -268,13 +275,16 @@ public abstract class BasicRenderer : IRenderer {
         effects[position] = effect;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual bool IsCharacterEmpty(Vector2Int position) => !displayUsed.Contains(position);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual bool IsCharacterEmpty(RenderCharacter renderCharacter) =>
         renderCharacter.background.a == 0f &&
         (!IsCharacterDrawable(renderCharacter.character, renderCharacter.style) ||
          renderCharacter.foreground.a == 0f);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual bool IsCharacterDrawable(char character, RenderStyle style) =>
         font?.IsCharacterDrawable(character, style & RenderStyle.AllPerFont) ?? false;
 }
