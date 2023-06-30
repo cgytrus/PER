@@ -64,6 +64,7 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     private readonly Vector2Int _chunkSize;
     private readonly Dictionary<Vector2Int, Chunk<TObject>> _chunks = new();
     private readonly Dictionary<Vector2Int, Chunk<TObject>> _newChunks = new();
+    private readonly List<Bounds> _chunksToGenerate = new();
     private readonly Vector2Int _minChunkPos;
     private readonly Vector2Int _maxChunkPos;
 
@@ -174,9 +175,12 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
         foreach((Vector2Int pos, Chunk<TObject> chunk) in _newChunks) {
             _chunks.Add(pos, chunk);
             Vector2Int levelPosition = ChunkToLevelPosition(pos);
-            chunkCreated?.Invoke(new Bounds(levelPosition, levelPosition + _chunkSize - new Vector2Int(1, 1)));
+            _chunksToGenerate.Add(new Bounds(levelPosition, levelPosition + _chunkSize - new Vector2Int(1, 1)));
         }
         _newChunks.Clear();
+        foreach(Bounds bounds in _chunksToGenerate)
+            chunkCreated?.Invoke(bounds);
+        _chunksToGenerate.Clear();
     }
 
     public bool HasObjectAt(Vector2Int position) =>
