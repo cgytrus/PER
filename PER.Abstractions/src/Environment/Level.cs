@@ -88,7 +88,9 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     public void Add(TObject obj) {
         _objects.Add(obj.id, obj);
         GetChunkAt(LevelToChunkPosition(obj.position)).Add(obj);
+        current = this;
         obj.Added();
+        current = null;
         objectAdded?.Invoke(obj);
     }
 
@@ -98,7 +100,9 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
             return;
         _objects.Remove(objId);
         GetChunkAt(LevelToChunkPosition(obj.position)).Remove(obj);
+        current = this;
         obj.Removed();
+        current = null;
         objectRemoved?.Invoke(obj);
     }
 
