@@ -116,7 +116,6 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
         UpdateChunksInBounds(time, cameraChunks);
         CheckDirty();
         DrawChunksInBounds(cameraChunks);
-        CheckDirty();
         current = null;
     }
 
