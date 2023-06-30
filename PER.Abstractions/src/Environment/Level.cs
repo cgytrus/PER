@@ -70,6 +70,7 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     public event Action<TObject>? objectAdded;
     public event Action<TObject>? objectRemoved;
     public event Action<TObject>? objectChanged;
+    public event Action<Bounds>? chunkCreated;
 
     public Level(IRenderer renderer, IInput input, IAudio audio, IResources resources, Vector2Int chunkSize) :
         base(renderer, input, audio, resources) {
@@ -87,7 +88,7 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     public void Add(TObject obj) {
         _objects.Add(obj.id, obj);
         GetChunkAt(LevelToChunkPosition(obj.position)).Add(obj);
-        obj.SetAdded(true);
+        obj.Added();
         objectAdded?.Invoke(obj);
     }
 
@@ -97,7 +98,7 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
             return;
         _objects.Remove(objId);
         GetChunkAt(LevelToChunkPosition(obj.position)).Remove(obj);
-        obj.SetAdded(false);
+        obj.Removed();
         objectRemoved?.Invoke(obj);
     }
 
@@ -127,13 +128,9 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
             for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
                 if(y > _maxChunkPos.y)
                     y = _minChunkPos.y;
-                UpdateChunk(time, new Vector2Int(x, y));
+                GetChunkAt(new Vector2Int(x, y)).Update(time);
             }
         }
-    }
-    private void UpdateChunk(TimeSpan time, Vector2Int pos) {
-        if(_chunks.TryGetValue(pos, out Chunk<TObject>? chunk))
-            chunk.Update(time);
     }
 
     private void DrawChunksInBounds(Bounds bounds) {
@@ -143,13 +140,9 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
             for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
                 if(y > _maxChunkPos.y)
                     y = _minChunkPos.y;
-                DrawChunk(new Vector2Int(x, y));
+                GetChunkAt(new Vector2Int(x, y)).Draw();
             }
         }
-    }
-    private void DrawChunk(Vector2Int pos) {
-        if(_chunks.TryGetValue(pos, out Chunk<TObject>? chunk))
-            chunk.Draw();
     }
 
     private void TickChunks(TimeSpan time) {
@@ -174,8 +167,11 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
             objectChanged?.Invoke(obj);
             obj.ClearDirty();
         }
-        foreach((Vector2Int pos, Chunk<TObject> chunk) in _newChunks)
+        foreach((Vector2Int pos, Chunk<TObject> chunk) in _newChunks) {
             _chunks.Add(pos, chunk);
+            Vector2Int levelPosition = ChunkToLevelPosition(pos);
+            chunkCreated?.Invoke(new Bounds(levelPosition, levelPosition + _chunkSize - new Vector2Int(1, 1)));
+        }
         _newChunks.Clear();
     }
 
@@ -190,6 +186,7 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     public bool TryGetObjectAt<T>(Vector2Int position, [NotNullWhen(true)] out T? ret) where T : TObject =>
         GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, out ret);
 
+    public void CreateChunkAt(Vector2Int chunkPosition) => GetChunkAt(chunkPosition);
     private Chunk<TObject> GetChunkAt(Vector2Int chunkPosition) {
         if(_chunks.TryGetValue(chunkPosition, out Chunk<TObject>? chunk) ||
             _newChunks.TryGetValue(chunkPosition, out chunk))

@@ -21,12 +21,12 @@ public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel :
 
     protected abstract RenderCharacter character { get; }
 
-    protected bool added { get; set; }
+    protected bool inLevel { get; private set; }
 
     public bool dirty {
         get => _dirty;
         protected set {
-            if(!added)
+            if(!inLevel)
                 return;
             _dirty = value;
         }
@@ -37,7 +37,7 @@ public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel :
     public Guid id {
         get => _id;
         set {
-            if(added)
+            if(inLevel)
                 throw new InvalidOperationException();
             _id = value;
         }
@@ -46,7 +46,7 @@ public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel :
     public int layer {
         get => _layer;
         set {
-            if(added)
+            if(inLevel)
                 throw new InvalidOperationException();
             _layer = value;
         }
@@ -56,7 +56,7 @@ public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel :
     public Vector2Int position {
         get => _position;
         set {
-            if(added && _position != value) {
+            if(inLevel && _position != value) {
                 dirty = true;
                 positionDirty = true;
             }
@@ -71,12 +71,14 @@ public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel :
     private int _layer;
     private Vector2Int _position;
 
+    public virtual void Added() => inLevel = true;
+    public virtual void Removed() => inLevel = false;
+
     public virtual void Draw() => renderer.DrawCharacter(level.LevelToScreenPosition(position), character);
 
     public abstract void Update(TimeSpan time);
     public abstract void Tick(TimeSpan time);
 
-    internal void SetAdded(bool value) => added = value;
     internal void ClearDirty() => dirty = false;
 }
 
