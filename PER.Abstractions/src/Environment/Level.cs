@@ -200,8 +200,12 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public Vector2Int LevelToChunkPosition(Vector2Int levelPosition) =>
-        new(levelPosition.x / _chunkSize.x, levelPosition.y / _chunkSize.y);
+    public Vector2Int LevelToChunkPosition(Vector2Int levelPosition) {
+        // all my homies hate negative numbers
+        int x = (int)MathF.Floor(levelPosition.x / (float)_chunkSize.x);
+        int y = (int)MathF.Floor(levelPosition.y / (float)_chunkSize.y);
+        return new Vector2Int(x, y);
+    }
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToChunkPosition(Vector2Int cameraPosition) =>
         LevelToChunkPosition(CameraToLevelPosition(cameraPosition));
