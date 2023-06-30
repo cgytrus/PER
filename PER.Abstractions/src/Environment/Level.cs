@@ -13,6 +13,7 @@ using PER.Util;
 
 namespace PER.Abstractions.Environment;
 
+[PublicAPI]
 public abstract class Level : IUpdatable, ITickable {
     public static Level? current { get; protected set; }
 
@@ -37,8 +38,6 @@ public abstract class Level : IUpdatable, ITickable {
     public abstract void Update(TimeSpan time);
     public abstract void Tick(TimeSpan time);
 
-    public abstract void Sort();
-
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int LevelToCameraPosition(Vector2Int levelPosition) => levelPosition - cameraPosition;
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -61,116 +60,162 @@ public abstract class Level : IUpdatable, ITickable {
 public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> {
     public IReadOnlyDictionary<Guid, TObject> objects => _objects;
     private readonly Dictionary<Guid, TObject> _objects = new();
-    private readonly List<TObject> _orderedObjects = new();
+
+    private readonly Vector2Int _chunkSize;
+    private readonly Dictionary<Vector2Int, Chunk<TObject>> _chunks = new();
+    private readonly Dictionary<Vector2Int, Chunk<TObject>> _newChunks = new();
+    private readonly Vector2Int _minChunkPos;
+    private readonly Vector2Int _maxChunkPos;
 
     public event Action<TObject>? objectAdded;
     public event Action<TObject>? objectRemoved;
     public event Action<TObject>? objectChanged;
 
-    public Level(IRenderer renderer, IInput input, IAudio audio, IResources resources) :
-        base(renderer, input, audio, resources) { }
+    public Level(IRenderer renderer, IInput input, IAudio audio, IResources resources, Vector2Int chunkSize) :
+        base(renderer, input, audio, resources) {
+        _chunkSize = chunkSize;
+        _minChunkPos = LevelToChunkPosition(new Vector2Int(int.MinValue, int.MinValue));
+        _maxChunkPos = LevelToChunkPosition(new Vector2Int(int.MaxValue, int.MaxValue));
+    }
 
     public override void Reset() {
         base.Reset();
         _objects.Clear();
-        _orderedObjects.Clear();
+        _chunks.Clear();
     }
 
     public void Add(TObject obj) {
         _objects.Add(obj.id, obj);
-        _orderedObjects.Add(obj);
-        Sort();
-        obj.added = true;
+        GetChunkAt(LevelToChunkPosition(obj.position)).Add(obj);
+        obj.SetAdded(true);
         objectAdded?.Invoke(obj);
     }
 
+    public void Remove(TObject obj) => Remove(obj.id);
     public void Remove(Guid objId) {
         if(!_objects.TryGetValue(objId, out TObject? obj))
             return;
         _objects.Remove(objId);
-        _orderedObjects.Remove(obj);
-        objectRemoved?.Invoke(obj);
-    }
-
-    public void Remove(TObject obj) {
-        _objects.Remove(obj.id);
-        _orderedObjects.Remove(obj);
+        GetChunkAt(LevelToChunkPosition(obj.position)).Remove(obj);
+        obj.SetAdded(false);
         objectRemoved?.Invoke(obj);
     }
 
     public override void Update(TimeSpan time) {
         current = this;
-        foreach(TObject obj in _objects.Values)
-            obj.Update(time);
-        foreach(TObject obj in _orderedObjects)
-            obj.Draw();
-        CheckDirtyObjects();
+        Bounds cameraChunks = new(
+            ScreenToChunkPosition(new Vector2Int(0, 0)),
+            ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1))
+        );
+        UpdateChunksInBounds(time, cameraChunks);
+        DrawChunksInBounds(cameraChunks);
+        CheckDirty();
         current = null;
     }
 
     public override void Tick(TimeSpan time) {
         current = this;
-        foreach(TObject obj in _objects.Values)
-            obj.Tick(time);
-        CheckDirtyObjects();
+        TickChunks(time);
+        CheckDirty();
         current = null;
     }
 
-    private void CheckDirtyObjects() {
+    private void UpdateChunksInBounds(TimeSpan time, Bounds bounds) {
+        for(int x = bounds.min.x; x != bounds.max.x + 1; x++) {
+            if(x > _maxChunkPos.x)
+                x = _minChunkPos.x;
+            for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
+                if(y > _maxChunkPos.y)
+                    y = _minChunkPos.y;
+                UpdateChunk(time, new Vector2Int(x, y));
+            }
+        }
+    }
+    private void UpdateChunk(TimeSpan time, Vector2Int pos) {
+        if(_chunks.TryGetValue(pos, out Chunk<TObject>? chunk))
+            chunk.Update(time);
+    }
+
+    private void DrawChunksInBounds(Bounds bounds) {
+        for(int x = bounds.min.x; x != bounds.max.x + 1; x++) {
+            if(x > _maxChunkPos.x)
+                x = _minChunkPos.x;
+            for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
+                if(y > _maxChunkPos.y)
+                    y = _minChunkPos.y;
+                DrawChunk(new Vector2Int(x, y));
+            }
+        }
+    }
+    private void DrawChunk(Vector2Int pos) {
+        if(_chunks.TryGetValue(pos, out Chunk<TObject>? chunk))
+            chunk.Draw();
+    }
+
+    private void TickChunks(TimeSpan time) {
+        foreach(Chunk<TObject> chunk in _chunks.Values)
+            chunk.Tick(time);
+    }
+
+    private void CheckDirty() {
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
         foreach(TObject obj in _objects.Values) {
+            if(obj.positionDirty) {
+                Vector2Int fromChunkPos = LevelToChunkPosition(obj.internalPrevPosition);
+                Vector2Int toChunkPos = LevelToChunkPosition(obj.position);
+                if(fromChunkPos != toChunkPos) {
+                    GetChunkAt(fromChunkPos).Remove(obj);
+                    GetChunkAt(toChunkPos).Add(obj);
+                }
+                obj.positionDirty = false;
+            }
             if(!obj.dirty)
                 continue;
             objectChanged?.Invoke(obj);
             obj.ClearDirty();
         }
+        foreach((Vector2Int pos, Chunk<TObject> chunk) in _newChunks)
+            _chunks.Add(pos, chunk);
+        _newChunks.Clear();
     }
 
-    public override void Sort() => _orderedObjects.Sort((a, b) => a.layer.CompareTo(b.layer));
+    public bool HasObjectAt(Vector2Int position) =>
+        GetChunkAt(LevelToChunkPosition(position)).HasObjectAt(position);
+    public bool HasObjectAt(Vector2Int position, Type type) =>
+        GetChunkAt(LevelToChunkPosition(position)).HasObjectAt(position, type);
+    public bool HasObjectAt<T>(Vector2Int position) where T : TObject =>
+        GetChunkAt(LevelToChunkPosition(position)).HasObjectAt<T>(position);
+    public bool TryGetObjectAt(Vector2Int position, [NotNullWhen(true)] out TObject? ret) =>
+        GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, out ret);
+    public bool TryGetObjectAt<T>(Vector2Int position, [NotNullWhen(true)] out T? ret) where T : TObject =>
+        GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, out ret);
 
-    public bool HasObjectAt(Vector2Int position) {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject obj in _objects.Values)
-            if(obj.position == position)
-                return true;
-        return false;
+    private Chunk<TObject> GetChunkAt(Vector2Int chunkPosition) {
+        if(_chunks.TryGetValue(chunkPosition, out Chunk<TObject>? chunk) ||
+            _newChunks.TryGetValue(chunkPosition, out chunk))
+            return chunk;
+        chunk = new Chunk<TObject>();
+        _newChunks.Add(chunkPosition, chunk);
+        return chunk;
     }
 
-    public bool HasObjectAt(Vector2Int position, Type type) {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject obj in _objects.Values)
-            if(obj.GetType() == type && obj.position == position)
-                return true;
-        return false;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int LevelToChunkPosition(Vector2Int levelPosition) =>
+        new(levelPosition.x / _chunkSize.x, levelPosition.y / _chunkSize.y);
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int CameraToChunkPosition(Vector2Int cameraPosition) =>
+        LevelToChunkPosition(CameraToLevelPosition(cameraPosition));
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int ScreenToChunkPosition(Vector2Int screenPosition) =>
+        LevelToChunkPosition(ScreenToLevelPosition(screenPosition));
 
-    public bool HasObjectAt<T>(Vector2Int position) where T : TObject {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject obj in _objects.Values)
-            if(obj is T && obj.position == position)
-                return true;
-        return false;
-    }
-
-    public bool TryGetObjectAt(Vector2Int position, [NotNullWhen(true)] out TObject? ret) {
-        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject obj in _objects.Values)
-            if(obj.position == position) {
-                ret = obj;
-                return true;
-            }
-        ret = null;
-        return false;
-    }
-
-    public bool TryGetObjectAt<T>(Vector2Int position, [NotNullWhen(true)] out T? ret) where T : TObject {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject obj in _objects.Values)
-            if(obj is T objT && obj.position == position) {
-                ret = objT;
-                return true;
-            }
-        ret = null;
-        return false;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int ChunkToLevelPosition(Vector2Int chunkPosition) =>
+        new(chunkPosition.x * _chunkSize.x, chunkPosition.y * _chunkSize.y);
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int ChunkToCameraPosition(Vector2Int chunkPosition) =>
+        LevelToCameraPosition(ChunkToLevelPosition(chunkPosition));
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int ChunkToScreenPosition(Vector2Int chunkPosition) =>
+        LevelToScreenPosition(ChunkToLevelPosition(chunkPosition));
 }

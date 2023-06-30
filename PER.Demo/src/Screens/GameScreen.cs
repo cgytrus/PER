@@ -72,7 +72,7 @@ public class GameScreen : LayoutResource, IScreen {
     public override void Load(string id) {
         base.Load(id);
 
-        _level = new Level<LevelObject>(renderer, input, audio, _resources);
+        _level = new Level<LevelObject>(renderer, input, audio, _resources, new Vector2Int(16, 16));
 
         for(int y = -20; y <= 20; y++) {
             for(int x = -20; x <= 20; x++) {

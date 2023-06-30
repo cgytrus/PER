@@ -21,9 +21,18 @@ public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel :
 
     protected abstract RenderCharacter character { get; }
 
-    internal bool added { get; set; }
+    protected bool added { get; set; }
 
-    public bool dirty { get; protected set; }
+    public bool dirty {
+        get => _dirty;
+        protected set {
+            if(!added)
+                return;
+            _dirty = value;
+        }
+    }
+
+    internal bool positionDirty { get; set; }
 
     public Guid id {
         get => _id;
@@ -37,22 +46,26 @@ public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel :
     public int layer {
         get => _layer;
         set {
-            if(_layer != value)
-                dirty = true;
+            if(added)
+                throw new InvalidOperationException();
             _layer = value;
-            if(added && Level.current is not null)
-                Level.current.Sort();
         }
     }
 
+    internal Vector2Int internalPrevPosition { get; private set; }
     public Vector2Int position {
         get => _position;
         set {
-            if(_position != value)
+            if(added && _position != value) {
                 dirty = true;
+                positionDirty = true;
+            }
+            internalPrevPosition = _position;
             _position = value;
         }
     }
+
+    private bool _dirty;
 
     private Guid _id = Guid.NewGuid();
     private int _layer;
@@ -63,6 +76,7 @@ public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel :
     public abstract void Update(TimeSpan time);
     public abstract void Tick(TimeSpan time);
 
+    internal void SetAdded(bool value) => added = value;
     internal void ClearDirty() => dirty = false;
 }
 
