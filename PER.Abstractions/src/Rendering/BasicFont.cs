@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
@@ -17,7 +18,8 @@ public abstract class BasicFont : IFont {
     public Image image { get; private set; }
     public string mappings { get; }
 
-    private readonly HashSet<(char, RenderStyle)> _drawable = new();
+    private readonly bool[] _drawable = new bool[0xFFFFFF];
+
     private readonly Dictionary<(char, RenderStyle), Vector2[]> _characters = new();
 
     protected BasicFont(string imagePath, string mappingsPath) {
@@ -37,7 +39,9 @@ public abstract class BasicFont : IFont {
         Setup(backgroundCharacter);
     }
 
-    public bool IsCharacterDrawable(char character, RenderStyle style) => _drawable.Contains((character, style));
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public bool IsCharacterDrawable(char character, RenderStyle style) =>
+        _drawable[(int)style | (character << sizeof(RenderStyle))];
 
     protected abstract Image ReadImage(string path);
 
@@ -69,7 +73,7 @@ public abstract class BasicFont : IFont {
 
         RenderStyle style = (RenderStyle)(y / originalHeight);
         char character = mappings[index];
-        _drawable.Add((character, style));
+        _drawable[(int)style | (character << sizeof(RenderStyle))] = true;
 
         Vector2[] texCoords = new Vector2[4];
         // Clockwise
