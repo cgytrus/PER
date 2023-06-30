@@ -110,10 +110,11 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     public override void Update(TimeSpan time) {
         current = this;
         Bounds cameraChunks = new(
-            ScreenToChunkPosition(new Vector2Int(0, 0)),
-            ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1))
+            ScreenToChunkPosition(-_chunkSize / 2),
+            ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1) + _chunkSize / 2)
         );
         UpdateChunksInBounds(time, cameraChunks);
+        CheckDirty();
         DrawChunksInBounds(cameraChunks);
         CheckDirty();
         current = null;

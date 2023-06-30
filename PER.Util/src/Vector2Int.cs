@@ -37,6 +37,9 @@ public readonly struct Vector2Int : IEquatable<Vector2Int> {
         new(left.x - right.x, left.y - right.y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static Vector2Int operator -(Vector2Int right) => new(-right.x, -right.y);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Vector2Int operator *(Vector2Int left, int right) =>
         new(left.x * right, left.y * right);
 
