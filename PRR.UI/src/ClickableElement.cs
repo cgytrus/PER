@@ -165,6 +165,12 @@ public abstract class ClickableElement : Element {
             return;
         }
 
+        // clear before drawing
+        for(int y = 0; y < size.y; y++)
+            for(int x = 0; x < size.x; x++)
+                renderer.DrawCharacter(position + new Vector2Int(x, y),
+                    new RenderCharacter('\0', renderer.background, Color.transparent));
+
         UpdateState(time);
         CustomUpdate(time);
 
