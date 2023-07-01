@@ -84,6 +84,13 @@ public abstract class ScreenGame : IGame {
         finalFrameTime[1] = '1';
 
         frameTime.frameTime.TotalMilliseconds.TryFormat(finalFrameTime[frameTimeLength..], out int written, "F2", c);
+        if(written > maxFrameTimeLength) {
+            renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 2),
+                "\f1ERROR\f\0/\f2ERROR\f\0 ms", _frameTimeFormatter, HorizontalAlignment.Right);
+            renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 1),
+                "\faERROR\f\0/\fbERROR\f\0 FPS", _frameTimeFormatter, HorizontalAlignment.Right);
+            return;
+        }
         frameTimeLength += written;
         finalFrameTime[frameTimeLength++] = '\f';
         finalFrameTime[frameTimeLength++] = '\0';
@@ -92,6 +99,13 @@ public abstract class ScreenGame : IGame {
         finalFrameTime[frameTimeLength++] = '2';
 
         frameTime.averageFrameTime.TotalMilliseconds.TryFormat(finalFrameTime[frameTimeLength..], out written, "F2", c);
+        if(written > maxFrameTimeLength) {
+            renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 2),
+                "\f1ERROR\f\0/\f2ERROR\f\0 ms", _frameTimeFormatter, HorizontalAlignment.Right);
+            renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 1),
+                "\faERROR\f\0/\fbERROR\f\0 FPS", _frameTimeFormatter, HorizontalAlignment.Right);
+            return;
+        }
         frameTimeLength += written;
         finalFrameTime[frameTimeLength++] = '\f';
         finalFrameTime[frameTimeLength++] = '\0';
@@ -104,6 +118,13 @@ public abstract class ScreenGame : IGame {
         finalFps[1] = 'a';
 
         frameTime.fps.TryFormat(finalFps[fpsLength..], out written, "F1", c);
+        if(written > maxFpsLength) {
+            renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 2),
+                "\f1ERROR\f\0/\f2ERROR\f\0 ms", _frameTimeFormatter, HorizontalAlignment.Right);
+            renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 1),
+                "\faERROR\f\0/\fbERROR\f\0 FPS", _frameTimeFormatter, HorizontalAlignment.Right);
+            return;
+        }
         fpsLength += written;
         finalFps[fpsLength++] = '\f';
         finalFps[fpsLength++] = '\0';
@@ -112,6 +133,13 @@ public abstract class ScreenGame : IGame {
         finalFps[fpsLength++] = 'b';
 
         frameTime.averageFps.TryFormat(finalFps[fpsLength..], out written, "F1", c);
+        if(written > maxFpsLength) {
+            renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 2),
+                "\f1ERROR\f\0/\f2ERROR\f\0 ms", _frameTimeFormatter, HorizontalAlignment.Right);
+            renderer.DrawText(new Vector2Int(renderer.width - 1, renderer.height - 1),
+                "\faERROR\f\0/\fbERROR\f\0 FPS", _frameTimeFormatter, HorizontalAlignment.Right);
+            return;
+        }
         fpsLength += written;
         finalFps[fpsLength++] = '\f';
         finalFps[fpsLength++] = '\0';
