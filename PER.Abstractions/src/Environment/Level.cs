@@ -64,14 +64,14 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     private readonly Vector2Int _chunkSize;
     private readonly Dictionary<Vector2Int, Chunk<TObject>> _chunks = new();
     private readonly Dictionary<Vector2Int, Chunk<TObject>> _newChunks = new();
-    private readonly List<Bounds> _chunksToGenerate = new();
+    private readonly List<Vector2Int> _chunksToGenerate = new();
     private readonly Vector2Int _minChunkPos;
     private readonly Vector2Int _maxChunkPos;
 
     public event Action<TObject>? objectAdded;
     public event Action<TObject>? objectRemoved;
     public event Action<TObject>? objectChanged;
-    public event Action<Bounds>? chunkCreated;
+    public event Action<Vector2Int, Vector2Int>? chunkCreated;
 
     public Level(IRenderer renderer, IInput input, IAudio audio, IResources resources, Vector2Int chunkSize) :
         base(renderer, input, audio, resources) {
@@ -115,6 +115,7 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
         );
         UpdateChunksInBounds(time, cameraChunks);
         CheckDirty();
+        AddNewChunks();
         DrawChunksInBounds(cameraChunks);
         current = null;
     }
@@ -123,6 +124,7 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
         current = this;
         TickChunks(time);
         CheckDirty();
+        AddNewChunks();
         current = null;
     }
 
@@ -172,14 +174,20 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
             objectChanged?.Invoke(obj);
             obj.ClearDirty();
         }
+    }
+
+    private void AddNewChunks() {
         foreach((Vector2Int pos, Chunk<TObject> chunk) in _newChunks) {
             _chunks.Add(pos, chunk);
             Vector2Int levelPosition = ChunkToLevelPosition(pos);
-            _chunksToGenerate.Add(new Bounds(levelPosition, levelPosition + _chunkSize - new Vector2Int(1, 1)));
+            // weird chunk size, skip gen
+            if(LevelToChunkPosition(levelPosition + _chunkSize - new Vector2Int(1, 1)) != pos)
+                continue;
+            _chunksToGenerate.Add(levelPosition);
         }
         _newChunks.Clear();
-        foreach(Bounds bounds in _chunksToGenerate)
-            chunkCreated?.Invoke(bounds);
+        foreach(Vector2Int levelPosition in _chunksToGenerate)
+            chunkCreated?.Invoke(levelPosition, _chunkSize);
         _chunksToGenerate.Clear();
     }
 
@@ -205,12 +213,8 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public Vector2Int LevelToChunkPosition(Vector2Int levelPosition) {
-        // all my homies hate negative numbers
-        int x = (int)MathF.Floor(levelPosition.x / (float)_chunkSize.x);
-        int y = (int)MathF.Floor(levelPosition.y / (float)_chunkSize.y);
-        return new Vector2Int(x, y);
-    }
+    public Vector2Int LevelToChunkPosition(Vector2Int levelPosition) =>
+        new(MoreMath.FloorDiv(levelPosition.x, _chunkSize.x), MoreMath.FloorDiv(levelPosition.y, _chunkSize.y));
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToChunkPosition(Vector2Int cameraPosition) =>
         LevelToChunkPosition(CameraToLevelPosition(cameraPosition));
