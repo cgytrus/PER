@@ -22,7 +22,7 @@ internal class HeadlessRenderer : IRenderer {
     }
     public int width => throw new InvalidOperationException();
     public int height => throw new InvalidOperationException();
-    public int framerate {
+    public bool verticalSync {
         get => throw new InvalidOperationException();
         set => throw new InvalidOperationException();
     }

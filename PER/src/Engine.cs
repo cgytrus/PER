@@ -23,6 +23,7 @@ public class Engine {
 
     public FrameTime frameTime { get; } = new();
 
+    public TimeSpan updateInterval { get; set; }
     public TimeSpan tickInterval { get; set; }
     public IResources resources { get; }
     public IGame game { get; }
@@ -33,6 +34,7 @@ public class Engine {
     private bool _headless;
 
     private readonly Stopwatch _clock = new();
+    private TimeSpan _lastUpdateTime;
     private TimeSpan _lastTickTime;
 
     public Engine(IResources resources, IGame game, IRenderer renderer, IInput input, IAudio audio) {
@@ -108,7 +110,9 @@ public class Engine {
         while(renderer.open) {
             TimeSpan time = _clock.time;
             TryTick(time);
-            frameTime.Update(time);
+            if(updateInterval > TimeSpan.Zero && time - _lastUpdateTime < updateInterval)
+                System.Threading.Thread.Sleep(updateInterval - (time - _lastUpdateTime));
+            _lastUpdateTime = time;
         }
         Finish();
     }
@@ -116,7 +120,7 @@ public class Engine {
     private void Run(RendererSettings rendererSettings) {
         logger.Info("Starting game");
         Setup(rendererSettings);
-        while(Update(_clock.time)) { }
+        while(Update()) { }
         Finish();
     }
 
@@ -130,16 +134,30 @@ public class Engine {
         logger.Info("Setup finished");
     }
 
-    private bool Update(TimeSpan time) {
+    private bool Update() {
+        // 1. vsync handles limiting for us
+        // 2. updateInterval <= 0 means no limit
+        if(!renderer.verticalSync && updateInterval > TimeSpan.Zero) {
+            // not using Thread.Sleep here because it's so inaccurate like holy fuck look at this
+            // https://media.discordapp.net/attachments/1119585041203347496/1124699614491181117/image.png
+            // (that was with a 60 fps limit)
+            TimeSpan updateTime = _clock.time;
+            if(updateTime - _lastUpdateTime < updateInterval)
+                return renderer.open;
+            _lastUpdateTime = updateTime;
+        }
+
         renderer.Clear();
 
+        TimeSpan time = _clock.time;
         input.Update(time);
         renderer.Update(time);
         game.Update(time);
         TryTick(time);
 
         renderer.Draw();
-        frameTime.Update(time);
+
+        frameTime.Update(_clock.time);
         return renderer.open;
     }
 

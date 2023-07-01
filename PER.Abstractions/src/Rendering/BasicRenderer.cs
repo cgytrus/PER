@@ -21,11 +21,11 @@ public abstract class BasicRenderer : IRenderer {
     public virtual int width { get; private set; }
     public virtual int height { get; private set; }
 
-    public virtual int framerate {
-        get => _framerate;
+    public virtual bool verticalSync {
+        get => _verticalSync;
         set {
-            _framerate = value;
-            UpdateFramerate();
+            _verticalSync = value;
+            UpdateVerticalSync();
         }
     }
 
@@ -70,7 +70,7 @@ public abstract class BasicRenderer : IRenderer {
 
     protected Dictionary<Vector2Int, IEffect> effects { get; private set; } = new();
 
-    private int _framerate;
+    private bool _verticalSync;
     private bool _fullscreen;
     private IFont? _font;
     private string _title = "";
@@ -80,7 +80,7 @@ public abstract class BasicRenderer : IRenderer {
         _title = settings.title;
         width = settings.width;
         height = settings.height;
-        _framerate = settings.framerate;
+        _verticalSync = settings.verticalSync;
         _fullscreen = settings.fullscreen;
         _font = settings.font;
         _icon = settings.icon;
@@ -89,7 +89,7 @@ public abstract class BasicRenderer : IRenderer {
     }
 
     protected abstract void CreateWindow();
-    protected abstract void UpdateFramerate();
+    protected abstract void UpdateVerticalSync();
     protected abstract void UpdateTitle();
     protected abstract void UpdateIcon();
 
@@ -105,7 +105,7 @@ public abstract class BasicRenderer : IRenderer {
             return true;
         }
         title = settings.title;
-        framerate = settings.framerate;
+        verticalSync = settings.verticalSync;
         icon = settings.icon;
         return false;
     }

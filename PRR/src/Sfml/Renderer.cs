@@ -101,14 +101,14 @@ public class Renderer : BasicRenderer, IDisposable {
         _textPosition = new Vector2f((videoMode.Width - text?.imageWidth ?? 0) / 2f,
             (videoMode.Height - text?.imageHeight ?? 0) / 2f);
 
-        UpdateFramerate();
+        UpdateVerticalSync();
     }
 
-    protected override void UpdateFramerate() {
+    protected override void UpdateVerticalSync() {
         if(window is null)
             return;
-        window.SetFramerateLimit(framerate <= 0 ? 0 : (uint)framerate);
-        window.SetVerticalSyncEnabled(framerate == (int)ReservedFramerates.Vsync);
+        window.SetFramerateLimit(0);
+        window.SetVerticalSyncEnabled(verticalSync);
     }
 
     protected override void UpdateTitle() => window?.SetTitle(title);

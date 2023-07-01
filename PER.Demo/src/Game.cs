@@ -81,7 +81,7 @@ public class Game : ScreenGame {
             title = "PER Demo Pog",
             width = 80,
             height = 60,
-            framerate = 0,
+            verticalSync = false,
             fullscreen = false,
             font = font.font,
             icon = icon?.icon
