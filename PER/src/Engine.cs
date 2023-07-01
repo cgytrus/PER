@@ -9,6 +9,7 @@ using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
+using PER.Abstractions.Screens;
 using PER.Headless;
 using PER.Util;
 
@@ -26,6 +27,7 @@ public class Engine {
     public TimeSpan updateInterval { get; set; }
     public TimeSpan tickInterval { get; set; }
     public IResources resources { get; }
+    public IScreens screens { get; }
     public IGame game { get; }
     public IRenderer renderer { get; }
     public IInput input { get; }
@@ -37,8 +39,9 @@ public class Engine {
     private TimeSpan _lastUpdateTime;
     private TimeSpan _lastTickTime;
 
-    public Engine(IResources resources, IGame game, IRenderer renderer, IInput input, IAudio audio) {
+    public Engine(IResources resources, IScreens screens, IGame game, IRenderer renderer, IInput input, IAudio audio) {
         this.resources = resources;
+        this.screens = screens;
         this.game = game;
         this.renderer = renderer;
         this.input = input;
@@ -55,6 +58,7 @@ public class Engine {
         // crashing with nre is fine in headless mode
         // games are supposed to implement the server in a different project
         // and not use any of the client-side stuff
+        screens = null!;
         input = null!;
         audio = null!;
     }
@@ -105,7 +109,10 @@ public class Engine {
         logger.Info("Starting game");
         _clock.Reset();
         renderer.Setup(rendererSettings);
-        game.Setup();
+        if(screens is ISetupable setupableScreens)
+            setupableScreens.Setup();
+        if(game is ISetupable setupableGame)
+            setupableGame.Setup();
         logger.Info("Setup finished");
         while(renderer.open) {
             TryTick(_clock.time);
@@ -131,7 +138,10 @@ public class Engine {
 
         renderer.Setup(rendererSettings);
         input.Reset();
-        game.Setup();
+        if(screens is ISetupable setupableScreens)
+            setupableScreens.Setup();
+        if(game is ISetupable setupableGame)
+            setupableGame.Setup();
 
         logger.Info("Setup finished");
     }
@@ -154,7 +164,10 @@ public class Engine {
         TimeSpan time = _clock.time;
         input.Update(time);
         renderer.Update(time);
-        game.Update(time);
+        if(screens is IUpdatable updatableScreens)
+            updatableScreens.Update(time);
+        if(game is IUpdatable updatableGame)
+            updatableGame.Update(time);
         TryTick(time);
 
         renderer.Draw();
@@ -171,11 +184,13 @@ public class Engine {
 
         while(time - _lastTickTime >= tickInterval) {
             _lastTickTime += tickInterval;
-            Tick(_lastTickTime);
+            if(screens is ITickable tickableScreens)
+                tickableScreens.Tick(_lastTickTime);
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            if(game is ITickable tickableGame)
+                tickableGame.Tick(_lastTickTime);
         }
     }
-
-    private void Tick(TimeSpan time) => game.Tick(time);
 
     private void Finish() {
         resources.Unload();

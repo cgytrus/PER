@@ -1,21 +1,13 @@
-﻿using System;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 using PER.Abstractions.Rendering;
 
 namespace PER.Abstractions;
 
 [PublicAPI]
-public interface IGame : IUpdatable, ITickable {
-    public IScreen? currentScreen { get; }
-    public void SwitchScreen(IScreen? screen, Func<bool>? middleCallback = null);
-    public void SwitchScreen(IScreen? screen, float fadeOutTime, float fadeInTime, Func<bool>? middleCallback = null);
-    public void FadeScreen(Action middleCallback);
-    public void FadeScreen(float fadeOutTime, float fadeInTime, Action middleCallback);
+public interface IGame {
     public void Unload();
     public void Load();
     public RendererSettings Loaded();
-    public void Setup();
     public void Finish();
 }

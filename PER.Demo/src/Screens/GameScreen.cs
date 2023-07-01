@@ -9,6 +9,7 @@ using PER.Abstractions.Environment;
 using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
+using PER.Abstractions.Screens;
 using PER.Abstractions.UI;
 using PER.Demo.Environment;
 using PER.Demo.Screens.Templates;
@@ -19,7 +20,7 @@ using PRR.UI.Resources;
 
 namespace PER.Demo.Screens;
 
-public class GameScreen : LayoutResource, IScreen {
+public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
     public const string GlobalId = "layouts/game";
 
     protected override IRenderer renderer => Core.engine.renderer;
@@ -38,7 +39,7 @@ public class GameScreen : LayoutResource, IScreen {
     private ProgressBar? _testProgressBar;
 
     private readonly IResources _resources;
-    private Level<LevelObject>? _level;
+    private Level? _level;
 
     public GameScreen(Settings settings, IResources resources) {
         _settings = settings;
@@ -72,7 +73,7 @@ public class GameScreen : LayoutResource, IScreen {
     public override void Load(string id) {
         base.Load(id);
 
-        _level = new Level<LevelObject>(renderer, input, audio, _resources, new Vector2Int(16, 16));
+        _level = new Level(renderer, input, audio, _resources, new Vector2Int(16, 16));
 
         for(int y = -20; y <= 20; y++) {
             for(int x = -20; x <= 20; x++) {
@@ -142,7 +143,7 @@ public class GameScreen : LayoutResource, IScreen {
         GetElement<Button>("reloadButton").onClick += (_, _) => {
             Core.engine.Reload();
             if(Core.engine.resources.TryGetResource(GlobalId, out GameScreen? screen))
-                Core.engine.game.SwitchScreen(screen);
+                Core.engine.screens.SwitchScreen(screen);
         };
 
         Text testSliderText = GetElement<Text>("testSliderText");

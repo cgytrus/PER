@@ -14,9 +14,10 @@ using PER.Util;
 namespace PER.Abstractions.Environment;
 
 [PublicAPI]
-public abstract class Level : IUpdatable, ITickable {
-    public static Level? current { get; protected set; }
-
+public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
+    where TLevel : Level<TLevel, TChunk, TObject>
+    where TChunk : Chunk<TLevel, TChunk, TObject>, new()
+    where TObject : LevelObject<TLevel, TChunk, TObject> {
     public IRenderer renderer { get; }
     public IInput input { get; }
     public IAudio audio { get; }
@@ -24,46 +25,12 @@ public abstract class Level : IUpdatable, ITickable {
 
     public Vector2Int cameraPosition { get; set; }
 
-    protected Level(IRenderer renderer, IInput input, IAudio audio, IResources resources) {
-        this.renderer = renderer;
-        this.input = input;
-        this.audio = audio;
-        this.resources = resources;
-    }
-
-    public virtual void Reset() {
-        cameraPosition = new Vector2Int();
-    }
-
-    public abstract void Update(TimeSpan time);
-    public abstract void Tick(TimeSpan time);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public Vector2Int LevelToCameraPosition(Vector2Int levelPosition) => levelPosition - cameraPosition;
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public Vector2Int LevelToScreenPosition(Vector2Int levelPosition) =>
-        CameraToScreenPosition(LevelToCameraPosition(levelPosition));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public Vector2Int CameraToLevelPosition(Vector2Int cameraPosition) => cameraPosition + this.cameraPosition;
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public Vector2Int CameraToScreenPosition(Vector2Int cameraPosition) => cameraPosition + renderer.size / 2;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public Vector2Int ScreenToLevelPosition(Vector2Int screenPosition) =>
-        ScreenToCameraPosition(CameraToLevelPosition(screenPosition));
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public Vector2Int ScreenToCameraPosition(Vector2Int screenPosition) => screenPosition - renderer.size / 2;
-}
-
-[PublicAPI]
-public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> {
     public IReadOnlyDictionary<Guid, TObject> objects => _objects;
     private readonly Dictionary<Guid, TObject> _objects = new();
 
     private readonly Vector2Int _chunkSize;
-    private readonly Dictionary<Vector2Int, Chunk<TObject>> _chunks = new();
-    private readonly Dictionary<Vector2Int, Chunk<TObject>> _newChunks = new();
+    private readonly Dictionary<Vector2Int, TChunk> _chunks = new();
+    private readonly Dictionary<Vector2Int, TChunk> _newChunks = new();
     private readonly List<Vector2Int> _chunksToGenerate = new();
     private readonly Vector2Int _minChunkPos;
     private readonly Vector2Int _maxChunkPos;
@@ -73,15 +40,18 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     public event Action<TObject>? objectChanged;
     public event Action<Vector2Int, Vector2Int>? chunkCreated;
 
-    public Level(IRenderer renderer, IInput input, IAudio audio, IResources resources, Vector2Int chunkSize) :
-        base(renderer, input, audio, resources) {
+    protected Level(IRenderer renderer, IInput input, IAudio audio, IResources resources, Vector2Int chunkSize) {
+        this.renderer = renderer;
+        this.input = input;
+        this.audio = audio;
+        this.resources = resources;
         _chunkSize = chunkSize;
         _minChunkPos = LevelToChunkPosition(new Vector2Int(int.MinValue, int.MinValue));
         _maxChunkPos = LevelToChunkPosition(new Vector2Int(int.MaxValue, int.MaxValue));
     }
 
-    public override void Reset() {
-        base.Reset();
+    public void Reset() {
+        cameraPosition = new Vector2Int();
         _objects.Clear();
         _chunks.Clear();
     }
@@ -89,9 +59,10 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     public void Add(TObject obj) {
         _objects.Add(obj.id, obj);
         GetChunkAt(LevelToChunkPosition(obj.position)).Add(obj);
-        current = this;
-        obj.Added();
-        current = null;
+        obj.SetLevel(this);
+        // ReSharper disable once SuspiciousTypeConversion.Global
+        if(obj is IAddable addable)
+            addable.Added();
         objectAdded?.Invoke(obj);
     }
 
@@ -101,14 +72,14 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
             return;
         _objects.Remove(objId);
         GetChunkAt(LevelToChunkPosition(obj.position)).Remove(obj);
-        current = this;
-        obj.Removed();
-        current = null;
+        // ReSharper disable once SuspiciousTypeConversion.Global
+        if(obj is IRemovable removable)
+            removable.Removed();
+        obj.SetLevel(null);
         objectRemoved?.Invoke(obj);
     }
 
-    public override void Update(TimeSpan time) {
-        current = this;
+    public void Update(TimeSpan time) {
         Bounds cameraChunks = new(
             ScreenToChunkPosition(-_chunkSize / 2),
             ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1) + _chunkSize / 2)
@@ -117,15 +88,12 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
         CheckDirty();
         AddNewChunks();
         DrawChunksInBounds(cameraChunks);
-        current = null;
     }
 
-    public override void Tick(TimeSpan time) {
-        current = this;
+    public void Tick(TimeSpan time) {
         TickChunks(time);
         CheckDirty();
         AddNewChunks();
-        current = null;
     }
 
     private void UpdateChunksInBounds(TimeSpan time, Bounds bounds) {
@@ -153,7 +121,7 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     }
 
     private void TickChunks(TimeSpan time) {
-        foreach(Chunk<TObject> chunk in _chunks.Values)
+        foreach(TChunk chunk in _chunks.Values)
             chunk.Tick(time);
     }
 
@@ -177,7 +145,7 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
     }
 
     private void AddNewChunks() {
-        foreach((Vector2Int pos, Chunk<TObject> chunk) in _newChunks) {
+        foreach((Vector2Int pos, TChunk chunk) in _newChunks) {
             _chunks.Add(pos, chunk);
             Vector2Int levelPosition = ChunkToLevelPosition(pos);
             // weird chunk size, skip gen
@@ -203,21 +171,37 @@ public class Level<TObject> : Level where TObject : LevelObject<Level<TObject>> 
         GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, out ret);
 
     public void CreateChunkAt(Vector2Int chunkPosition) => GetChunkAt(chunkPosition);
-    private Chunk<TObject> GetChunkAt(Vector2Int chunkPosition) {
-        if(_chunks.TryGetValue(chunkPosition, out Chunk<TObject>? chunk) ||
+    private TChunk GetChunkAt(Vector2Int chunkPosition) {
+        if(_chunks.TryGetValue(chunkPosition, out TChunk? chunk) ||
             _newChunks.TryGetValue(chunkPosition, out chunk))
             return chunk;
-        chunk = new Chunk<TObject>();
+        chunk = new TChunk();
         _newChunks.Add(chunkPosition, chunk);
         return chunk;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int LevelToCameraPosition(Vector2Int levelPosition) => levelPosition - cameraPosition;
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int LevelToScreenPosition(Vector2Int levelPosition) =>
+        CameraToScreenPosition(LevelToCameraPosition(levelPosition));
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int LevelToChunkPosition(Vector2Int levelPosition) =>
         new(MoreMath.FloorDiv(levelPosition.x, _chunkSize.x), MoreMath.FloorDiv(levelPosition.y, _chunkSize.y));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int CameraToLevelPosition(Vector2Int cameraPosition) => cameraPosition + this.cameraPosition;
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int CameraToScreenPosition(Vector2Int cameraPosition) => cameraPosition + renderer.size / 2;
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToChunkPosition(Vector2Int cameraPosition) =>
         LevelToChunkPosition(CameraToLevelPosition(cameraPosition));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int ScreenToLevelPosition(Vector2Int screenPosition) =>
+        ScreenToCameraPosition(CameraToLevelPosition(screenPosition));
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int ScreenToCameraPosition(Vector2Int screenPosition) => screenPosition - renderer.size / 2;
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ScreenToChunkPosition(Vector2Int screenPosition) =>
         LevelToChunkPosition(ScreenToLevelPosition(screenPosition));

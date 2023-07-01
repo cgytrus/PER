@@ -1,19 +1,19 @@
 ﻿using System;
 
-using PER.Abstractions.Environment;
+using PER.Abstractions;
 using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
 namespace PER.Demo.Environment;
 
-public class PlayerObject : LevelObject {
+public class PlayerObject : LevelObject, IUpdatable, ITickable {
     protected override RenderCharacter character { get; } = new('@', Color.transparent, new Color(0, 255, 255, 255));
 
     private int _moveX;
     private int _moveY;
 
-    public override void Update(TimeSpan time) {
+    public void Update(TimeSpan time) {
         _moveX = 0;
         _moveY = 0;
 
@@ -29,7 +29,7 @@ public class PlayerObject : LevelObject {
 
     // shtu up
     // ReSharper disable once CognitiveComplexity
-    public override void Tick(TimeSpan time) {
+    public void Tick(TimeSpan time) {
         int moveX = _moveX;
         int moveY = _moveY;
 

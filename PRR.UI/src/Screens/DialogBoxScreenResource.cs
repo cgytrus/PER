@@ -3,7 +3,7 @@
 using PER.Abstractions;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
-using PER.Abstractions.UI;
+using PER.Abstractions.Screens;
 using PER.Common.Resources;
 using PER.Util;
 
@@ -12,7 +12,7 @@ using PRR.UI.Resources;
 namespace PRR.UI.Screens;
 
 [PublicAPI]
-public abstract class DialogBoxScreenResource : LayoutResource, IScreen {
+public abstract class DialogBoxScreenResource : LayoutResource, IScreen, IUpdatable {
     protected abstract IResources resources { get; }
 
     protected Vector2Int size { get; set; }
@@ -54,6 +54,4 @@ public abstract class DialogBoxScreenResource : LayoutResource, IScreen {
         for(int i = 0; i < elementList.Count; i++)
             elementList[i].Update(time);
     }
-
-    public abstract void Tick(TimeSpan time);
 }

@@ -1,9 +1,9 @@
 ﻿using JetBrains.Annotations;
 
-namespace PER.Abstractions;
+namespace PER.Abstractions.Screens;
 
 [PublicAPI]
-public interface IScreen : IUpdatable, ITickable {
+public interface IScreen {
     public void Open();
     public void Close();
 }

@@ -6,19 +6,34 @@ using PER.Util;
 
 namespace PER.Abstractions.Environment;
 
-public class Chunk<TObject> : IUpdatable, ITickable where TObject : LevelObject<Level<TObject>> {
+public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
+    where TLevel : Level<TLevel, TChunk, TObject>
+    where TChunk : Chunk<TLevel, TChunk, TObject>, new()
+    where TObject : LevelObject<TLevel, TChunk, TObject> {
     private readonly List<TObject> _objects = new();
+    private readonly List<IUpdatable> _updatables = new();
+    private readonly List<ITickable> _tickables = new();
 
     public void Add(TObject obj) {
         _objects.Add(obj);
         _objects.Sort((a, b) => a.layer.CompareTo(b.layer));
+        if(obj is IUpdatable updatable)
+            _updatables.Add(updatable);
+        if(obj is ITickable tickable)
+            _tickables.Add(tickable);
     }
 
-    public void Remove(TObject obj) => _objects.Remove(obj);
+    public void Remove(TObject obj) {
+        _objects.Remove(obj);
+        if(obj is IUpdatable updatable)
+            _updatables.Remove(updatable);
+        if(obj is ITickable tickable)
+            _tickables.Remove(tickable);
+    }
 
     public void Update(TimeSpan time) {
-        foreach(TObject obj in _objects)
-            obj.Update(time);
+        foreach(IUpdatable updatable in _updatables)
+            updatable.Update(time);
     }
 
     public void Draw() {
@@ -27,8 +42,8 @@ public class Chunk<TObject> : IUpdatable, ITickable where TObject : LevelObject<
     }
 
     public void Tick(TimeSpan time) {
-        foreach(TObject obj in _objects)
-            obj.Tick(time);
+        foreach(ITickable tickable in _tickables)
+            tickable.Tick(time);
     }
 
     public bool HasObjectAt(Vector2Int position) {
