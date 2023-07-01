@@ -129,12 +129,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
         foreach(TObject obj in _objects.Values) {
             if(obj.positionDirty) {
-                Vector2Int fromChunkPos = LevelToChunkPosition(obj.internalPrevPosition);
-                Vector2Int toChunkPos = LevelToChunkPosition(obj.position);
-                if(fromChunkPos != toChunkPos) {
-                    GetChunkAt(fromChunkPos).Remove(obj);
-                    GetChunkAt(toChunkPos).Add(obj);
-                }
+                ObjectMoved(obj);
                 obj.positionDirty = false;
             }
             if(!obj.dirty)
@@ -142,6 +137,18 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             objectChanged?.Invoke(obj);
             obj.ClearDirty();
         }
+    }
+
+    private void ObjectMoved(TObject obj) {
+        Vector2Int fromChunkPos = LevelToChunkPosition(obj.internalPrevPosition);
+        Vector2Int toChunkPos = LevelToChunkPosition(obj.position);
+        if(fromChunkPos != toChunkPos) {
+            GetChunkAt(fromChunkPos).Remove(obj);
+            GetChunkAt(toChunkPos).Add(obj);
+        }
+        // ReSharper disable once SuspiciousTypeConversion.Global
+        if(obj is IMovable movable)
+            movable.Moved();
     }
 
     private void AddNewChunks() {

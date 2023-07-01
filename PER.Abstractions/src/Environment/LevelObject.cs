@@ -64,9 +64,6 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
             if(_level is not null && _position != value) {
                 dirty = true;
                 positionDirty = true;
-                // ReSharper disable once SuspiciousTypeConversion.Global
-                if(this is IMovable movable)
-                    movable.Moved();
             }
             internalPrevPosition = _position;
             _position = value;
