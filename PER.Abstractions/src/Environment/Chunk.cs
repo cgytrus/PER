@@ -62,7 +62,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
         return false;
     }
 
-    public bool HasObjectAt<T>(Vector2Int position) where T : TObject {
+    public bool HasObjectAt<T>(Vector2Int position) where T : class {
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
         foreach(TObject obj in _objects)
             if(obj is T && obj.position == position)
@@ -81,7 +81,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
         return false;
     }
 
-    public bool TryGetObjectAt<T>(Vector2Int position, [NotNullWhen(true)] out T? ret) where T : TObject {
+    public bool TryGetObjectAt<T>(Vector2Int position, [NotNullWhen(true)] out T? ret) where T : class {
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
         foreach(TObject obj in _objects)
             if(obj is T objT && obj.position == position) {

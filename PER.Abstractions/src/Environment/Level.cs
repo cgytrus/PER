@@ -163,11 +163,11 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         GetChunkAt(LevelToChunkPosition(position)).HasObjectAt(position);
     public bool HasObjectAt(Vector2Int position, Type type) =>
         GetChunkAt(LevelToChunkPosition(position)).HasObjectAt(position, type);
-    public bool HasObjectAt<T>(Vector2Int position) where T : TObject =>
+    public bool HasObjectAt<T>(Vector2Int position) where T : class =>
         GetChunkAt(LevelToChunkPosition(position)).HasObjectAt<T>(position);
     public bool TryGetObjectAt(Vector2Int position, [NotNullWhen(true)] out TObject? ret) =>
         GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, out ret);
-    public bool TryGetObjectAt<T>(Vector2Int position, [NotNullWhen(true)] out T? ret) where T : TObject =>
+    public bool TryGetObjectAt<T>(Vector2Int position, [NotNullWhen(true)] out T? ret) where T : class =>
         GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, out ret);
 
     public void CreateChunkAt(Vector2Int chunkPosition) => GetChunkAt(chunkPosition);
