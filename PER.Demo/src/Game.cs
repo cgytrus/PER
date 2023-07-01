@@ -25,10 +25,10 @@ public class Game : ScreenGame {
     protected override FrameTime frameTime => Core.engine.frameTime;
     protected override IRenderer renderer => Core.engine.renderer;
 
-    // 59 instead of 60 because time measuring isn't exactly perfect
-    // so it may be a little more or less than 60 every frame
-    private static readonly TimeSpan fpsGood = TimeSpan.FromSeconds(1d / 59d);
-    private static readonly TimeSpan fpsOk = TimeSpan.FromSeconds(1d / 30d);
+    private static TimeSpan fpsGood => (Core.engine.updateInterval > TimeSpan.Zero ? Core.engine.updateInterval :
+        TimeSpan.FromSeconds(1d / 60d)) + TimeSpan.FromSeconds(0.001d);
+    private static TimeSpan fpsOk => (Core.engine.updateInterval > TimeSpan.Zero ? Core.engine.updateInterval * 2 :
+        TimeSpan.FromSeconds(1d / 60d) * 2) + TimeSpan.FromSeconds(0.001d);
 
     private Color _fpsGoodColor;
     private Color _fpsOkColor;
@@ -81,7 +81,7 @@ public class Game : ScreenGame {
             title = "PER Demo Pog",
             width = 80,
             height = 60,
-            verticalSync = false,
+            verticalSync = true,
             fullscreen = false,
             font = font.font,
             icon = icon?.icon
