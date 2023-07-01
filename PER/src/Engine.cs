@@ -108,11 +108,13 @@ public class Engine {
         game.Setup();
         logger.Info("Setup finished");
         while(renderer.open) {
+            TryTick(_clock.time);
+            if(updateInterval <= TimeSpan.Zero)
+                continue;
             TimeSpan time = _clock.time;
-            TryTick(time);
             if(updateInterval > TimeSpan.Zero && time - _lastUpdateTime < updateInterval)
                 System.Threading.Thread.Sleep(updateInterval - (time - _lastUpdateTime));
-            _lastUpdateTime = time;
+            _lastUpdateTime = _clock.time;
         }
         Finish();
     }
