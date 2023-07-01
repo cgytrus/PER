@@ -1,3 +1,6 @@
+using System;
+using System.Runtime.CompilerServices;
+
 using JetBrains.Annotations;
 
 namespace PER.Util;
@@ -28,13 +31,17 @@ public static class Perlin {
             p[x] = permutation[x % 256];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static float Get(float x, float y, float z) {
-        int xi = (int)x & 255; // Calculate the "unit cube" that the point asked will be located in
-        int yi = (int)y & 255; // The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
-        int zi = (int)z & 255; // plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.
-        float xf = x - (int)x; // We also fade the location to smooth the result.
-        float yf = y - (int)y;
-        float zf = z - (int)z;
+        float fx = MathF.Floor(x);
+        float fy = MathF.Floor(y);
+        float fz = MathF.Floor(z);
+        int xi = (int)fx & 255; // Calculate the "unit cube" that the point asked will be located in
+        int yi = (int)fy & 255; // The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
+        int zi = (int)fz & 255; // plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.
+        float xf = x - fx; // We also fade the location to smooth the result.
+        float yf = y - fy;
+        float zf = z - fz;
         float u = Fade(xf);
         float v = Fade(yf);
         float w = Fade(zf);
@@ -64,6 +71,7 @@ public static class Perlin {
         return (MoreMath.LerpUnclamped(y1, y2, w) + 1f) / 2f;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private static float Gradual(int hash, float x, float y, float z) {
         int h = hash & 0b1111;
         float u = h < 0b1000 ? x : y;
@@ -82,5 +90,6 @@ public static class Perlin {
     // Fade function as defined by Ken Perlin. This eases coordinate values
     // so that they will "ease" towards integral values. This ends up smoothing
     // the final output.
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private static float Fade(float t) => t * t * t * (t * (t * 6f - 15f) + 10f); // 6t^5 - 15t^4 + 10t^3
 }
