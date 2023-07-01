@@ -59,6 +59,7 @@ public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel :
             if(inLevel && _position != value) {
                 dirty = true;
                 positionDirty = true;
+                Moved();
             }
             internalPrevPosition = _position;
             _position = value;
@@ -78,6 +79,8 @@ public abstract class LevelObject<TLevel> : IUpdatable, ITickable where TLevel :
 
     public abstract void Update(TimeSpan time);
     public abstract void Tick(TimeSpan time);
+
+    protected virtual void Moved() { }
 
     internal void ClearDirty() => dirty = false;
 }
