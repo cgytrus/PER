@@ -25,6 +25,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     public Vector2Int cameraPosition { get; set; }
 
+    public LevelUpdateState updateState { get; private set; }
+
     public IReadOnlyDictionary<Guid, TObject> objects => _objects;
     private readonly Dictionary<Guid, TObject> _objects = new();
     private readonly List<TObject> _dirtyObjects = new();
@@ -81,16 +83,20 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     public void Update(TimeSpan time) {
+        updateState = LevelUpdateState.Update;
         Bounds cameraChunks = new(
             ScreenToChunkPosition(-_chunkSize / 2),
             ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1) + _chunkSize / 2)
         );
         AddNewChunks();
         UpdateChunksInBounds(time, cameraChunks);
+        updateState = LevelUpdateState.Draw;
         DrawChunksInBounds(cameraChunks);
+        updateState = LevelUpdateState.None;
     }
 
     public void Tick(TimeSpan time) {
+        updateState = LevelUpdateState.Tick;
         foreach(TChunk chunk in _chunks.Values)
             chunk.Tick(time);
         foreach(TChunk chunk in _chunks.Values)
@@ -100,6 +106,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             CheckDirty(obj);
         _dirtyObjects.Clear();
         AddNewChunks();
+        updateState = LevelUpdateState.None;
     }
 
     public void CheckDirty(TObject obj) {

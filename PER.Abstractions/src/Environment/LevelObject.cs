@@ -42,7 +42,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
         get => _id;
         set {
             if(_level is not null)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"{nameof(id)} cannot be changed while in a level");
             _id = value;
         }
     }
@@ -51,7 +51,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
         get => _layer;
         set {
             if(_level is not null)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"{nameof(layer)} cannot be changed while in a level");
             _layer = value;
         }
     }
@@ -61,10 +61,17 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     public Vector2Int position {
         get => _position;
         set {
-            if(_level is not null && _position != value) {
-                dirty = true;
-                positionDirty = true;
+            if(_level is null) {
+                internalPrevPosition = _position;
+                _position = value;
+                return;
             }
+            if(_level.updateState is not LevelUpdateState.None and not LevelUpdateState.Tick)
+                throw new InvalidOperationException($"{nameof(position)} can only be changed from Tick");
+            if(_position == value)
+                return;
+            dirty = true;
+            positionDirty = true;
             internalPrevPosition = _position;
             _position = value;
         }
