@@ -119,7 +119,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             }
             // ReSharper disable once SuspiciousTypeConversion.Global
             if(obj is IMovable movable)
-                movable.Moved();
+                movable.Moved(obj.internalPrevPosition);
             obj.positionDirty = false;
         }
         if(!obj.dirty)
