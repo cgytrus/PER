@@ -119,7 +119,7 @@ public class InputField : ClickableElement {
     private Func<char, Formatting> _formatter;
 
     public InputField(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) =>
-        _formatter = _ => new Formatting(Color.white, Color.transparent, style, RenderOptions.Default, effect);
+        _formatter = _ => new Formatting(Color.white, Color.transparent, style, effect);
 
     public override Element Clone() => throw new NotImplementedException();
 
@@ -205,7 +205,7 @@ public class InputField : ClickableElement {
             MoreMath.Lerp(0f, foregroundColor.a, t) * (usePlaceholder ? 0.5f : 1f));
 
         character = new RenderCharacter(characterCharacter, backgroundColor, foregroundColor, style);
-        renderer.DrawCharacter(position, character, RenderOptions.Default, effect);
+        renderer.DrawCharacter(position, character, effect);
     }
 
     protected override void Click() {

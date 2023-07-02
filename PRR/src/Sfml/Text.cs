@@ -19,10 +19,12 @@ public class Text : IDisposable {
     public uint imageWidth { get; }
     public uint imageHeight { get; }
 
-    private readonly List<IEffect> _globalModEffects;
+    private readonly Vector2Int _size;
     private readonly RenderCharacter[,] _display;
-    private readonly HashSet<Vector2Int> _displayUsed;
-    private readonly Dictionary<Vector2Int, IEffect> _effects;
+    private readonly bool[,] _displayUsed;
+    private readonly IDisplayEffect?[,] _displayEffects;
+    private readonly List<IDrawableEffect> _globalDrawableEffects;
+    private readonly List<IModifierEffect> _globalModEffects;
     private readonly uint _charWidth;
     private readonly uint _charHeight;
     private readonly Vector2f _charBottomRight;
@@ -31,16 +33,19 @@ public class Text : IDisposable {
     private readonly Vertex[] _quads;
     private readonly Texture _texture;
     private readonly Vector2f[] _backgroundCharacter;
-    private readonly Dictionary<(char, RenderStyle), Vector2f[]> _characters;
+    private readonly Vector2f[]?[] _characters;
 
     private uint _quadCount;
 
-    public Text(IFont? font, Vector2Int size, List<IEffect> globalModEffects, RenderCharacter[,] display,
-        HashSet<Vector2Int> displayUsed, Dictionary<Vector2Int, IEffect> effects) {
-        _globalModEffects = globalModEffects;
+    public Text(IFont? font, Vector2Int size, RenderCharacter[,] display, bool[,] displayUsed,
+        IDisplayEffect?[,] displayEffects, List<IDrawableEffect> globalDrawableEffects,
+        List<IModifierEffect> globalModEffects) {
+        _size = size;
         _display = display;
         _displayUsed = displayUsed;
-        _effects = effects;
+        _displayEffects = displayEffects;
+        _globalDrawableEffects = globalDrawableEffects;
+        _globalModEffects = globalModEffects;
         _texture = font is null ? new Texture(0, 0) : new Texture(SfmlConverters.ToSfmlImage(font.image));
         _charWidth = (uint)(font?.size.x ?? 0);
         _charHeight = (uint)(font?.size.y ?? 0);
@@ -54,70 +59,92 @@ public class Text : IDisposable {
         _quads = new Vertex[8 * textWidth * textHeight];
         _backgroundCharacter = font?.backgroundCharacter.Select(SfmlConverters.ToSfmlVector2).ToArray() ??
             Array.Empty<Vector2f>();
-        _characters = font?.characters.ToDictionary(pair => pair.Key, pair =>
-            pair.Value.Select(SfmlConverters.ToSfmlVector2).ToArray()) ??
-                      new Dictionary<(char, RenderStyle), Vector2f[]>();
+        _characters = new Vector2f[]?[0xFFFFFF];
+        if(font is null)
+            return;
+        foreach(((char c, RenderStyle s), Vector2[] arr) in font.characters)
+            _characters[(int)s | (c << (sizeof(RenderStyle) * 8))] = arr.Select(SfmlConverters.ToSfmlVector2).ToArray();
     }
 
     public void RebuildQuads(Vector2f offset) {
         uint index = 0;
-        foreach(Vector2Int pos in _displayUsed) {
-            RenderCharacter character = _display[pos.y, pos.x];
-            Vector2 modPosition = new(pos.x, pos.y);
+        for(int y = 0; y < _size.y; y++) {
+            for(int x = 0; x < _size.x; x++) {
+                Vector2Int pos = new(x, y);
 
-            if(_effects.TryGetValue(pos, out IEffect? effect) && effect.hasModifiers)
-                effect.ApplyModifiers(pos, ref modPosition, ref character);
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for(int i = 0; i < _globalDrawableEffects.Count; i++)
+                    _globalDrawableEffects[i].Draw(pos);
 
-            // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-            foreach(IEffect globalEffect in _globalModEffects)
-                globalEffect.ApplyModifiers(pos, ref modPosition, ref character);
+                IDisplayEffect? displayEffect = _displayEffects[y, x];
+                if(displayEffect is IDrawableEffect drawableEffect)
+                    drawableEffect.Draw(pos);
 
-            Vector2f position = new(modPosition.X * _charWidth + offset.X, modPosition.Y * _charHeight + offset.Y);
-            Color background = SfmlConverters.ToSfmlColor(character.background);
+                if(!_displayUsed[y, x]) {
+                    _displayEffects[y, x] = null;
+                    continue;
+                }
+                _displayUsed[y, x] = false;
 
-            _quads[index].Position = position;
-            _quads[index].Color = background;
-            _quads[index].TexCoords = _backgroundCharacter[0];
+                RenderCharacter character = _display[y, x];
+                Vector2 modPosition = new(x, y);
 
-            _quads[index + 1].Position = position + _charBottomRight;
-            _quads[index + 1].Color = background;
-            _quads[index + 1].TexCoords = _backgroundCharacter[1];
+                if(displayEffect is IModifierEffect modifierEffect)
+                    modifierEffect.ApplyModifiers(pos, ref modPosition, ref character);
 
-            _quads[index + 2].Position = position + _charTopRight;
-            _quads[index + 2].Color = background;
-            _quads[index + 2].TexCoords = _backgroundCharacter[2];
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for(int i = 0; i < _globalModEffects.Count; i++)
+                    _globalModEffects[i].ApplyModifiers(pos, ref modPosition, ref character);
 
-            _quads[index + 3].Position = position + _charTopLeft;
-            _quads[index + 3].Color = background;
-            _quads[index + 3].TexCoords = _backgroundCharacter[3];
+                Vector2f position = new(modPosition.X * _charWidth + offset.X, modPosition.Y * _charHeight + offset.Y);
+                Color background = SfmlConverters.ToSfmlColor(character.background);
 
-            index += 4;
+                _quads[index].Position = position;
+                _quads[index].Color = background;
+                _quads[index].TexCoords = _backgroundCharacter[0];
 
-            if(!_characters.TryGetValue((character.character, character.style & RenderStyle.AllPerFont),
-                out Vector2f[]? texCoords))
-                continue;
+                _quads[index + 1].Position = position + _charBottomRight;
+                _quads[index + 1].Color = background;
+                _quads[index + 1].TexCoords = _backgroundCharacter[1];
 
-            bool italic = (character.style & RenderStyle.Italic) != 0;
-            Vector2f italicOffset = new(italic.ToByte(), 0f);
-            Color foreground = SfmlConverters.ToSfmlColor(character.foreground);
+                _quads[index + 2].Position = position + _charTopRight;
+                _quads[index + 2].Color = background;
+                _quads[index + 2].TexCoords = _backgroundCharacter[2];
 
-            _quads[index].Position = position + italicOffset;
-            _quads[index].Color = foreground;
-            _quads[index].TexCoords = texCoords[0];
+                _quads[index + 3].Position = position + _charTopLeft;
+                _quads[index + 3].Color = background;
+                _quads[index + 3].TexCoords = _backgroundCharacter[3];
 
-            _quads[index + 1].Position = position + _charBottomRight + italicOffset;
-            _quads[index + 1].Color = foreground;
-            _quads[index + 1].TexCoords = texCoords[1];
+                index += 4;
 
-            _quads[index + 2].Position = position + _charTopRight;
-            _quads[index + 2].Color = foreground;
-            _quads[index + 2].TexCoords = texCoords[2];
+                int charIndex = (int)(character.style & RenderStyle.AllPerFont) |
+                    (character.character << (sizeof(RenderStyle) * 8));
+                Vector2f[]? texCoords = _characters[charIndex];
+                if(texCoords is null)
+                    continue;
 
-            _quads[index + 3].Position = position + _charTopLeft;
-            _quads[index + 3].Color = foreground;
-            _quads[index + 3].TexCoords = texCoords[3];
+                bool italic = (character.style & RenderStyle.Italic) != 0;
+                Vector2f italicOffset = new(italic.ToByte(), 0f);
+                Color foreground = SfmlConverters.ToSfmlColor(character.foreground);
 
-            index += 4;
+                _quads[index].Position = position + italicOffset;
+                _quads[index].Color = foreground;
+                _quads[index].TexCoords = texCoords[0];
+
+                _quads[index + 1].Position = position + _charBottomRight + italicOffset;
+                _quads[index + 1].Color = foreground;
+                _quads[index + 1].TexCoords = texCoords[1];
+
+                _quads[index + 2].Position = position + _charTopRight;
+                _quads[index + 2].Color = foreground;
+                _quads[index + 2].TexCoords = texCoords[2];
+
+                _quads[index + 3].Position = position + _charTopLeft;
+                _quads[index + 3].Color = foreground;
+                _quads[index + 3].TexCoords = texCoords[3];
+
+                index += 4;
+            }
         }
         _quadCount = index;
     }

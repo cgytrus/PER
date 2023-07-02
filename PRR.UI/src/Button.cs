@@ -31,7 +31,7 @@ public class Button : ClickableElement {
     private Func<char, Formatting> _formatter;
 
     public Button(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) => _formatter =
-        _ => new Formatting(Color.white, Color.transparent, style, RenderOptions.Default, effect);
+        _ => new Formatting(Color.white, Color.transparent, style, effect);
 
     public static Button Clone(Button template) => new(template.renderer, template.input, template.audio) {
         enabled = template.enabled,
@@ -62,6 +62,6 @@ public class Button : ClickableElement {
         Vector2Int position = new(this.position.x + x, this.position.y + y);
         RenderCharacter character = renderer.GetCharacter(position);
         character = new RenderCharacter(character.character, backgroundColor, foregroundColor, style);
-        renderer.DrawCharacter(position, character, RenderOptions.Default, effect);
+        renderer.DrawCharacter(position, character, effect);
     }
 }

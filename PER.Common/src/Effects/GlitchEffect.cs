@@ -8,11 +8,7 @@ using PER.Util;
 namespace PER.Common.Effects;
 
 [PublicAPI]
-public class GlitchEffect : IEffect {
-    public IEnumerable<PipelineStep>? pipeline => null;
-    public bool hasModifiers => true;
-    public bool drawable => true;
-
+public class GlitchEffect : IModifierEffect, IDrawableEffect {
     private bool _draw = true;
 
     private readonly IRenderer _renderer;
@@ -28,8 +24,6 @@ public class GlitchEffect : IEffect {
             RandomNonNegativeFloat() <= 0.95f ? character.style :
                 (RenderStyle)Random.Shared.Next((int)RenderStyle.None, (int)RenderStyle.All));
     }
-
-    public void Update(bool fullscreen) { }
 
     public void Draw(Vector2Int position) {
         if(position.x % Random.Shared.Next(3, 10) == 0 || position.y % Random.Shared.Next(3, 10) == 0)

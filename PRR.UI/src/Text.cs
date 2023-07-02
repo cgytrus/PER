@@ -38,7 +38,7 @@ public class Text : Element {
             return;
         if(formatting.Count == 0)
             formatting.Add('\0',
-                new Formatting(Color.white, Color.transparent, RenderStyle.None, RenderOptions.Default, effect));
+                new Formatting(Color.white, Color.transparent, RenderStyle.None, effect));
         renderer.DrawText(position, text, _formatter, align, wrap ? size.x : 0);
     }
 

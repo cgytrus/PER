@@ -174,7 +174,7 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
                 """,
             flag => flag switch {
                 'c' => new Formatting(new Color(0f, 1f, 0f, 1f), Color.transparent),
-                'g' => new Formatting(Color.white, Color.transparent, RenderStyle.None, RenderOptions.Default,
+                'g' => new Formatting(Color.white, Color.transparent, RenderStyle.None,
                     renderer.formattingEffects["glitch"]),
                 'w' => new Formatting(Color.white, Color.transparent,
                     RenderStyle.Bold | RenderStyle.Italic | RenderStyle.Underline),
@@ -195,7 +195,7 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
 
         renderer.DrawText(new Vector2Int(10, 3),
             "per-text effects test", _ => new Formatting(Color.white, Color.transparent,
-                RenderStyle.None, RenderOptions.Default, renderer.formattingEffects["glitch"]));
+                RenderStyle.None, renderer.formattingEffects["glitch"]));
 
         for(int i = 0; i < _styleFormatters.Count; i++)
             renderer.DrawText(new Vector2Int(0, 5 + i), "styles test", _styleFormatters[i]);

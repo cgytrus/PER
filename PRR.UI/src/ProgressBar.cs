@@ -92,7 +92,7 @@ public class ProgressBar : Element {
         for(int x = 0; x < size.x; x++)
             for(int y = 0; y < size.y; y++)
                 renderer.DrawCharacter(new Vector2Int(position.x + x, position.y + y),
-                    new RenderCharacter('\0', _anim[x, y].Get(time), Color.transparent), RenderOptions.Default,
+                    new RenderCharacter('\0', _anim[x, y].Get(time), Color.transparent),
                     effect);
     }
 

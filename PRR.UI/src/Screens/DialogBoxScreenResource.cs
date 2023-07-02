@@ -19,7 +19,7 @@ public abstract class DialogBoxScreenResource : LayoutResource, IScreen, IUpdata
 
     protected virtual string foregroundColorId => "dialogBox_fg";
     protected virtual string backgroundColorId => "dialogBox_bg";
-    protected virtual IEffect? frameEffect => null;
+    protected virtual IDisplayEffect? frameEffect => null;
 
     private ColorsResource? _colors;
     private DialogBoxPaletteResource? _palette;
@@ -47,8 +47,7 @@ public abstract class DialogBoxScreenResource : LayoutResource, IScreen, IUpdata
         for(int y = 0; y < size.y; y++)
             for(int x = 0; x < size.x; x++)
                 renderer.DrawCharacter(new Vector2Int(offset.x + x, offset.y + y),
-                    new RenderCharacter(_palette.Get(x, y, size), backgroundColor, foregroundColor),
-                    RenderOptions.Default, frameEffect);
+                    new RenderCharacter(_palette.Get(x, y, size), backgroundColor, foregroundColor), frameEffect);
 
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < elementList.Count; i++)

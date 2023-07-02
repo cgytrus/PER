@@ -1,20 +1,15 @@
-﻿using System.Numerics;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
-using PER.Util;
 
 namespace PER.Common.Effects;
 
 [PublicAPI]
-public class BloomEffect : Resource, IEffect {
+public class BloomEffect : Resource, IPipelineEffect {
     public const string GlobalId = "graphics/effects/bloom";
 
     public IEnumerable<PipelineStep>? pipeline { get; private set; }
-    public bool hasModifiers => false;
-    public bool drawable => false;
 
     public override void Preload() {
         AddPath("vertex", "graphics/shaders/default_vert.glsl");
@@ -70,10 +65,4 @@ public class BloomEffect : Resource, IEffect {
     }
 
     public override void Unload(string id) => pipeline = null;
-
-    public void ApplyModifiers(Vector2Int at, ref Vector2 position, ref RenderCharacter character) { }
-
-    public void Update(bool fullscreen) { }
-
-    public void Draw(Vector2Int position) { }
 }

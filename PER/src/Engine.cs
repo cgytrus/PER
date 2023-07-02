@@ -159,8 +159,6 @@ public class Engine {
             _lastUpdateTime = updateTime;
         }
 
-        renderer.Clear();
-
         TimeSpan time = _clock.time;
         input.Update(time);
         renderer.Update(time);

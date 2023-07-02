@@ -27,7 +27,7 @@ public abstract class Element : IUpdatable {
     public virtual Vector2Int center =>
         new(position.x + (int)(size.x / 2f - 0.5f), position.y + (int)(size.y / 2f - 0.5f));
 
-    public IEffect? effect { get; set; }
+    public IDisplayEffect? effect { get; set; }
 
     protected Element(IRenderer renderer) => this.renderer = renderer;
 

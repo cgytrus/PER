@@ -8,12 +8,8 @@ using PER.Util;
 namespace PER.Common.Effects;
 
 [PublicAPI]
-public class FadeEffect : IEffect {
+public class FadeEffect : IModifierEffect, IUpdatableEffect {
     private enum State { None, Out, In }
-
-    public IEnumerable<PipelineStep>? pipeline => null;
-    public bool hasModifiers => true;
-    public bool drawable => false;
 
     public bool fading => _state != State.None;
     private float t => (float)_stopwatch.time.TotalSeconds / _state switch {
@@ -67,7 +63,7 @@ public class FadeEffect : IEffect {
         };
     }
 
-    public void Update(bool fullscreen) {
+    public void Update() {
         if(_callbackThisFrame)
             _callbackThisFrame = false;
         _lastT = t;
@@ -85,6 +81,4 @@ public class FadeEffect : IEffect {
                 break;
         }
     }
-
-    public void Draw(Vector2Int position) { }
 }

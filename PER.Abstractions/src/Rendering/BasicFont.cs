@@ -41,7 +41,7 @@ public abstract class BasicFont : IFont {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool IsCharacterDrawable(char character, RenderStyle style) =>
-        _drawable[(int)style | (character << sizeof(RenderStyle))];
+        _drawable[(int)style | (character << (sizeof(RenderStyle) * 8))];
 
     protected abstract Image ReadImage(string path);
 
@@ -73,7 +73,7 @@ public abstract class BasicFont : IFont {
 
         RenderStyle style = (RenderStyle)(y / originalHeight);
         char character = mappings[index];
-        _drawable[(int)style | (character << sizeof(RenderStyle))] = true;
+        _drawable[(int)style | (character << (sizeof(RenderStyle) * 8))] = true;
 
         Vector2[] texCoords = new Vector2[4];
         // Clockwise

@@ -5,7 +5,7 @@ namespace PER.Demo.Environment;
 
 public class EffectObject : LevelObject {
     public Vector2Int size { get; set; }
-    public IEffect? effect { get; set; }
+    public IDisplayEffect? effect { get; set; }
 
     protected override RenderCharacter character { get; } = new('a', Color.transparent, Color.white);
     public override void Draw() {

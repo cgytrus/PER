@@ -38,7 +38,7 @@ public class FilledPanel : Element {
         RenderCharacter rc = new(character, backgroundColor, foregroundColor, style);
         for(int y = bounds.min.y; y <= bounds.max.y; y++)
             for(int x = bounds.min.x; x <= bounds.max.x; x++)
-                renderer.DrawCharacter(new Vector2Int(x, y), rc, RenderOptions.Default, effect);
+                renderer.DrawCharacter(new Vector2Int(x, y), rc, effect);
     }
 
     public override void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id, string? special) {

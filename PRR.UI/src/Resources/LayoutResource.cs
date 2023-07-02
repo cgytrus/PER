@@ -18,22 +18,19 @@ namespace PRR.UI.Resources;
 public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutResourceElement>> {
     [PublicAPI]
     public readonly record struct TextFormatting(string? foregroundColor, string? backgroundColor,
-        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style,
-        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderOptions? options, string? effect = null) {
-        public Formatting GetFormatting(Dictionary<string, Color> colors, Dictionary<string, IEffect?> effects) {
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style, string? effect = null) {
+        public Formatting GetFormatting(Dictionary<string, Color> colors, Dictionary<string, IDisplayEffect?> effects) {
             Color foregroundColor = Color.white;
             Color backgroundColor = Color.transparent;
             RenderStyle style = RenderStyle.None;
-            RenderOptions options = RenderOptions.Default;
-            IEffect? effect = null;
+            IDisplayEffect? effect = null;
             if(this.foregroundColor is not null && colors.TryGetValue(this.foregroundColor, out Color color))
                 foregroundColor = color;
             if(this.backgroundColor is not null && colors.TryGetValue(this.backgroundColor, out color))
                 backgroundColor = color;
             if(this.style.HasValue) style = this.style.Value;
-            if(this.options.HasValue) options = this.options.Value;
             if(this.effect is not null) effects.TryGetValue(this.effect, out effect);
-            return new Formatting(foregroundColor, backgroundColor, style, options, effect);
+            return new Formatting(foregroundColor, backgroundColor, style, effect);
         }
     }
     [PublicAPI]

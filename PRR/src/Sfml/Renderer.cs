@@ -31,7 +31,7 @@ public class Renderer : BasicRenderer, IDisposable {
     public Text? text { get; private set; }
     public RenderWindow? window { get; private set; }
 
-    private readonly Dictionary<IEffect, CachedEffect> _cachedGlobalEffects = new();
+    private readonly Dictionary<IPipelineEffect, CachedPipelineEffect> _cachedPipelineEffects = new();
 
     private bool _swapTextures;
 
@@ -69,10 +69,10 @@ public class Renderer : BasicRenderer, IDisposable {
         if(base.Reset(settings))
             return true;
         // rebuild global effects cache on soft reload
-        _cachedGlobalEffects.Clear();
-        foreach(IEffect effect in globalEffects) {
-            CachedEffect cachedEffect = new() { effect = effect };
-            _cachedGlobalEffects.Add(effect, cachedEffect);
+        _cachedPipelineEffects.Clear();
+        foreach(IPipelineEffect effect in pipelineEffects) {
+            CachedPipelineEffect cachedPipelineEffect = new() { effect = effect };
+            _cachedPipelineEffects.Add(effect, cachedPipelineEffect);
         }
         return false;
     }
@@ -125,25 +125,29 @@ public class Renderer : BasicRenderer, IDisposable {
     }
 
     protected override void UpdateFont() {
-        _cachedGlobalEffects.Clear();
+        _cachedPipelineEffects.Clear();
         base.UpdateFont();
     }
 
     protected override void CreateText() =>
-        text = new Text(font, new Vector2Int(width, height), globalModEffects, display, displayUsed, effects);
+        text = new Text(font, new Vector2Int(width, height), display, displayUsed, displayEffects,
+            globalDrawableEffects, globalModEffects);
 
     public override void AddEffect(IEffect effect) {
         base.AddEffect(effect);
-        if(_cachedGlobalEffects.ContainsKey(effect)) return;
-        CachedEffect cachedEffect = new() { effect = effect };
-        _cachedGlobalEffects.Add(effect, cachedEffect);
+        if(effect is not IPipelineEffect pipelineEffect || _cachedPipelineEffects.ContainsKey(pipelineEffect))
+            return;
+        CachedPipelineEffect cachedPipelineEffect = new() { effect = pipelineEffect };
+        _cachedPipelineEffects.Add(pipelineEffect, cachedPipelineEffect);
     }
 
     public override void Draw() {
-        if(window is null)
+        if(window is null) {
+            base.Draw();
             return;
+        }
 
-        DrawAllEffects();
+        UpdateEffects();
 
         text?.RebuildQuads(_textPosition);
 
@@ -156,17 +160,20 @@ public class Renderer : BasicRenderer, IDisposable {
         RunPipelines();
 
         window.Display();
+
+        base.Draw();
     }
 
     private void RunPipelines() {
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach(IEffect effect in globalEffects) {
-            if(effect.pipeline is null) continue;
+        foreach(IPipelineEffect effect in pipelineEffects) {
+            if(effect.pipeline is null)
+                continue;
 
-            CachedEffect cachedEffect = _cachedGlobalEffects[effect];
+            CachedPipelineEffect cachedPipelineEffect = _cachedPipelineEffects[effect];
             // ignore because can't be null when effect.pipeline is not null
-            for(int i = 0; i < cachedEffect.pipeline!.Length; i++) {
-                CachedPipelineStep step = cachedEffect.pipeline[i];
+            for(int i = 0; i < cachedPipelineEffect.pipeline!.Length; i++) {
+                CachedPipelineStep step = cachedPipelineEffect.pipeline[i];
                 RunPipelineStep(step, i);
             }
         }

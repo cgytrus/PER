@@ -9,8 +9,8 @@ using Shader = SFML.Graphics.Shader;
 
 namespace PRR.Sfml;
 
-public class CachedEffect {
-    public IEffect? effect {
+public class CachedPipelineEffect {
+    public IPipelineEffect? effect {
         get => _effect;
         set {
             if(_effect == value) return;
@@ -32,5 +32,5 @@ public class CachedEffect {
 
     public CachedPipelineStep[]? pipeline { get; private set; }
 
-    private IEffect? _effect;
+    private IPipelineEffect? _effect;
 }

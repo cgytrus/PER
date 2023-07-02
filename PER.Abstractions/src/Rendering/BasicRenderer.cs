@@ -60,15 +60,16 @@ public abstract class BasicRenderer : IRenderer {
 
     public virtual Color background { get; set; } = Color.black;
 
-    public Dictionary<string, IEffect?> formattingEffects { get; } = new();
-
-    protected List<IEffect> globalEffects { get; private set; } = new();
-    protected List<IEffect> globalModEffects { get; private set; } = new();
+    public Dictionary<string, IDisplayEffect?> formattingEffects { get; } = new();
 
     protected RenderCharacter[,] display { get; private set; } = new RenderCharacter[0, 0];
-    protected HashSet<Vector2Int> displayUsed { get; private set; } = new();
+    protected bool[,] displayUsed { get; private set; } = new bool[0, 0];
 
-    protected Dictionary<Vector2Int, IEffect> effects { get; private set; } = new();
+    protected List<IUpdatableEffect> updatableEffects { get; private set; } = new();
+    protected List<IPipelineEffect> pipelineEffects { get; private set; } = new();
+    protected List<IDrawableEffect> globalDrawableEffects { get; private set; } = new();
+    protected List<IModifierEffect> globalModEffects { get; private set; } = new();
+    protected IDisplayEffect?[,] displayEffects { get; private set; } = new IDisplayEffect?[0, 0];
 
     private bool _verticalSync;
     private bool _fullscreen;
@@ -114,10 +115,12 @@ public abstract class BasicRenderer : IRenderer {
 
     protected virtual void UpdateFont() {
         display = new RenderCharacter[height, width];
-        displayUsed = new HashSet<Vector2Int>(width * height);
-        effects = new Dictionary<Vector2Int, IEffect>(width * height);
+        displayUsed = new bool[height, width];
+        displayEffects = new IDisplayEffect?[height, width];
 
-        globalEffects.Clear();
+        updatableEffects.Clear();
+        pipelineEffects.Clear();
+        globalDrawableEffects.Clear();
         globalModEffects.Clear();
 
         CreateText();
@@ -125,69 +128,29 @@ public abstract class BasicRenderer : IRenderer {
 
     protected abstract void CreateText();
 
-    public virtual void Clear() {
-        displayUsed.Clear();
-        effects.Clear();
-        globalEffects.Clear();
+    public virtual void Draw() {
+        updatableEffects.Clear();
+        pipelineEffects.Clear();
+        globalDrawableEffects.Clear();
         globalModEffects.Clear();
     }
 
-    public abstract void Draw();
-
-    protected void DrawAllEffects() {
-        DrawEffects();
-        DrawGlobalEffects();
-    }
-
-    private void DrawEffects() {
-        foreach((Vector2Int position, IEffect effect) in effects) {
-            effect.Update(false);
-            if(effect.drawable)
-                effect.Draw(position);
-        }
-    }
-
-    private void DrawGlobalEffects() {
-        foreach(IEffect effect in globalEffects) {
-            effect.Update(true);
-            if(!effect.drawable)
-                continue;
-            for(int y = 0; y < height; y++)
-                for(int x = 0; x < width; x++)
-                    effect.Draw(new Vector2Int(x, y));
-        }
+    protected void UpdateEffects() {
+        foreach(IUpdatableEffect effect in updatableEffects)
+            effect.Update();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual void DrawCharacter(Vector2Int position, RenderCharacter character,
-        RenderOptions options = RenderOptions.Default, IEffect? effect = null) {
+    public virtual void DrawCharacter(Vector2Int position, RenderCharacter character, IDisplayEffect? effect = null) {
         if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
             return;
-
-        if(IsCharacterEmpty(character)) {
-            AddEffect(position, effect);
-            return;
-        }
-
-        if((options & RenderOptions.BackgroundAlphaBlending) != 0) {
-            RenderCharacter currentCharacter = GetCharacter(position);
-            Color background = currentCharacter.background.Blend(character.background);
-            character = character with { background = background };
-        }
-
-        if((options & RenderOptions.InvertedBackgroundAsForegroundColor) != 0) {
-            RenderCharacter currentCharacter = GetCharacter(position);
-            character = character with { foreground = Color.white - currentCharacter.background };
-        }
-
-        if(IsCharacterEmpty(character))
-            displayUsed.Remove(position);
-        else {
-            display[position.y, position.x] = character;
-            displayUsed.Add(position);
-        }
-
         AddEffect(position, effect);
+        if(IsCharacterEmpty(character))
+            return;
+        if(!IsCharacterEmpty(position))
+            character = character with { background = GetCharacter(position).background.Blend(character.background) };
+        display[position.y, position.x] = character;
+        displayUsed[position.y, position.x] = true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -243,8 +206,8 @@ public abstract class BasicRenderer : IRenderer {
             Formatting formatting = formatter(formattingFlag);
             Vector2Int charPos = new(position.x + x, position.y + y);
             DrawCharacter(charPos,
-                new RenderCharacter(toDraw, formatting.backgroundColor, formatting.foregroundColor,
-                    formatting.style), formatting.options, formatting.effect);
+                new RenderCharacter(toDraw, formatting.backgroundColor, formatting.foregroundColor, formatting.style),
+                formatting.effect);
             x++;
         }
     }
@@ -261,22 +224,30 @@ public abstract class BasicRenderer : IRenderer {
         new RenderCharacter('\0', Color.transparent, Color.transparent) : display[position.y, position.x];
 
     public virtual void AddEffect(IEffect effect) {
-        globalEffects.Add(effect);
-        if(effect.hasModifiers)
-            globalModEffects.Add(effect);
+        // ReSharper disable once ConvertIfStatementToSwitchStatement
+        if(effect is IUpdatableEffect updatable)
+            updatableEffects.Add(updatable);
+        if(effect is IPipelineEffect pipeline)
+            pipelineEffects.Add(pipeline);
+        if(effect is IDrawableEffect drawable)
+            globalDrawableEffects.Add(drawable);
+        if(effect is IModifierEffect mod)
+            globalModEffects.Add(mod);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual void AddEffect(Vector2Int position, IEffect? effect) {
-        if(effect is null) {
-            effects.Remove(position);
+    public virtual void AddEffect(Vector2Int position, IDisplayEffect? effect) {
+        if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
             return;
-        }
-        effects[position] = effect;
+        if(displayEffects[position.y, position.x] is IUpdatableEffect prevUpdatable)
+            updatableEffects.Remove(prevUpdatable);
+        if(effect is IUpdatableEffect updatable)
+            updatableEffects.Add(updatable);
+        displayEffects[position.y, position.x] = effect;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual bool IsCharacterEmpty(Vector2Int position) => !displayUsed.Contains(position);
+    public virtual bool IsCharacterEmpty(Vector2Int position) => !displayUsed[position.y, position.x];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual bool IsCharacterEmpty(RenderCharacter renderCharacter) =>

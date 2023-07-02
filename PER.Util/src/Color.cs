@@ -51,8 +51,10 @@ public readonly struct Color : IEquatable<Color> {
         // which caused a to be 0, which caused a division by 0, which caused the RGB of the color be NaN,NaN,NaN,
         // which caused any other operation with that color return NaN, which was displaying as if it was black...
         // i wanna f---ing die.
-        if(bottom.a == 0f && top.a == 0f)
-            return transparent;
+        if(bottom.a == 0f)
+            return top;
+        if(top.a == 0f)
+            return bottom;
 
         float t = (1f - top.a) * bottom.a;
         float a = t + top.a;

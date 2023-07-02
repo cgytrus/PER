@@ -74,8 +74,7 @@ public class Slider : ClickableElement {
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
         Vector2Int position = new(this.position.x + x, this.position.y + y);
         char character = x < _relativeValue ? '─' : x == _relativeValue ? '█' : '-';
-        renderer.DrawCharacter(position, new RenderCharacter(character, backgroundColor, foregroundColor),
-            RenderOptions.Default, effect);
+        renderer.DrawCharacter(position, new RenderCharacter(character, backgroundColor, foregroundColor), effect);
     }
 
     protected override void CustomUpdate(TimeSpan time) { }
