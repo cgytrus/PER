@@ -27,6 +27,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     public IReadOnlyDictionary<Guid, TObject> objects => _objects;
     private readonly Dictionary<Guid, TObject> _objects = new();
+    private readonly List<TObject> _dirtyObjects = new();
 
     private readonly Vector2Int _chunkSize;
     private readonly Dictionary<Vector2Int, TChunk> _chunks = new();
@@ -85,15 +86,15 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1) + _chunkSize / 2)
         );
         UpdateChunksInBounds(time, cameraChunks);
-        CheckDirty();
-        AddNewChunks();
         DrawChunksInBounds(cameraChunks);
     }
 
     public void Tick(TimeSpan time) {
-        TickChunks(time);
+        foreach(TChunk chunk in _chunks.Values) {
+            chunk.Tick(time);
+            chunk.PopulateDirty(_dirtyObjects);
+        }
         CheckDirty();
-        AddNewChunks();
     }
 
     private void UpdateChunksInBounds(TimeSpan time, Bounds bounds) {
@@ -103,9 +104,12 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
                 if(y > _maxChunkPos.y)
                     y = _minChunkPos.y;
-                GetChunkAt(new Vector2Int(x, y)).Update(time);
+                TChunk chunk = GetChunkAt(new Vector2Int(x, y));
+                chunk.Update(time);
+                chunk.PopulateDirty(_dirtyObjects);
             }
         }
+        CheckDirty();
     }
 
     private void DrawChunksInBounds(Bounds bounds) {
@@ -120,14 +124,9 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         }
     }
 
-    private void TickChunks(TimeSpan time) {
-        foreach(TChunk chunk in _chunks.Values)
-            chunk.Tick(time);
-    }
-
     private void CheckDirty() {
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject obj in _objects.Values) {
+        foreach(TObject obj in _dirtyObjects) {
             if(obj.positionDirty) {
                 ObjectMoved(obj);
                 obj.positionDirty = false;
@@ -137,6 +136,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             objectChanged?.Invoke(obj);
             obj.ClearDirty();
         }
+        _dirtyObjects.Clear();
+        AddNewChunks();
     }
 
     private void ObjectMoved(TObject obj) {

@@ -46,6 +46,13 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
             tickable.Tick(time);
     }
 
+    public void PopulateDirty(List<TObject> dirtyObjects) {
+        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
+        foreach(TObject obj in _objects)
+            if(obj.positionDirty || obj.dirty)
+                dirtyObjects.Add(obj);
+    }
+
     public bool HasObjectAt(Vector2Int position) {
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
         foreach(TObject obj in _objects)
