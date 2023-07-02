@@ -71,8 +71,9 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
             if(_position == value)
                 return;
             dirty = true;
+            if(!positionDirty)
+                internalPrevPosition = _position;
             positionDirty = true;
-            internalPrevPosition = _position;
             _position = value;
         }
     }
