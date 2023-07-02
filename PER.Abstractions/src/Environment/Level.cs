@@ -85,16 +85,40 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             ScreenToChunkPosition(-_chunkSize / 2),
             ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1) + _chunkSize / 2)
         );
+        AddNewChunks();
         UpdateChunksInBounds(time, cameraChunks);
         DrawChunksInBounds(cameraChunks);
     }
 
     public void Tick(TimeSpan time) {
-        foreach(TChunk chunk in _chunks.Values) {
+        foreach(TChunk chunk in _chunks.Values)
             chunk.Tick(time);
+        foreach(TChunk chunk in _chunks.Values)
             chunk.PopulateDirty(_dirtyObjects);
+        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+        foreach(TObject obj in _dirtyObjects)
+            CheckDirty(obj);
+        _dirtyObjects.Clear();
+        AddNewChunks();
+    }
+
+    public void CheckDirty(TObject obj) {
+        if(obj.positionDirty) {
+            Vector2Int fromChunkPos = LevelToChunkPosition(obj.internalPrevPosition);
+            Vector2Int toChunkPos = LevelToChunkPosition(obj.position);
+            if(fromChunkPos != toChunkPos) {
+                GetChunkAt(fromChunkPos).Remove(obj);
+                GetChunkAt(toChunkPos).Add(obj);
+            }
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            if(obj is IMovable movable)
+                movable.Moved();
+            obj.positionDirty = false;
         }
-        CheckDirty();
+        if(!obj.dirty)
+            return;
+        objectChanged?.Invoke(obj);
+        obj.ClearDirty();
     }
 
     private void UpdateChunksInBounds(TimeSpan time, Bounds bounds) {
@@ -104,12 +128,9 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
                 if(y > _maxChunkPos.y)
                     y = _minChunkPos.y;
-                TChunk chunk = GetChunkAt(new Vector2Int(x, y));
-                chunk.Update(time);
-                chunk.PopulateDirty(_dirtyObjects);
+                GetChunkAt(new Vector2Int(x, y)).Update(time);
             }
         }
-        CheckDirty();
     }
 
     private void DrawChunksInBounds(Bounds bounds) {
@@ -122,34 +143,6 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
                 GetChunkAt(new Vector2Int(x, y)).Draw();
             }
         }
-    }
-
-    private void CheckDirty() {
-        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject obj in _dirtyObjects) {
-            if(obj.positionDirty) {
-                ObjectMoved(obj);
-                obj.positionDirty = false;
-            }
-            if(!obj.dirty)
-                continue;
-            objectChanged?.Invoke(obj);
-            obj.ClearDirty();
-        }
-        _dirtyObjects.Clear();
-        AddNewChunks();
-    }
-
-    private void ObjectMoved(TObject obj) {
-        Vector2Int fromChunkPos = LevelToChunkPosition(obj.internalPrevPosition);
-        Vector2Int toChunkPos = LevelToChunkPosition(obj.position);
-        if(fromChunkPos != toChunkPos) {
-            GetChunkAt(fromChunkPos).Remove(obj);
-            GetChunkAt(toChunkPos).Add(obj);
-        }
-        // ReSharper disable once SuspiciousTypeConversion.Global
-        if(obj is IMovable movable)
-            movable.Moved();
     }
 
     private void AddNewChunks() {
