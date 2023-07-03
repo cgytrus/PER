@@ -7,6 +7,7 @@ public class EffectObject : LevelObject {
     public Vector2Int size { get; set; }
     public IDisplayEffect? effect { get; set; }
 
+    public override int layer => 2;
     protected override RenderCharacter character { get; } = new('a', Color.transparent, Color.white);
     public override void Draw() {
         for(int y = 0; y < size.y; y++)

@@ -25,6 +25,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     protected IAudio audio => level.audio;
     protected IResources resources => level.resources;
 
+    public abstract int layer { get; }
     protected abstract RenderCharacter character { get; }
 
     public bool dirty {
@@ -44,15 +45,6 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
             if(_level is not null)
                 throw new InvalidOperationException($"{nameof(id)} cannot be changed while in a level");
             _id = value;
-        }
-    }
-
-    public int layer {
-        get => _layer;
-        set {
-            if(_level is not null)
-                throw new InvalidOperationException($"{nameof(layer)} cannot be changed while in a level");
-            _layer = value;
         }
     }
 
@@ -83,7 +75,6 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     private bool _dirty;
 
     private Guid _id = Guid.NewGuid();
-    private int _layer;
     private Vector2Int _position;
 
     public virtual void Draw() => renderer.DrawCharacter(level.LevelToScreenPosition(position), character);

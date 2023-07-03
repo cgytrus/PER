@@ -8,6 +8,7 @@ using PER.Util;
 namespace PER.Demo.Environment;
 
 public class PlayerObject : LevelObject, IUpdatable, ITickable {
+    public override int layer => 0;
     protected override RenderCharacter character { get; } = new('@', Color.transparent, new Color(0, 255, 255, 255));
 
     private int _moveX;
