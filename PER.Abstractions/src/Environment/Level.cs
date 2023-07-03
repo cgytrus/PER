@@ -33,8 +33,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     private readonly Vector2Int _chunkSize;
     private readonly Dictionary<Vector2Int, TChunk> _chunks = new();
-    private readonly Dictionary<Vector2Int, TChunk> _newChunks = new();
-    private readonly List<Vector2Int> _chunksToGenerate = new();
+    private readonly Dictionary<Vector2Int, TChunk> _autoChunks = new();
+    private readonly List<(Vector2Int, Vector2Int)> _chunksToGenerate = new();
     private readonly Vector2Int _minChunkPos;
     private readonly Vector2Int _maxChunkPos;
 
@@ -97,8 +97,13 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     public void Tick(TimeSpan time) {
         updateState = LevelUpdateState.Tick;
-        foreach(TChunk chunk in _chunks.Values)
+        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+        foreach(TChunk chunk in _chunks.Values) {
+            if(chunk.ticks <= 0)
+                continue;
             chunk.Tick(time);
+            chunk.ticks--;
+        }
         foreach(TChunk chunk in _chunks.Values)
             chunk.PopulateDirty(_dirtyObjects);
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
@@ -135,7 +140,9 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
                 if(y > _maxChunkPos.y)
                     y = _minChunkPos.y;
-                GetChunkAt(new Vector2Int(x, y)).Update(time);
+                TChunk chunk = GetChunkAt(new Vector2Int(x, y));
+                chunk.ticks++;
+                chunk.Update(time);
             }
         }
     }
@@ -153,17 +160,19 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     private void AddNewChunks() {
-        foreach((Vector2Int pos, TChunk chunk) in _newChunks) {
+        foreach((Vector2Int pos, TChunk chunk) in _autoChunks) {
+            if(chunk.ticks <= 0)
+                continue;
             _chunks.Add(pos, chunk);
-            Vector2Int levelPosition = ChunkToLevelPosition(pos);
+            _chunksToGenerate.Add((ChunkToLevelPosition(pos), pos));
+        }
+        foreach((Vector2Int levelPosition, Vector2Int pos) in _chunksToGenerate) {
+            _autoChunks.Remove(pos);
             // weird chunk size, skip gen
             if(LevelToChunkPosition(levelPosition + _chunkSize - new Vector2Int(1, 1)) != pos)
                 continue;
-            _chunksToGenerate.Add(levelPosition);
-        }
-        _newChunks.Clear();
-        foreach(Vector2Int levelPosition in _chunksToGenerate)
             chunkCreated?.Invoke(levelPosition, _chunkSize);
+        }
         _chunksToGenerate.Clear();
     }
 
@@ -178,13 +187,13 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     public bool TryGetObjectAt<T>(Vector2Int position, [NotNullWhen(true)] out T? ret) where T : class =>
         GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, out ret);
 
-    public void CreateChunkAt(Vector2Int chunkPosition) => GetChunkAt(chunkPosition);
+    public void LoadChunkAt(Vector2Int chunkPosition) => GetChunkAt(chunkPosition).ticks += 2;
     private TChunk GetChunkAt(Vector2Int chunkPosition) {
         if(_chunks.TryGetValue(chunkPosition, out TChunk? chunk) ||
-            _newChunks.TryGetValue(chunkPosition, out chunk))
+            _autoChunks.TryGetValue(chunkPosition, out chunk))
             return chunk;
         chunk = new TChunk();
-        _newChunks.Add(chunkPosition, chunk);
+        _autoChunks.Add(chunkPosition, chunk);
         return chunk;
     }
 

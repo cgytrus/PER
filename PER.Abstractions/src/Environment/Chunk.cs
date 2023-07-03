@@ -10,6 +10,8 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     where TLevel : Level<TLevel, TChunk, TObject>
     where TChunk : Chunk<TLevel, TChunk, TObject>, new()
     where TObject : LevelObject<TLevel, TChunk, TObject> {
+    internal int ticks { get; set; }
+
     private readonly List<TObject> _objects = new();
     private readonly List<IUpdatable> _updatables = new();
     private readonly List<ITickable> _tickables = new();
