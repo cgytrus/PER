@@ -39,14 +39,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
 
     internal bool positionDirty { get; set; }
 
-    public Guid id {
-        get => _id;
-        set {
-            if(_level is not null)
-                throw new InvalidOperationException($"{nameof(id)} cannot be changed while in a level");
-            _id = value;
-        }
-    }
+    public Guid id { get; protected init; } = Guid.NewGuid();
 
     internal Vector2Int internalPrevPosition { get; private set; }
 
@@ -74,7 +67,6 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
 
     private bool _dirty;
 
-    private Guid _id = Guid.NewGuid();
     private Vector2Int _position;
 
     public virtual void Draw() => renderer.DrawCharacter(level.LevelToScreenPosition(position), character);
