@@ -12,7 +12,7 @@ namespace PRR.UI;
 
 [PublicAPI]
 public class Slider : ClickableElement {
-    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceSlider);
+    public static readonly Type serializedType = typeof(LayoutResourceSlider);
 
     protected override string type => "slider";
 
@@ -78,4 +78,24 @@ public class Slider : ClickableElement {
     }
 
     protected override void CustomUpdate(TimeSpan time) { }
+
+    private record LayoutResourceSlider(bool? enabled, Vector2Int position, Vector2Int size, int? width, float? value,
+        float? minValue, float? maxValue, bool? active) :
+        LayoutResource.LayoutResourceElement(enabled, position, size) {
+        public override Element GetElement(LayoutResource resource, IRenderer renderer,
+            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            Slider element = new(renderer, input, audio) {
+                position = position,
+                size = size
+            };
+            if(enabled.HasValue) element.enabled = enabled.Value;
+            if(width.HasValue) element.width = width.Value;
+            if(minValue.HasValue) element.minValue = minValue.Value;
+            if(maxValue.HasValue) element.maxValue = maxValue.Value;
+            if(value.HasValue) element.value = value.Value;
+            if(active.HasValue) element.active = active.Value;
+            element.UpdateColors(colors, layoutName, id, null);
+            return element;
+        }
+    }
 }

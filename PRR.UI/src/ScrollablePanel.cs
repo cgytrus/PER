@@ -1,14 +1,19 @@
 ﻿using JetBrains.Annotations;
 
+using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.UI;
 using PER.Util;
 
+using PRR.UI.Resources;
+
 namespace PRR.UI;
 
 [PublicAPI]
 public class ScrollablePanel : Element {
+    public static readonly Type serializedType = typeof(LayoutResourceScrollablePanel);
+
     public IInput input { get; set; }
 
     public override bool enabled {
@@ -84,4 +89,18 @@ public class ScrollablePanel : Element {
 
     public override void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id,
         string? special) { }
+
+    protected record LayoutResourceScrollablePanel(bool? enabled, Vector2Int position, Vector2Int size) :
+        LayoutResource.LayoutResourceElement(enabled, position, size) {
+        public override Element GetElement(LayoutResource resource, IRenderer renderer,
+            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            ScrollablePanel element = new(renderer, input) {
+                position = position,
+                size = size
+            };
+            if(enabled.HasValue) element.enabled = enabled.Value;
+            element.UpdateColors(colors, layoutName, id, null);
+            return element;
+        }
+    }
 }

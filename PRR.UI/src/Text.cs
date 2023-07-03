@@ -1,5 +1,9 @@
-﻿using JetBrains.Annotations;
+﻿using System.Text.Json.Serialization;
 
+using JetBrains.Annotations;
+
+using PER.Abstractions.Audio;
+using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.UI;
 using PER.Util;
@@ -10,7 +14,7 @@ namespace PRR.UI;
 
 [PublicAPI]
 public class Text : Element {
-    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceText);
+    public static readonly Type serializedType = typeof(LayoutResourceText);
 
     public string? text { get; set; }
     public Dictionary<char, Formatting> formatting { get; set; } = new();
@@ -52,5 +56,30 @@ public class Text : Element {
         formatting['\0'] = formatting.TryGetValue('\0', out Formatting oldFormatting) ?
             oldFormatting with { foregroundColor = foregroundColor, backgroundColor = backgroundColor } :
             new Formatting(foregroundColor, backgroundColor);
+    }
+
+    private record LayoutResourceText(bool? enabled, Vector2Int position, Vector2Int size, string? text,
+        Dictionary<char, LayoutResourceTextFormatting>? formatting,
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] HorizontalAlignment? align, bool? wrap) :
+        LayoutResource.LayoutResourceElement(enabled, position, size) {
+        public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
+            Dictionary<string, Color> colors, string layoutName, string id) {
+            Text element = new(renderer) {
+                position = position,
+                size = size,
+                text = text
+            };
+            if(text is null && TryGetPath(resource, $"{id}.text", out string? filePath))
+                element.text = File.ReadAllText(filePath);
+            if(enabled.HasValue) element.enabled = enabled.Value;
+            if(formatting is not null)
+                foreach((char flag, LayoutResourceTextFormatting textFormatting) in formatting)
+                    element.formatting.Add(flag,
+                        textFormatting.GetFormatting(colors, renderer.formattingEffects));
+            if(align.HasValue) element.align = align.Value;
+            if(wrap.HasValue) element.wrap = wrap.Value;
+            element.UpdateColors(colors, layoutName, id, null);
+            return element;
+        }
     }
 }

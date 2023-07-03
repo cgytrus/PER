@@ -1,5 +1,9 @@
-﻿using JetBrains.Annotations;
+﻿using System.Text.Json.Serialization;
 
+using JetBrains.Annotations;
+
+using PER.Abstractions.Audio;
+using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.UI;
 using PER.Util;
@@ -10,7 +14,7 @@ namespace PRR.UI;
 
 [PublicAPI]
 public class FilledPanel : Element {
-    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceFilledPanel);
+    public static readonly Type serializedType = typeof(LayoutResourceFilledPanel);
 
     public char character { get; set; } = '\0';
     public Color foregroundColor { get; set; } = Color.white;
@@ -46,5 +50,22 @@ public class FilledPanel : Element {
             foregroundColor = color;
         if(TryGetColor(colors, "panel", layoutName, id, "bg", special, out color))
             backgroundColor = color;
+    }
+
+    private record LayoutResourceFilledPanel(bool? enabled, Vector2Int position, Vector2Int size, char? character,
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style) :
+        LayoutResource.LayoutResourceElement(enabled, position, size) {
+        public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
+            Dictionary<string, Color> colors, string layoutName, string id) {
+            FilledPanel element = new(renderer) {
+                position = position,
+                size = size
+            };
+            if(enabled.HasValue) element.enabled = enabled.Value;
+            if(character.HasValue) element.character = character.Value;
+            if(style.HasValue) element.style = style.Value;
+            element.UpdateColors(colors, layoutName, id, null);
+            return element;
+        }
     }
 }

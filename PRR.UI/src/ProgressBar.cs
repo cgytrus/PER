@@ -1,5 +1,7 @@
 ﻿using JetBrains.Annotations;
 
+using PER.Abstractions.Audio;
+using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.UI;
 using PER.Util;
@@ -10,7 +12,7 @@ namespace PRR.UI;
 
 [PublicAPI]
 public class ProgressBar : Element {
-    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceProgressBar);
+    public static readonly Type serializedType = typeof(LayoutResourceProgressBar);
 
     private struct AnimatedCharacter {
         private float speed { get; set; }
@@ -101,5 +103,20 @@ public class ProgressBar : Element {
             lowColor = color;
         if(TryGetColor(colors, "progressBar", layoutName, id, "high", special, out color))
             highColor = color;
+    }
+
+    private record LayoutResourceProgressBar(bool? enabled, Vector2Int position, Vector2Int size, float? value) :
+        LayoutResource.LayoutResourceElement(enabled, position, size) {
+        public override Element GetElement(LayoutResource resource, IRenderer renderer,
+            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            ProgressBar element = new(renderer) {
+                position = position,
+                size = size
+            };
+            if(enabled.HasValue) element.enabled = enabled.Value;
+            if(value.HasValue) element.value = value.Value;
+            element.UpdateColors(colors, layoutName, id, null);
+            return element;
+        }
     }
 }

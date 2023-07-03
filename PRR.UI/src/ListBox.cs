@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 
+using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.UI;
@@ -23,7 +24,7 @@ public interface IListBoxTemplateFactory<TItem> {
 
 [PublicAPI]
 public class ListBox<TItem> : ScrollablePanel {
-    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceListBox<TItem>);
+    public new static readonly Type serializedType = typeof(LayoutResourceListBox);
 
     public IReadOnlyList<TItem> items => _items;
 
@@ -107,5 +108,21 @@ public class ListBox<TItem> : ScrollablePanel {
         _elements[b].Enable();
         _elements[b].MoveTo(offsetPosition, a, size);
         (_elements[a], _elements[b]) = (_elements[b], _elements[a]);
+    }
+
+    private record LayoutResourceListBox(bool? enabled, Vector2Int position, Vector2Int size, string template) :
+        LayoutResourceScrollablePanel(enabled, position, size) {
+        public override Element GetElement(LayoutResource resource, IRenderer renderer,
+            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            ListBoxTemplateResource<TItem> templateFactory =
+                GetDependency<ListBoxTemplateResource<TItem>>(resource, $"layouts/templates/{template}");
+            ListBox<TItem> element = new(renderer, input, templateFactory) {
+                position = position,
+                size = size
+            };
+            if(enabled.HasValue) element.enabled = enabled.Value;
+            element.UpdateColors(colors, layoutName, id, null);
+            return element;
+        }
     }
 }

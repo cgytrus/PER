@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System.Text.Json.Serialization;
+
+using JetBrains.Annotations;
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
@@ -12,7 +14,7 @@ namespace PRR.UI;
 
 [PublicAPI]
 public class Button : ClickableElement {
-    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceButton);
+    public static readonly Type serializedType = typeof(LayoutResourceButton);
 
     protected override string type => "button";
 
@@ -63,5 +65,24 @@ public class Button : ClickableElement {
         RenderCharacter character = renderer.GetCharacter(position);
         character = new RenderCharacter(character.character, backgroundColor, foregroundColor, style);
         renderer.DrawCharacter(position, character, effect);
+    }
+
+    private record LayoutResourceButton(bool? enabled, Vector2Int position, Vector2Int size, string? text,
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style, bool? active, bool? toggled) :
+        LayoutResource.LayoutResourceElement(enabled, position, size) {
+        public override Element GetElement(LayoutResource resource, IRenderer renderer,
+            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            Button element = new(renderer, input, audio) {
+                position = position,
+                size = size,
+                text = text
+            };
+            if(enabled.HasValue) element.enabled = enabled.Value;
+            if(style.HasValue) element.style = style.Value;
+            if(active.HasValue) element.active = active.Value;
+            if(toggled.HasValue) element.toggled = toggled.Value;
+            element.UpdateColors(colors, layoutName, id, null);
+            return element;
+        }
     }
 }

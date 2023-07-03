@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System.Text.Json.Serialization;
+
+using JetBrains.Annotations;
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
@@ -12,7 +14,7 @@ namespace PRR.UI;
 
 [PublicAPI]
 public class InputField : ClickableElement {
-    public static readonly Type serializedType = typeof(LayoutResource.LayoutResourceInputField);
+    public static readonly Type serializedType = typeof(LayoutResourceInputField);
 
     protected override string type => "inputField";
 
@@ -337,5 +339,28 @@ public class InputField : ClickableElement {
             return;
         _animSpeeds[position.y, position.x] = Random.Shared.NextSingle(MinSpeed, MaxSpeed);
         _animStartTimes[position.y, position.x] = time;
+    }
+
+    private record LayoutResourceInputField(bool? enabled, Vector2Int position, Vector2Int size, string? value,
+        string? placeholder, bool? wrap, int? cursor, float? blinkRate,
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style, bool? active) :
+        LayoutResource.LayoutResourceElement(enabled, position, size) {
+        public override Element GetElement(LayoutResource resource, IRenderer renderer,
+            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            InputField element = new(renderer, input, audio) {
+                position = position,
+                size = size,
+                value = value,
+                placeholder = placeholder
+            };
+            if(enabled.HasValue) element.enabled = enabled.Value;
+            if(wrap.HasValue) element.wrap = wrap.Value;
+            if(cursor.HasValue) element.cursor = cursor.Value;
+            if(blinkRate.HasValue) element.blinkRate = blinkRate.Value;
+            if(style.HasValue) element.style = style.Value;
+            if(active.HasValue) element.active = active.Value;
+            element.UpdateColors(colors, layoutName, id, null);
+            return element;
+        }
     }
 }
