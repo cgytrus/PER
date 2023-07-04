@@ -232,4 +232,22 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ChunkToScreenPosition(Vector2Int chunkPosition) =>
         LevelToScreenPosition(ChunkToLevelPosition(chunkPosition));
+
+    public Bounds GetBounds() {
+        int minX = int.MaxValue;
+        int minY = int.MaxValue;
+        int maxX = int.MinValue;
+        int maxY = int.MinValue;
+        foreach(TObject obj in _objects.Values) {
+            if(obj.position.x < minX)
+                minX = obj.position.x;
+            if(obj.position.y < minY)
+                minY = obj.position.y;
+            if(obj.position.x > maxX)
+                maxX = obj.position.x;
+            if(obj.position.y > maxY)
+                maxY = obj.position.y;
+        }
+        return new Bounds(new Vector2Int(minX, minY), new Vector2Int(maxX, maxY));
+    }
 }
