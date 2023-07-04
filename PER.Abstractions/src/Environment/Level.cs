@@ -178,14 +178,24 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     public bool HasObjectAt(Vector2Int position) =>
         GetChunkAt(LevelToChunkPosition(position)).HasObjectAt(position);
+    public bool HasObjectAt(Vector2Int position, int minLayer) =>
+        GetChunkAt(LevelToChunkPosition(position)).HasObjectAt(position, minLayer);
     public bool HasObjectAt(Vector2Int position, Type type) =>
         GetChunkAt(LevelToChunkPosition(position)).HasObjectAt(position, type);
+    public bool HasObjectAt(Vector2Int position, int minLayer, Type type) =>
+        GetChunkAt(LevelToChunkPosition(position)).HasObjectAt(position, minLayer, type);
     public bool HasObjectAt<T>(Vector2Int position) where T : class =>
         GetChunkAt(LevelToChunkPosition(position)).HasObjectAt<T>(position);
+    public bool HasObjectAt<T>(Vector2Int position, int minLayer) where T : class =>
+        GetChunkAt(LevelToChunkPosition(position)).HasObjectAt<T>(position, minLayer);
     public bool TryGetObjectAt(Vector2Int position, [NotNullWhen(true)] out TObject? ret) =>
         GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, out ret);
+    public bool TryGetObjectAt(Vector2Int position, int minLayer, [NotNullWhen(true)] out TObject? ret) =>
+        GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, minLayer, out ret);
     public bool TryGetObjectAt<T>(Vector2Int position, [NotNullWhen(true)] out T? ret) where T : class =>
         GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, out ret);
+    public bool TryGetObjectAt<T>(Vector2Int position, int minLayer, [NotNullWhen(true)] out T? ret) where T : class =>
+        GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, minLayer, out ret);
 
     public void LoadChunkAt(Vector2Int chunkPosition) => GetChunkAt(chunkPosition).ticks += 2;
     private TChunk GetChunkAt(Vector2Int chunkPosition) {
