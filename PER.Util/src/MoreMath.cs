@@ -24,4 +24,7 @@ public static class MoreMath {
             return a / b - *(byte*)&cond;
         }
     }
+    // https://stackoverflow.com/a/1082938
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static int Mod(int a, int b) => ((a % b) + b) % b;
 }

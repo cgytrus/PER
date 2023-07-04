@@ -93,16 +93,18 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
             _level.Add(new WallObject { position = new Vector2Int(8, i - 7) });
         }
 
-        _level.Add(new EffectObject {
-            position = new Vector2Int(3, -10),
-            size = new Vector2Int(10, 10),
-            effect = renderer.formattingEffects["glitch"]
-        });
-        _level.Add(new EffectObject {
-            position = new Vector2Int(-12, -24),
-            size = new Vector2Int(6, 9),
-            effect = renderer.formattingEffects["glitch"]
-        });
+        for(int y = 0; y < 10; y++)
+            for(int x = 0; x < 10; x++)
+                _level.Add(new EffectObject {
+                    position = new Vector2Int(x + 3, y - 10),
+                    useEffect = renderer.formattingEffects["glitch"]
+                });
+        for(int y = 0; y < 6; y++)
+            for(int x = 0; x < 9; x++)
+                _level.Add(new EffectObject {
+                    position = new Vector2Int(x - 12, y - 24),
+                    useEffect = renderer.formattingEffects["glitch"]
+                });
 
         for(RenderStyle style = RenderStyle.None; style <= RenderStyle.All; style++) {
             RenderStyle curStyle = style;

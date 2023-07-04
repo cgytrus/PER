@@ -29,7 +29,9 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     protected IResources resources => level.resources;
 
     public abstract int layer { get; }
-    protected abstract RenderCharacter character { get; }
+    public abstract RenderCharacter character { get; }
+    public virtual IDisplayEffect? effect => null;
+    public abstract bool blocksLight { get; }
 
     public bool dirty {
         get => _dirty;
@@ -71,8 +73,6 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     private bool _dirty;
 
     private Vector2Int _position;
-
-    public virtual void Draw() => renderer.DrawCharacter(level.LevelToScreenPosition(position), character);
 
     internal void SetLevel(Level<TLevel, TChunk, TObject>? level) => _level = level as TLevel;
     internal void ClearDirty() => dirty = false;

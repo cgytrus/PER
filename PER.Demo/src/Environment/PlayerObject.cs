@@ -1,15 +1,21 @@
 ﻿using System;
 
 using PER.Abstractions;
+using PER.Abstractions.Environment;
 using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
 namespace PER.Demo.Environment;
 
-public class PlayerObject : LevelObject, IUpdatable, ITickable {
+public class PlayerObject : LevelObject, IUpdatable, ITickable, ILight {
     public override int layer => 0;
-    protected override RenderCharacter character { get; } = new('@', Color.transparent, new Color(0, 255, 255, 255));
+    public override RenderCharacter character { get; } = new('@', Color.transparent, new Color(0, 255, 255, 255));
+    public override bool blocksLight => false;
+
+    public float brightness => 1f;
+    public byte emission => 8;
+    public byte visibility => 8;
 
     private int _moveX;
     private int _moveY;

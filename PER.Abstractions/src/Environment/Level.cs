@@ -22,6 +22,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     public IInput input { get; }
     public IAudio audio { get; }
     public IResources resources { get; }
+    public Vector2Int chunkSize { get; }
 
     public Vector2Int cameraPosition { get; set; }
 
@@ -31,10 +32,10 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     private readonly Dictionary<Guid, TObject> _objects = new();
     private readonly List<TObject> _dirtyObjects = new();
 
-    private readonly Vector2Int _chunkSize;
     private readonly Dictionary<Vector2Int, TChunk> _chunks = new();
     private readonly Dictionary<Vector2Int, TChunk> _autoChunks = new();
     private readonly List<(Vector2Int, Vector2Int)> _chunksToGenerate = new();
+    private readonly List<Vector2Int> _relightQueue = new();
     private readonly Vector2Int _minChunkPos;
     private readonly Vector2Int _maxChunkPos;
 
@@ -48,7 +49,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         this.input = input;
         this.audio = audio;
         this.resources = resources;
-        _chunkSize = chunkSize;
+        this.chunkSize = chunkSize;
         _minChunkPos = LevelToChunkPosition(new Vector2Int(int.MinValue, int.MinValue));
         _maxChunkPos = LevelToChunkPosition(new Vector2Int(int.MaxValue, int.MaxValue));
     }
@@ -61,7 +62,11 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     public void Add(TObject obj) {
         _objects.Add(obj.id, obj);
-        GetChunkAt(LevelToChunkPosition(obj.position)).Add(obj);
+        TChunk chunk = GetChunkAt(LevelToChunkPosition(obj.position));
+        chunk.Add(obj);
+        foreach(ILight? light in chunk.lights)
+            if(light is TObject { inLevelInt: true })
+                TryQueueLight(obj.position, light);
         obj.SetLevel(this);
         // ReSharper disable once SuspiciousTypeConversion.Global
         if(obj is IAddable addable)
@@ -74,21 +79,46 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         if(!_objects.TryGetValue(objId, out TObject? obj))
             return;
         _objects.Remove(objId);
-        GetChunkAt(LevelToChunkPosition(obj.position)).Remove(obj);
-        // ReSharper disable once SuspiciousTypeConversion.Global
+        TChunk chunk = GetChunkAt(LevelToChunkPosition(obj.position));
+        chunk.Remove(obj);
+        foreach(ILight? light in chunk.lights)
+            if(light is TObject { inLevelInt: true })
+                TryQueueLight(obj.position, light);
         if(obj is IRemovable removable)
             removable.Removed();
         obj.SetLevel(null);
         objectRemoved?.Invoke(obj);
     }
 
+    private void TryQueueLight(Vector2Int pos, ILight light) {
+        byte dist = Math.Max(light.emission, light.visibility);
+        for(int y = -dist; y <= dist; y++) {
+            for(int x = -dist; x <= dist; x++) {
+                Vector2Int chunkPos = LevelToChunkPosition(pos + new Vector2Int(x, y));
+                if(!_relightQueue.Contains(chunkPos))
+                    _relightQueue.Add(chunkPos);
+            }
+        }
+    }
+
     public void Update(TimeSpan time) {
         updateState = LevelUpdateState.Update;
         Bounds cameraChunks = new(
-            ScreenToChunkPosition(-_chunkSize / 2),
-            ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1) + _chunkSize / 2)
+            ScreenToChunkPosition(-chunkSize / 2),
+            ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1) + chunkSize / 2)
         );
+        foreach(TChunk chunk in _chunks.Values)
+            chunk.PopulateDirty(_dirtyObjects);
+        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+        foreach(TObject obj in _dirtyObjects)
+            CheckDirty(obj);
+        _dirtyObjects.Clear();
         AddNewChunks();
+        foreach(Vector2Int pos in _relightQueue)
+            GetChunkAt(pos).ClearLighting();
+        foreach(Vector2Int pos in _relightQueue)
+            GetChunkAt(pos).UpdateLighting();
+        _relightQueue.Clear();
         UpdateChunksInBounds(time, cameraChunks);
         updateState = LevelUpdateState.Draw;
         DrawChunksInBounds(cameraChunks);
@@ -111,17 +141,27 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             CheckDirty(obj);
         _dirtyObjects.Clear();
         AddNewChunks();
+        foreach(Vector2Int pos in _relightQueue)
+            GetChunkAt(pos).ClearLighting();
+        foreach(Vector2Int pos in _relightQueue)
+            GetChunkAt(pos).UpdateLighting();
+        _relightQueue.Clear();
         updateState = LevelUpdateState.None;
     }
 
     public void CheckDirty(TObject obj) {
         if(obj.positionDirty) {
+            ILight? light = obj as ILight;
             Vector2Int fromChunkPos = LevelToChunkPosition(obj.internalPrevPosition);
             Vector2Int toChunkPos = LevelToChunkPosition(obj.position);
             if(fromChunkPos != toChunkPos) {
                 GetChunkAt(fromChunkPos).Remove(obj);
                 GetChunkAt(toChunkPos).Add(obj);
+                if(light is not null)
+                    TryQueueLight(obj.internalPrevPosition, light);
             }
+            if(light is not null)
+                TryQueueLight(obj.position, light);
             // ReSharper disable once SuspiciousTypeConversion.Global
             if(obj is IMovable movable)
                 movable.Moved(obj.internalPrevPosition);
@@ -154,7 +194,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
                 if(y > _maxChunkPos.y)
                     y = _minChunkPos.y;
-                GetChunkAt(new Vector2Int(x, y)).Draw();
+                Vector2Int pos = new(x, y);
+                GetChunkAt(pos).Draw(ChunkToScreenPosition(pos));
             }
         }
     }
@@ -169,9 +210,9 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         foreach((Vector2Int levelPosition, Vector2Int pos) in _chunksToGenerate) {
             _autoChunks.Remove(pos);
             // weird chunk size, skip gen
-            if(LevelToChunkPosition(levelPosition + _chunkSize - new Vector2Int(1, 1)) != pos)
+            if(LevelToChunkPosition(levelPosition + chunkSize - new Vector2Int(1, 1)) != pos)
                 continue;
-            chunkCreated?.Invoke(levelPosition, _chunkSize);
+            chunkCreated?.Invoke(levelPosition, chunkSize);
         }
         _chunksToGenerate.Clear();
     }
@@ -206,11 +247,13 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         GetChunkAt(LevelToChunkPosition(position)).GetObjectsAt<T>(position, minLayer);
 
     public void LoadChunkAt(Vector2Int chunkPosition) => GetChunkAt(chunkPosition).ticks += 2;
-    private TChunk GetChunkAt(Vector2Int chunkPosition) {
+    internal TChunk GetChunkAt(Vector2Int chunkPosition) {
         if(_chunks.TryGetValue(chunkPosition, out TChunk? chunk) ||
             _autoChunks.TryGetValue(chunkPosition, out chunk))
             return chunk;
         chunk = new TChunk();
+        chunk.SetLevel(this);
+        chunk.InitLighting();
         _autoChunks.Add(chunkPosition, chunk);
         return chunk;
     }
@@ -222,7 +265,10 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         CameraToScreenPosition(LevelToCameraPosition(levelPosition));
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int LevelToChunkPosition(Vector2Int levelPosition) =>
-        new(MoreMath.FloorDiv(levelPosition.x, _chunkSize.x), MoreMath.FloorDiv(levelPosition.y, _chunkSize.y));
+        new(MoreMath.FloorDiv(levelPosition.x, chunkSize.x), MoreMath.FloorDiv(levelPosition.y, chunkSize.y));
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public Vector2Int LevelToInChunkPosition(Vector2Int levelPosition) =>
+        new(MoreMath.Mod(levelPosition.x, chunkSize.x), MoreMath.Mod(levelPosition.y, chunkSize.y));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToLevelPosition(Vector2Int cameraPosition) => cameraPosition + this.cameraPosition;
@@ -243,7 +289,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ChunkToLevelPosition(Vector2Int chunkPosition) =>
-        new(chunkPosition.x * _chunkSize.x, chunkPosition.y * _chunkSize.y);
+        new(chunkPosition.x * chunkSize.x, chunkPosition.y * chunkSize.y);
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ChunkToCameraPosition(Vector2Int chunkPosition) =>
         LevelToCameraPosition(ChunkToLevelPosition(chunkPosition));

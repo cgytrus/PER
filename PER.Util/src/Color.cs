@@ -15,21 +15,29 @@ public readonly struct Color : IEquatable<Color> {
     public float r {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         get => _vec.X;
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        init => _vec.X = value;
     }
 
     public float g {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         get => _vec.Y;
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        init => _vec.Y = value;
     }
 
     public float b {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         get => _vec.Z;
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        init => _vec.Z = value;
     }
 
     public float a {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         get => _vec.W;
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        init => _vec.W = value;
     }
 
     private readonly Vector4 _vec;
@@ -80,6 +88,9 @@ public readonly struct Color : IEquatable<Color> {
     public static Color operator -(Color left, Color right) => new(left._vec - right._vec);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static Color operator *(Color left, Color right) => new(left._vec * right._vec);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Color operator *(Color left, float right) => new(left._vec * right);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -87,6 +98,9 @@ public readonly struct Color : IEquatable<Color> {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Color operator /(Color left, float right) => new(left._vec / right);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static Color operator /(Color left, Color right) => new(left._vec / right._vec);
 
     public bool Equals(Color other) => _vec.Equals(other._vec);
 

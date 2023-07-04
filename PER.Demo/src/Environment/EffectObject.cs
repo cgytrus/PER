@@ -4,14 +4,10 @@ using PER.Util;
 namespace PER.Demo.Environment;
 
 public class EffectObject : LevelObject {
-    public Vector2Int size { get; set; }
-    public IDisplayEffect? effect { get; set; }
+    public IDisplayEffect? useEffect { get; init; }
 
     public override int layer => 2;
-    protected override RenderCharacter character { get; } = new('a', Color.transparent, Color.white);
-    public override void Draw() {
-        for(int y = 0; y < size.y; y++)
-            for(int x = 0; x < size.x; x++)
-                renderer.AddEffect(level.LevelToScreenPosition(position) + new Vector2Int(x, y), effect);
-    }
+    public override RenderCharacter character => renderer.GetCharacter(position);
+    public override IDisplayEffect? effect => useEffect;
+    public override bool blocksLight => false;
 }
