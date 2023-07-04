@@ -169,4 +169,28 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
         ret = null;
         return false;
     }
+
+    public IEnumerable<TObject> GetObjectsAt(Vector2Int position) {
+        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
+        foreach(TObject? obj in _objects)
+            if(obj is not null && obj.inLevelInt && obj.position == position)
+                yield return obj;
+    }
+    public IEnumerable<TObject> GetObjectsAt(Vector2Int position, int minLayer) {
+        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
+        foreach(TObject? obj in _objects)
+            if(obj is not null && obj.inLevelInt && obj.position == position && obj.layer >= minLayer)
+                yield return obj;
+    }
+
+    public IEnumerable<T> GetObjectsAt<T>(Vector2Int position) where T : class {
+        foreach(TObject? obj in _objects)
+            if(obj is T objT && obj.inLevelInt && obj.position == position)
+                yield return objT;
+    }
+    public IEnumerable<T> GetObjectsAt<T>(Vector2Int position, int minLayer) where T : class {
+        foreach(TObject? obj in _objects)
+            if(obj is T objT && obj.inLevelInt && obj.position == position && obj.layer >= minLayer)
+                yield return objT;
+    }
 }

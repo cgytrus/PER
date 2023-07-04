@@ -196,6 +196,14 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, out ret);
     public bool TryGetObjectAt<T>(Vector2Int position, int minLayer, [NotNullWhen(true)] out T? ret) where T : class =>
         GetChunkAt(LevelToChunkPosition(position)).TryGetObjectAt(position, minLayer, out ret);
+    public IEnumerable<TObject> GetObjectsAt(Vector2Int position) =>
+        GetChunkAt(LevelToChunkPosition(position)).GetObjectsAt(position);
+    public IEnumerable<TObject> GetObjectsAt(Vector2Int position, int minLayer) =>
+        GetChunkAt(LevelToChunkPosition(position)).GetObjectsAt(position, minLayer);
+    public IEnumerable<T> GetObjectsAt<T>(Vector2Int position) where T : class =>
+        GetChunkAt(LevelToChunkPosition(position)).GetObjectsAt<T>(position);
+    public IEnumerable<T> GetObjectsAt<T>(Vector2Int position, int minLayer) where T : class =>
+        GetChunkAt(LevelToChunkPosition(position)).GetObjectsAt<T>(position, minLayer);
 
     public void LoadChunkAt(Vector2Int chunkPosition) => GetChunkAt(chunkPosition).ticks += 2;
     private TChunk GetChunkAt(Vector2Int chunkPosition) {
