@@ -20,6 +20,9 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
         private set => _level = value;
     }
 
+    protected bool inLevel => _level is not null;
+    internal bool inLevelInt => inLevel;
+
     protected IRenderer renderer => level.renderer;
     protected IInput input => level.input;
     protected IAudio audio => level.audio;
