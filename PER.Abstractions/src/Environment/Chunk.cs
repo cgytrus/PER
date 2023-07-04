@@ -30,6 +30,13 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     public float[,] light { get; private set; } = new float[0, 0];
     public short[,] visibility { get; private set; } = new short[0, 0];
 
+    private bool _swapProp;
+    private HashSet<Vector2Int> _prop0 = new();
+    private HashSet<Vector2Int> _prop1 = new();
+    private HashSet<Vector2Int> _prop => _swapProp ? _prop1 : _prop0;
+    private HashSet<Vector2Int> _otherProp => _swapProp ? _prop0 : _prop1;
+    private HashSet<Vector2Int> _visited = new();
+
     public void InitLighting() {
         light = new float[level.chunkSize.y, level.chunkSize.x];
         visibility = new short[level.chunkSize.y, level.chunkSize.x];
@@ -132,52 +139,85 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
             ILight? light = _lights[i];
             if(light is not TObject { inLevelInt: true } obj)
                 continue;
-            if(light is { emission: > 0, brightness: > 0f })
-                PropagateLight(obj.position, light.emission, light.emission, light.brightness);
+            if(light is { emission: > 0, brightness: > 0f }) {
+                PropagateLight(obj.position, light.emission, light.brightness);
+            }
             if(light.visibility > 0)
                 PropagateVisibility(obj.position, light.visibility);
         }
     }
 
-    private void PropagateLight(Vector2Int position, byte emission, byte startEmission, float brightness) {
-        if(emission == 0)
-            return;
+    private void PropagateLight(Vector2Int position, byte emission, float brightness) {
+        byte startEmission = emission;
+        _swapProp = false;
 
-        float light = emission * brightness / startEmission;
+        _prop.Add(position);
+        while(emission > 0) {
+            float light = emission * brightness / startEmission;
+            foreach(Vector2Int pos in _prop) {
+                _visited.Add(pos);
 
-        Vector2Int inChunk = level.LevelToInChunkPosition(position);
-        TChunk chunk = level.GetChunkAt(level.LevelToChunkPosition(position));
+                Vector2Int inChunk = level.LevelToInChunkPosition(pos);
+                TChunk chunk = level.GetChunkAt(level.LevelToChunkPosition(pos));
 
-        if(light > chunk.light[inChunk.y, inChunk.x])
-            chunk.light[inChunk.y, inChunk.x] = light;
-        else
-            return;
+                if(light > chunk.light[inChunk.y, inChunk.x])
+                    chunk.light[inChunk.y, inChunk.x] = light;
 
-        if(level.GetObjectsAt(position).Any(x => x.blocksLight))
-            return;
-        PropagateLight(position + new Vector2Int(-1, 0), (byte)(emission - 1), startEmission, brightness);
-        PropagateLight(position + new Vector2Int(1, 0), (byte)(emission - 1), startEmission, brightness);
-        PropagateLight(position + new Vector2Int(0, -1), (byte)(emission - 1), startEmission, brightness);
-        PropagateLight(position + new Vector2Int(0, 1), (byte)(emission - 1), startEmission, brightness);
+                if(level.GetObjectsAt(pos).Any(x => x.blocksLight))
+                    continue;
+
+                if(!_visited.Contains(pos + new Vector2Int(-1, 0)))
+                    _otherProp.Add(pos + new Vector2Int(-1, 0));
+                if(!_visited.Contains(pos + new Vector2Int(1, 0)))
+                    _otherProp.Add(pos + new Vector2Int(1, 0));
+                if(!_visited.Contains(pos + new Vector2Int(0, -1)))
+                    _otherProp.Add(pos + new Vector2Int(0, -1));
+                if(!_visited.Contains(pos + new Vector2Int(0, 1)))
+                    _otherProp.Add(pos + new Vector2Int(0, 1));
+            }
+            _prop.Clear();
+            _swapProp = !_swapProp;
+            emission--;
+        }
+
+        _prop0.Clear();
+        _prop1.Clear();
+        _visited.Clear();
     }
     private void PropagateVisibility(Vector2Int position, byte value) {
-        if(value == 0)
-            return;
+        _swapProp = false;
 
-        Vector2Int inChunk = level.LevelToInChunkPosition(position);
-        TChunk chunk = level.GetChunkAt(level.LevelToChunkPosition(position));
+        _prop.Add(position);
+        while(value > 0) {
+            foreach(Vector2Int pos in _prop) {
+                _visited.Add(pos);
 
-        if(value > chunk.visibility[inChunk.y, inChunk.x])
-            chunk.visibility[inChunk.y, inChunk.x] = value;
-        else
-            return;
+                Vector2Int inChunk = level.LevelToInChunkPosition(pos);
+                TChunk chunk = level.GetChunkAt(level.LevelToChunkPosition(pos));
 
-        if(level.GetObjectsAt(position).Any(x => x.blocksLight))
-            return;
-        PropagateVisibility(position + new Vector2Int(-1, 0), (byte)(value - 1));
-        PropagateVisibility(position + new Vector2Int(1, 0), (byte)(value - 1));
-        PropagateVisibility(position + new Vector2Int(0, -1), (byte)(value - 1));
-        PropagateVisibility(position + new Vector2Int(0, 1), (byte)(value - 1));
+                if(value > chunk.visibility[inChunk.y, inChunk.x])
+                    chunk.visibility[inChunk.y, inChunk.x] = value;
+
+                if(level.GetObjectsAt(pos).Any(x => x.blocksLight))
+                    continue;
+
+                if(!_visited.Contains(pos + new Vector2Int(-1, 0)))
+                    _otherProp.Add(pos + new Vector2Int(-1, 0));
+                if(!_visited.Contains(pos + new Vector2Int(1, 0)))
+                    _otherProp.Add(pos + new Vector2Int(1, 0));
+                if(!_visited.Contains(pos + new Vector2Int(0, -1)))
+                    _otherProp.Add(pos + new Vector2Int(0, -1));
+                if(!_visited.Contains(pos + new Vector2Int(0, 1)))
+                    _otherProp.Add(pos + new Vector2Int(0, 1));
+            }
+            _prop.Clear();
+            _swapProp = !_swapProp;
+            value--;
+        }
+
+        _prop0.Clear();
+        _prop1.Clear();
+        _visited.Clear();
     }
 
     public void PopulateDirty(List<TObject> dirtyObjects) {
