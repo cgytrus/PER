@@ -13,9 +13,9 @@ public class PlayerObject : LevelObject, IUpdatable, ITickable, ILight {
     public override RenderCharacter character { get; } = new('@', Color.transparent, new Color(0, 255, 255, 255));
     public override bool blocksLight => false;
 
-    public float brightness => 1f;
-    public byte emission => 8;
-    public byte visibility => 8;
+    public float brightness => 0f;
+    public byte emission => 0;
+    public byte reveal => 8;
 
     private int _moveX;
     private int _moveY;

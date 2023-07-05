@@ -71,14 +71,12 @@ public class LightPropagator<TLevel, TChunk, TObject>
         // silencing null checks as everything in here should already be checked before by
         // QueueResetLight, QueuePropagateLight and UpdateQueued
         ILight light = (obj as ILight)!;
-        foreach((Vector2Int pos, (float lighting, int visibility)) in obj.contributedLight!) {
+        foreach((Vector2Int pos, (float lighting, float visibility)) in obj.contributedLight!) {
             Vector2Int inChunk = _level.LevelToInChunkPosition(pos);
             TChunk chunk = _level.GetChunkAt(_level.LevelToChunkPosition(pos));
 
             chunk.lighting[inChunk.y, inChunk.x] -= lighting;
             chunk.visibility[inChunk.y, inChunk.x] -= visibility;
-
-            chunk.totalLighting -= lighting;
             chunk.totalVisibility -= visibility;
 
             int index = chunk.litBy.IndexOf(light);
@@ -93,22 +91,23 @@ public class LightPropagator<TLevel, TChunk, TObject>
         ILight light = (obj as ILight)!;
 
         byte emission = light.emission;
-        byte visibility = light.visibility;
+        byte reveal = light.reveal;
 
-        if(emission == 0 && visibility == 0)
+        if(emission == 0 && reveal == 0)
             return;
 
         prop.Add(obj.position);
-        while(emission > 0 || visibility > 0) {
-            float lighting = emission * light.brightness / light.emission;
+        while(emission > 0 || reveal > 0) {
+            float lighting = light.emission == 0 ? 0f : emission * light.brightness / light.emission;
+            float visibility = light.reveal == 0 ? 0f : reveal / (float)light.reveal;
             foreach(Vector2Int pos in prop)
                 PropagateStep(obj, pos, lighting, visibility);
             prop.Clear();
             _swapProp = !_swapProp;
             if(emission > 0)
                 emission--;
-            if(visibility > 0)
-                visibility--;
+            if(reveal > 0)
+                reveal--;
         }
 
         _swapProp = false;
@@ -118,7 +117,7 @@ public class LightPropagator<TLevel, TChunk, TObject>
     }
 
     private void PropagateStep(LevelObject<TLevel, TChunk, TObject> obj, Vector2Int pos, float lighting,
-        byte visibility) {
+        float visibility) {
         ILight light = (obj as ILight)!;
 
         _visited.Add(pos);
@@ -128,8 +127,6 @@ public class LightPropagator<TLevel, TChunk, TObject>
 
         chunk.lighting[inChunk.y, inChunk.x] += lighting;
         chunk.visibility[inChunk.y, inChunk.x] += visibility;
-
-        chunk.totalLighting += lighting;
         chunk.totalVisibility += visibility;
 
         chunk.litBy.Add(light);

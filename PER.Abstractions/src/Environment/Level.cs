@@ -24,6 +24,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     public IResources resources { get; }
     public Vector2Int chunkSize { get; }
 
+    public float ambientLight { get; set; } = 0.1f;
+
     public Vector2Int cameraPosition { get; set; }
 
     public LevelUpdateState updateState { get; private set; }

@@ -3,5 +3,5 @@
 public interface ILight {
     public float brightness { get; }
     public byte emission { get; }
-    public byte visibility => 0;
+    public byte reveal => 0;
 }

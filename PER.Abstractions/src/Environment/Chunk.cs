@@ -25,10 +25,9 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     internal List<ILight?> litBy { get; } = new();
 
     public float[,] lighting { get; private set; } = new float[0, 0];
-    public int[,] visibility { get; private set; } = new int[0, 0];
+    public float[,] visibility { get; private set; } = new float[0, 0];
 
-    public float totalLighting { get; set; }
-    public int totalVisibility { get; set; }
+    public float totalVisibility { get; set; }
 
     private readonly List<TObject?> _objects = new();
     private readonly List<IUpdatable?> _updatables = new();
@@ -38,9 +37,8 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     public void InitLighting() {
         lighting = new float[level.chunkSize.y, level.chunkSize.x];
-        visibility = new int[level.chunkSize.y, level.chunkSize.x];
-        totalLighting = 0f;
-        totalVisibility = 0;
+        visibility = new float[level.chunkSize.y, level.chunkSize.x];
+        totalVisibility = 0f;
     }
 
     public void Add(TObject obj) {
@@ -84,7 +82,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     public void Draw(Vector2Int start) {
-        if(!shouldUpdate || totalLighting == 0f || totalVisibility == 0)
+        if(!shouldUpdate || totalVisibility == 0f)
             return;
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < _objects.Count; i++) {
@@ -93,17 +91,18 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
                 continue;
             Vector2Int screenPos = level.LevelToScreenPosition(obj.position);
             Vector2Int localPos = screenPos - start;
-            if(visibility[localPos.y, localPos.x] == 0)
+            if(visibility[localPos.y, localPos.x] == 0f)
                 continue;
             level.renderer.DrawCharacter(screenPos, ApplyLight(obj.character, localPos), obj.effect);
         }
     }
 
     private RenderCharacter ApplyLight(RenderCharacter c, Vector2Int pos) {
-        float light = Math.Min(lighting[pos.y, pos.x], 1f);
+        float final = Math.Min(visibility[pos.y, pos.x], 1f);
+        final *= Math.Min(lighting[pos.y, pos.x] + level.ambientLight, 1f);
         return c with {
-            background = (c.background * light) with { a = c.background.a },
-            foreground = (c.foreground * light) with { a = c.foreground.a }
+            background = (c.background * final) with { a = c.background.a },
+            foreground = (c.foreground * final) with { a = c.foreground.a }
         };
     }
 
