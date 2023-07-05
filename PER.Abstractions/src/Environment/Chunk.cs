@@ -98,7 +98,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     private RenderCharacter ApplyLight(RenderCharacter c, Vector2Int pos) {
-        float final = Math.Min(visibility[pos.y, pos.x], 1f);
+        float final = Math.Min(visibility[pos.y, pos.x] * (1f + level.visibilityStay), 1f);
         final *= Math.Min(lighting[pos.y, pos.x] + level.ambientLight, 1f);
         return c with {
             background = (c.background * final) with { a = c.background.a },
