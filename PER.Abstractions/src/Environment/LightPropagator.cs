@@ -99,14 +99,15 @@ public static class LightPropagator {
                 if(chunk.TryMarkBlockingLightAt(pos, light))
                     continue;
 
-                // TODO: check quadrant
-                if(!visited.Contains(pos + new Vector2Int(-1, 0)))
+                Vector2Int offset = pos - obj.position;
+
+                if(offset.x <= 0 && !visited.Contains(pos + new Vector2Int(-1, 0)))
                     otherProp.Add(pos + new Vector2Int(-1, 0));
-                if(!visited.Contains(pos + new Vector2Int(1, 0)))
+                if(offset.x >= 0 && !visited.Contains(pos + new Vector2Int(1, 0)))
                     otherProp.Add(pos + new Vector2Int(1, 0));
-                if(!visited.Contains(pos + new Vector2Int(0, -1)))
+                if(offset.y <= 0 && !visited.Contains(pos + new Vector2Int(0, -1)))
                     otherProp.Add(pos + new Vector2Int(0, -1));
-                if(!visited.Contains(pos + new Vector2Int(0, 1)))
+                if(offset.y >= 0 && !visited.Contains(pos + new Vector2Int(0, 1)))
                     otherProp.Add(pos + new Vector2Int(0, 1));
             }
             prop.Clear();
