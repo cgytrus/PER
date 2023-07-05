@@ -155,6 +155,10 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             if(obj is IMovable movable)
                 movable.Moved(obj.internalPrevPosition);
         }
+        else if(obj.lightDirty) {
+            _light.QueueReset(obj);
+            _light.QueuePropagate(obj);
+        }
         if(obj.dirty)
             objectChanged?.Invoke(obj);
         obj.ClearDirty();

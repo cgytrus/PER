@@ -41,6 +41,15 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
         }
     }
 
+    public bool lightDirty {
+        get => _lightDirty;
+        protected set {
+            if(_level is null)
+                return;
+            _lightDirty = value;
+            level.dirtyObjects.Add((TObject)this);
+        }
+    }
 
     public Guid id { get; protected init; } = Guid.NewGuid();
 
@@ -72,6 +81,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     private TLevel? _level;
 
     private bool _dirty;
+    private bool _lightDirty;
 
     private Vector2Int _position;
 
@@ -90,7 +100,8 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     }
 
     internal void ClearDirty() {
-        dirty = false;
+        _dirty = false;
         positionDirty = false;
+        _lightDirty = false;
     }
 }
