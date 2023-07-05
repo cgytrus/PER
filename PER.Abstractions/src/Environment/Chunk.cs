@@ -23,23 +23,15 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     private readonly List<TObject?> _objects = new();
     private readonly List<IUpdatable?> _updatables = new();
     private readonly List<ITickable?> _tickables = new();
-    private readonly List<ILight?> _lights = new();
 
-    internal IReadOnlyList<ILight?> lights => _lights;
+    internal List<ILight?> litBy { get; } = new();
 
-    public float[,] light { get; private set; } = new float[0, 0];
-    public short[,] visibility { get; private set; } = new short[0, 0];
-
-    private bool _swapProp;
-    private HashSet<Vector2Int> _prop0 = new();
-    private HashSet<Vector2Int> _prop1 = new();
-    private HashSet<Vector2Int> _prop => _swapProp ? _prop1 : _prop0;
-    private HashSet<Vector2Int> _otherProp => _swapProp ? _prop0 : _prop1;
-    private HashSet<Vector2Int> _visited = new();
+    public float[,] lighting { get; private set; } = new float[0, 0];
+    public int[,] visibility { get; private set; } = new int[0, 0];
 
     public void InitLighting() {
-        light = new float[level.chunkSize.y, level.chunkSize.x];
-        visibility = new short[level.chunkSize.y, level.chunkSize.x];
+        lighting = new float[level.chunkSize.y, level.chunkSize.x];
+        visibility = new int[level.chunkSize.y, level.chunkSize.x];
     }
 
     public void Add(TObject obj) {
@@ -49,8 +41,6 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
             _updatables.Add(updatable);
         if(obj is ITickable tickable)
             _tickables.Add(tickable);
-        if(obj is ILight light)
-            _lights.Add(light);
     }
 
     public void Remove(TObject obj) {
@@ -62,16 +52,11 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
             if(index >= 0)
                 _updatables[index] = null;
         }
+        // ReSharper disable once InvertIf
         if(obj is ITickable tickable) {
             index = _tickables.IndexOf(tickable);
             if(index >= 0)
                 _tickables[index] = null;
-        }
-        // ReSharper disable once InvertIf
-        if(obj is ILight light) {
-            index = _lights.IndexOf(light);
-            if(index >= 0)
-                _lights[index] = null;
         }
     }
 
@@ -100,7 +85,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     private RenderCharacter ApplyLight(RenderCharacter c, Vector2Int pos) {
-        float light = this.light[pos.y, pos.x];
+        float light = Math.Min(lighting[pos.y, pos.x], 1f);
         return c with {
             background = (c.background * light) with { a = c.background.a },
             foreground = (c.foreground * light) with { a = c.foreground.a }
@@ -121,103 +106,6 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
         _objects.RemoveAll(x => x is null || !x.inLevelInt);
         _updatables.RemoveAll(x => x is null or TObject { inLevelInt: false });
         _tickables.RemoveAll(x => x is null or TObject { inLevelInt: false });
-        _lights.RemoveAll(x => x is null or TObject { inLevelInt: false });
-    }
-
-    public void ClearLighting() {
-        for(int y = 0; y < level.chunkSize.y; y++) {
-            for(int x = 0; x < level.chunkSize.x; x++) {
-                light[y, x] = 0f;
-                visibility[y, x] = 0;
-            }
-        }
-    }
-
-    public void UpdateLighting() {
-        // ReSharper disable once ForCanBeConvertedToForeach
-        for(int i = 0; i < _lights.Count; i++) {
-            ILight? light = _lights[i];
-            if(light is not TObject { inLevelInt: true } obj)
-                continue;
-            if(light is { emission: > 0, brightness: > 0f }) {
-                PropagateLight(obj.position, light.emission, light.brightness);
-            }
-            if(light.visibility > 0)
-                PropagateVisibility(obj.position, light.visibility);
-        }
-    }
-
-    private void PropagateLight(Vector2Int position, byte emission, float brightness) {
-        byte startEmission = emission;
-        _swapProp = false;
-
-        _prop.Add(position);
-        while(emission > 0) {
-            float light = emission * brightness / startEmission;
-            foreach(Vector2Int pos in _prop) {
-                _visited.Add(pos);
-
-                Vector2Int inChunk = level.LevelToInChunkPosition(pos);
-                TChunk chunk = level.GetChunkAt(level.LevelToChunkPosition(pos));
-
-                if(light > chunk.light[inChunk.y, inChunk.x])
-                    chunk.light[inChunk.y, inChunk.x] = light;
-
-                if(level.GetObjectsAt(pos).Any(x => x.blocksLight))
-                    continue;
-
-                if(!_visited.Contains(pos + new Vector2Int(-1, 0)))
-                    _otherProp.Add(pos + new Vector2Int(-1, 0));
-                if(!_visited.Contains(pos + new Vector2Int(1, 0)))
-                    _otherProp.Add(pos + new Vector2Int(1, 0));
-                if(!_visited.Contains(pos + new Vector2Int(0, -1)))
-                    _otherProp.Add(pos + new Vector2Int(0, -1));
-                if(!_visited.Contains(pos + new Vector2Int(0, 1)))
-                    _otherProp.Add(pos + new Vector2Int(0, 1));
-            }
-            _prop.Clear();
-            _swapProp = !_swapProp;
-            emission--;
-        }
-
-        _prop0.Clear();
-        _prop1.Clear();
-        _visited.Clear();
-    }
-    private void PropagateVisibility(Vector2Int position, byte value) {
-        _swapProp = false;
-
-        _prop.Add(position);
-        while(value > 0) {
-            foreach(Vector2Int pos in _prop) {
-                _visited.Add(pos);
-
-                Vector2Int inChunk = level.LevelToInChunkPosition(pos);
-                TChunk chunk = level.GetChunkAt(level.LevelToChunkPosition(pos));
-
-                if(value > chunk.visibility[inChunk.y, inChunk.x])
-                    chunk.visibility[inChunk.y, inChunk.x] = value;
-
-                if(level.GetObjectsAt(pos).Any(x => x.blocksLight))
-                    continue;
-
-                if(!_visited.Contains(pos + new Vector2Int(-1, 0)))
-                    _otherProp.Add(pos + new Vector2Int(-1, 0));
-                if(!_visited.Contains(pos + new Vector2Int(1, 0)))
-                    _otherProp.Add(pos + new Vector2Int(1, 0));
-                if(!_visited.Contains(pos + new Vector2Int(0, -1)))
-                    _otherProp.Add(pos + new Vector2Int(0, -1));
-                if(!_visited.Contains(pos + new Vector2Int(0, 1)))
-                    _otherProp.Add(pos + new Vector2Int(0, 1));
-            }
-            _prop.Clear();
-            _swapProp = !_swapProp;
-            value--;
-        }
-
-        _prop0.Clear();
-        _prop1.Clear();
-        _visited.Clear();
     }
 
     public void PopulateDirty(List<TObject> dirtyObjects) {
@@ -335,6 +223,27 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
         foreach(TObject? obj in _objects)
             if(obj is T objT && obj.inLevelInt && obj.position == position && obj.layer >= minLayer)
                 yield return objT;
+    }
+
+    internal bool TryMarkBlockingLightAt(Vector2Int position, ILight light) {
+        bool res = false;
+        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+        foreach(TObject? obj in _objects) {
+            if(obj is null || !obj.inLevelInt || obj.position != position || !obj.blocksLight)
+                continue;
+            res = true;
+            obj.blockedLights?.Add(light);
+        }
+        return res;
+    }
+    internal void MarkNotBlockingLightAt(Vector2Int position, ILight light) {
+        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+        foreach(TObject? obj in _objects)
+            if(obj is not null && obj.inLevelInt && obj.position == position && obj.blocksLight) {
+                int index = obj.blockedLights?.IndexOf(light) ?? -1;
+                if(index >= 0)
+                    obj.blockedLights![index] = null;
+            }
     }
 
     internal void SetLevel(Level<TLevel, TChunk, TObject>? level) => _level = level as TLevel;

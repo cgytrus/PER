@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -47,7 +48,6 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     public Guid id { get; protected init; } = Guid.NewGuid();
 
     internal Vector2Int internalPrevPosition { get; private set; }
-
     public Vector2Int position {
         get => _position;
         set {
@@ -68,12 +68,28 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
         }
     }
 
+    internal List<ILight?>? blockedLights { get; private set; }
+    internal Dictionary<Vector2Int, (float lighting, int visibility)>? contributedLight { get; private set; }
+
     private TLevel? _level;
 
     private bool _dirty;
 
     private Vector2Int _position;
 
-    internal void SetLevel(Level<TLevel, TChunk, TObject>? level) => _level = level as TLevel;
+    internal void SetLevel(Level<TLevel, TChunk, TObject>? level) {
+        _level = level as TLevel;
+        if(level is not null) {
+            if(blocksLight)
+                blockedLights ??= new List<ILight?>();
+            if(this is ILight)
+                contributedLight ??= new Dictionary<Vector2Int, (float, int)>();
+        }
+        else {
+            blockedLights?.Clear();
+            contributedLight?.Clear();
+        }
+    }
+
     internal void ClearDirty() => dirty = false;
 }

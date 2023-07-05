@@ -28,6 +28,20 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     public LevelUpdateState updateState { get; private set; }
 
+    public bool doLighting {
+        get => _doLighting;
+        set {
+            _doLighting = value;
+            if(value)
+                foreach(TObject obj in _objects.Values)
+                    LightPropagator.PropagateLight(this, obj);
+            else
+                foreach(TObject obj in _objects.Values)
+                    LightPropagator.ResetLight(this, obj);
+        }
+    }
+    private bool _doLighting = true;
+
     public IReadOnlyDictionary<Guid, TObject> objects => _objects;
     private readonly Dictionary<Guid, TObject> _objects = new();
     private readonly List<TObject> _dirtyObjects = new();
@@ -35,7 +49,6 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     private readonly Dictionary<Vector2Int, TChunk> _chunks = new();
     private readonly Dictionary<Vector2Int, TChunk> _autoChunks = new();
     private readonly List<(Vector2Int, Vector2Int)> _chunksToGenerate = new();
-    private readonly List<Vector2Int> _relightQueue = new();
     private readonly Vector2Int _minChunkPos;
     private readonly Vector2Int _maxChunkPos;
 
@@ -62,13 +75,12 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     public void Add(TObject obj) {
         _objects.Add(obj.id, obj);
+        obj.SetLevel(this);
         TChunk chunk = GetChunkAt(LevelToChunkPosition(obj.position));
         chunk.Add(obj);
-        foreach(ILight? light in chunk.lights)
-            if(light is TObject { inLevelInt: true })
-                TryQueueLight(obj.position, light);
-        obj.SetLevel(this);
-        // ReSharper disable once SuspiciousTypeConversion.Global
+        if(obj.blocksLight)
+            LightPropagator.UpdateLitByLights(this, chunk);
+        LightPropagator.PropagateLight(this, obj);
         if(obj is IAddable addable)
             addable.Added();
         objectAdded?.Invoke(obj);
@@ -78,27 +90,14 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     public void Remove(Guid objId) {
         if(!_objects.TryGetValue(objId, out TObject? obj))
             return;
+        LightPropagator.ResetLight(this, obj);
+        GetChunkAt(LevelToChunkPosition(obj.position)).Remove(obj);
+        LightPropagator.UpdateBlockedLights(this, obj);
         _objects.Remove(objId);
-        TChunk chunk = GetChunkAt(LevelToChunkPosition(obj.position));
-        chunk.Remove(obj);
-        foreach(ILight? light in chunk.lights)
-            if(light is TObject { inLevelInt: true })
-                TryQueueLight(obj.position, light);
         if(obj is IRemovable removable)
             removable.Removed();
         obj.SetLevel(null);
         objectRemoved?.Invoke(obj);
-    }
-
-    private void TryQueueLight(Vector2Int pos, ILight light) {
-        byte dist = Math.Max(light.emission, light.visibility);
-        for(int y = -dist; y <= dist; y++) {
-            for(int x = -dist; x <= dist; x++) {
-                Vector2Int chunkPos = LevelToChunkPosition(pos + new Vector2Int(x, y));
-                if(!_relightQueue.Contains(chunkPos))
-                    _relightQueue.Add(chunkPos);
-            }
-        }
     }
 
     public void Update(TimeSpan time) {
@@ -114,11 +113,6 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             CheckDirty(obj);
         _dirtyObjects.Clear();
         AddNewChunks();
-        foreach(Vector2Int pos in _relightQueue)
-            GetChunkAt(pos).ClearLighting();
-        foreach(Vector2Int pos in _relightQueue)
-            GetChunkAt(pos).UpdateLighting();
-        _relightQueue.Clear();
         UpdateChunksInBounds(time, cameraChunks);
         updateState = LevelUpdateState.Draw;
         DrawChunksInBounds(cameraChunks);
@@ -141,27 +135,23 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             CheckDirty(obj);
         _dirtyObjects.Clear();
         AddNewChunks();
-        foreach(Vector2Int pos in _relightQueue)
-            GetChunkAt(pos).ClearLighting();
-        foreach(Vector2Int pos in _relightQueue)
-            GetChunkAt(pos).UpdateLighting();
-        _relightQueue.Clear();
         updateState = LevelUpdateState.None;
     }
 
     public void CheckDirty(TObject obj) {
         if(obj.positionDirty) {
-            ILight? light = obj as ILight;
             Vector2Int fromChunkPos = LevelToChunkPosition(obj.internalPrevPosition);
             Vector2Int toChunkPos = LevelToChunkPosition(obj.position);
+            TChunk to = GetChunkAt(toChunkPos);
             if(fromChunkPos != toChunkPos) {
                 GetChunkAt(fromChunkPos).Remove(obj);
-                GetChunkAt(toChunkPos).Add(obj);
-                if(light is not null)
-                    TryQueueLight(obj.internalPrevPosition, light);
+                to.Add(obj);
             }
-            if(light is not null)
-                TryQueueLight(obj.position, light);
+            LightPropagator.UpdateBlockedLights(this, obj);
+            if(obj.blocksLight)
+                LightPropagator.UpdateLitByLights(this, to);
+            LightPropagator.ResetLight(this, obj);
+            LightPropagator.PropagateLight(this, obj);
             // ReSharper disable once SuspiciousTypeConversion.Global
             if(obj is IMovable movable)
                 movable.Moved(obj.internalPrevPosition);
