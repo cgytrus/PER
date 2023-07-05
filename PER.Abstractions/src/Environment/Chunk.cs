@@ -130,13 +130,6 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
             _tickables.RemoveAll(x => x is null or TObject { inLevelInt: false });
     }
 
-    public void PopulateDirty(List<TObject> dirtyObjects) {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject? obj in _objects)
-            if(obj is not null && obj.inLevelInt && (obj.positionDirty || obj.dirty))
-                dirtyObjects.Add(obj);
-    }
-
     public bool HasObjectAt(Vector2Int position) {
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
         foreach(TObject? obj in _objects)

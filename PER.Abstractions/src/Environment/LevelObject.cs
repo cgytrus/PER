@@ -37,13 +37,14 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
             if(_level is null)
                 return;
             _dirty = value;
+            level.dirtyObjects.Add((TObject)this);
         }
     }
 
-    internal bool positionDirty { get; set; }
 
     public Guid id { get; protected init; } = Guid.NewGuid();
 
+    internal bool positionDirty { get; private set; }
     internal Vector2Int internalPrevPosition { get; private set; }
     public Vector2Int position {
         get => _position;
@@ -88,5 +89,8 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
         }
     }
 
-    internal void ClearDirty() => dirty = false;
+    internal void ClearDirty() {
+        dirty = false;
+        positionDirty = false;
+    }
 }
