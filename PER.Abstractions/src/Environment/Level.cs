@@ -34,13 +34,15 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             _doLighting = value;
             if(value)
                 foreach(TObject obj in _objects.Values)
-                    LightPropagator.PropagateLight(this, obj);
+                    _light.QueuePropagate(obj);
             else
                 foreach(TObject obj in _objects.Values)
-                    LightPropagator.ResetLight(this, obj);
+                    _light.QueueReset(obj);
         }
     }
     private bool _doLighting = true;
+
+    private LightPropagator<TLevel, TChunk, TObject> _light;
 
     public IReadOnlyDictionary<Guid, TObject> objects => _objects;
     private readonly Dictionary<Guid, TObject> _objects = new();
@@ -63,6 +65,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         this.audio = audio;
         this.resources = resources;
         this.chunkSize = chunkSize;
+        _light = new LightPropagator<TLevel, TChunk, TObject>(this);
         _minChunkPos = LevelToChunkPosition(new Vector2Int(int.MinValue, int.MinValue));
         _maxChunkPos = LevelToChunkPosition(new Vector2Int(int.MaxValue, int.MaxValue));
     }
@@ -79,8 +82,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         TChunk chunk = GetChunkAt(LevelToChunkPosition(obj.position));
         chunk.Add(obj);
         if(obj.blocksLight)
-            LightPropagator.UpdateLitByLights(this, chunk);
-        LightPropagator.PropagateLight(this, obj);
+            _light.QueueLitBy(chunk);
+        _light.QueuePropagate(obj);
         if(obj is IAddable addable)
             addable.Added();
         objectAdded?.Invoke(obj);
@@ -90,9 +93,9 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     public void Remove(Guid objId) {
         if(!_objects.TryGetValue(objId, out TObject? obj))
             return;
-        LightPropagator.ResetLight(this, obj);
+        _light.QueueReset(obj);
         GetChunkAt(LevelToChunkPosition(obj.position)).Remove(obj);
-        LightPropagator.UpdateBlockedLights(this, obj);
+        _light.QueueBlockedBy(obj);
         _objects.Remove(objId);
         if(obj is IRemovable removable)
             removable.Removed();
@@ -106,16 +109,10 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             ScreenToChunkPosition(-chunkSize / 2),
             ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1) + chunkSize / 2)
         );
-        foreach(TChunk chunk in _chunks.Values)
-            chunk.PopulateDirty(_dirtyObjects);
-        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject obj in _dirtyObjects)
-            CheckDirty(obj);
-        _dirtyObjects.Clear();
+        CheckDirtyInBounds(cameraChunks);
         AddNewChunks();
+        _light.UpdateQueued();
         UpdateChunksInBounds(time, cameraChunks);
-        updateState = LevelUpdateState.Draw;
-        DrawChunksInBounds(cameraChunks);
         updateState = LevelUpdateState.None;
     }
 
@@ -135,6 +132,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             CheckDirty(obj);
         _dirtyObjects.Clear();
         AddNewChunks();
+        _light.UpdateQueued();
         updateState = LevelUpdateState.None;
     }
 
@@ -147,11 +145,11 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
                 GetChunkAt(fromChunkPos).Remove(obj);
                 to.Add(obj);
             }
-            LightPropagator.UpdateBlockedLights(this, obj);
+            _light.QueueBlockedBy(obj);
             if(obj.blocksLight)
-                LightPropagator.UpdateLitByLights(this, to);
-            LightPropagator.ResetLight(this, obj);
-            LightPropagator.PropagateLight(this, obj);
+                _light.QueueLitBy(to);
+            _light.QueueReset(obj);
+            _light.QueuePropagate(obj);
             // ReSharper disable once SuspiciousTypeConversion.Global
             if(obj is IMovable movable)
                 movable.Moved(obj.internalPrevPosition);
@@ -163,6 +161,22 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         obj.ClearDirty();
     }
 
+    private void CheckDirtyInBounds(Bounds bounds) {
+        for(int x = bounds.min.x; x != bounds.max.x + 1; x++) {
+            if(x > _maxChunkPos.x)
+                x = _minChunkPos.x;
+            for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
+                if(y > _maxChunkPos.y)
+                    y = _minChunkPos.y;
+                GetChunkAt(new Vector2Int(x, y)).PopulateDirty(_dirtyObjects);
+            }
+        }
+        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+        foreach(TObject obj in _dirtyObjects)
+            CheckDirty(obj);
+        _dirtyObjects.Clear();
+    }
+
     private void UpdateChunksInBounds(TimeSpan time, Bounds bounds) {
         for(int x = bounds.min.x; x != bounds.max.x + 1; x++) {
             if(x > _maxChunkPos.x)
@@ -170,22 +184,11 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
                 if(y > _maxChunkPos.y)
                     y = _minChunkPos.y;
-                TChunk chunk = GetChunkAt(new Vector2Int(x, y));
+                Vector2Int pos = new(x, y);
+                TChunk chunk = GetChunkAt(pos);
                 chunk.ticks++;
                 chunk.Update(time);
-            }
-        }
-    }
-
-    private void DrawChunksInBounds(Bounds bounds) {
-        for(int x = bounds.min.x; x != bounds.max.x + 1; x++) {
-            if(x > _maxChunkPos.x)
-                x = _minChunkPos.x;
-            for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
-                if(y > _maxChunkPos.y)
-                    y = _minChunkPos.y;
-                Vector2Int pos = new(x, y);
-                GetChunkAt(pos).Draw(ChunkToScreenPosition(pos));
+                chunk.Draw(ChunkToScreenPosition(pos));
             }
         }
     }

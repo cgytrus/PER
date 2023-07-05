@@ -16,10 +16,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     where TLevel : Level<TLevel, TChunk, TObject>
     where TChunk : Chunk<TLevel, TChunk, TObject>, new()
     where TObject : LevelObject<TLevel, TChunk, TObject> {
-    protected TLevel level {
-        get => _level!;
-        private set => _level = value;
-    }
+    protected TLevel level => _level!;
 
     protected bool inLevel => _level is not null;
     internal bool inLevelInt => inLevel;

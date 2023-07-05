@@ -1,66 +1,79 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+
+using JetBrains.Annotations;
 
 using PER.Abstractions.Rendering;
 using PER.Util;
 
 namespace PER.Abstractions.Environment;
 
+[PublicAPI]
 public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     where TLevel : Level<TLevel, TChunk, TObject>
     where TChunk : Chunk<TLevel, TChunk, TObject>, new()
     where TObject : LevelObject<TLevel, TChunk, TObject> {
     internal int ticks { get; set; }
 
-    protected TLevel level {
-        get => _level!;
-        private set => _level = value;
-    }
-    private TLevel? _level;
+    protected abstract bool shouldUpdate { get; }
+    protected abstract bool shouldTick { get; }
 
-    private readonly List<TObject?> _objects = new();
-    private readonly List<IUpdatable?> _updatables = new();
-    private readonly List<ITickable?> _tickables = new();
+    protected TLevel level => _level!;
+    private TLevel? _level;
 
     internal List<ILight?> litBy { get; } = new();
 
     public float[,] lighting { get; private set; } = new float[0, 0];
     public int[,] visibility { get; private set; } = new int[0, 0];
 
+    public float totalLighting { get; set; }
+    public int totalVisibility { get; set; }
+
+    private readonly List<TObject?> _objects = new();
+    private readonly List<IUpdatable?> _updatables = new();
+    private readonly List<ITickable?> _tickables = new();
+
+    private bool _shouldProcessRemoved;
+
     public void InitLighting() {
         lighting = new float[level.chunkSize.y, level.chunkSize.x];
         visibility = new int[level.chunkSize.y, level.chunkSize.x];
+        totalLighting = 0f;
+        totalVisibility = 0;
     }
 
     public void Add(TObject obj) {
         _objects.Add(obj);
         _objects.Sort((a, b) => (a?.layer ?? int.MinValue).CompareTo(b?.layer ?? int.MinValue));
-        if(obj is IUpdatable updatable)
+        if(shouldUpdate && obj is IUpdatable updatable)
             _updatables.Add(updatable);
-        if(obj is ITickable tickable)
+        if(shouldTick && obj is ITickable tickable)
             _tickables.Add(tickable);
+        _shouldProcessRemoved = true;
     }
 
     public void Remove(TObject obj) {
         int index = _objects.IndexOf(obj);
         if(index >= 0)
             _objects[index] = null;
-        if(obj is IUpdatable updatable) {
+        if(shouldUpdate && obj is IUpdatable updatable) {
             index = _updatables.IndexOf(updatable);
             if(index >= 0)
                 _updatables[index] = null;
         }
         // ReSharper disable once InvertIf
-        if(obj is ITickable tickable) {
+        if(shouldTick && obj is ITickable tickable) {
             index = _tickables.IndexOf(tickable);
             if(index >= 0)
                 _tickables[index] = null;
         }
+        _shouldProcessRemoved = true;
     }
 
     public void Update(TimeSpan time) {
+        if(!shouldUpdate)
+            return;
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < _updatables.Count; i++) {
             IUpdatable? updatable = _updatables[i];
@@ -71,6 +84,8 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     public void Draw(Vector2Int start) {
+        if(!shouldUpdate || totalLighting == 0f || totalVisibility == 0)
+            return;
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < _objects.Count; i++) {
             TObject? obj = _objects[i];
@@ -93,6 +108,8 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     public void Tick(TimeSpan time) {
+        if(!shouldTick)
+            return;
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < _tickables.Count; i++) {
             ITickable? tickable = _tickables[i];
@@ -103,9 +120,14 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     private void ProcessRemoved() {
+        if(!_shouldProcessRemoved)
+            return;
+        _shouldProcessRemoved = false;
         _objects.RemoveAll(x => x is null || !x.inLevelInt);
-        _updatables.RemoveAll(x => x is null or TObject { inLevelInt: false });
-        _tickables.RemoveAll(x => x is null or TObject { inLevelInt: false });
+        if(shouldUpdate)
+            _updatables.RemoveAll(x => x is null or TObject { inLevelInt: false });
+        if(shouldTick)
+            _tickables.RemoveAll(x => x is null or TObject { inLevelInt: false });
     }
 
     public void PopulateDirty(List<TObject> dirtyObjects) {

@@ -1,3 +1,3 @@
 ﻿namespace PER.Abstractions.Environment;
 
-public enum LevelUpdateState { None, Tick, Update, Draw }
+public enum LevelUpdateState { None, Tick, Update }
