@@ -46,20 +46,24 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     private LightPropagator<TLevel, TChunk, TObject> _light;
 
+    protected abstract TimeSpan maxGenerationTime { get; }
+    internal bool shouldGenerateChunks { get; private set; }
+
     public IReadOnlyDictionary<Guid, TObject> objects => _objects;
     private readonly Dictionary<Guid, TObject> _objects = new();
     internal HashSet<TObject> dirtyObjects { get; } = new();
 
     private readonly Dictionary<Vector2Int, TChunk> _chunks = new();
-    private readonly Dictionary<Vector2Int, TChunk> _autoChunks = new();
-    private readonly List<(Vector2Int, Vector2Int)> _chunksToGenerate = new();
+    private readonly List<TChunk> _chunkValues = new();
+    private readonly Queue<Chunk<TLevel, TChunk, TObject>> _chunksToGenerate = new();
     private readonly Vector2Int _minChunkPos;
     private readonly Vector2Int _maxChunkPos;
 
     public event Action<TObject>? objectAdded;
     public event Action<TObject>? objectRemoved;
     public event Action<TObject>? objectChanged;
-    public event Action<Vector2Int, Vector2Int>? chunkCreated;
+
+    private readonly Stopwatch _generationTimer = new();
 
     protected Level(IRenderer renderer, IInput input, IAudio audio, IResources resources, Vector2Int chunkSize) {
         this.renderer = renderer;
@@ -72,13 +76,9 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         _maxChunkPos = LevelToChunkPosition(new Vector2Int(int.MaxValue, int.MaxValue));
     }
 
-    public void Reset() {
-        cameraPosition = new Vector2Int();
-        _objects.Clear();
-        _chunks.Clear();
-    }
-
     public void Add(TObject obj) {
+        if(updateState == LevelUpdateState.Update)
+            throw new InvalidOperationException("Add cannot be called from Update.");
         _objects.Add(obj.id, obj);
         obj.SetLevel(this);
         TChunk chunk = GetChunkAt(LevelToChunkPosition(obj.position));
@@ -93,6 +93,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     public void Remove(TObject obj) => Remove(obj.id);
     public void Remove(Guid objId) {
+        if(updateState == LevelUpdateState.Update)
+            throw new InvalidOperationException("Remove cannot be called from Update.");
         if(!_objects.TryGetValue(objId, out TObject? obj))
             return;
         _light.QueueReset(obj);
@@ -106,35 +108,67 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     public virtual void Update(TimeSpan time) {
+        shouldGenerateChunks = true;
+        updateState = LevelUpdateState.Update;
+        foreach(TObject obj in dirtyObjects)
+            CheckDirty(obj);
+        dirtyObjects.Clear();
+        updateState = LevelUpdateState.None;
+        _light.UpdateQueued();
         updateState = LevelUpdateState.Update;
         Bounds cameraChunks = new(
             ScreenToChunkPosition(-chunkSize / 2),
             ScreenToChunkPosition(renderer.size - new Vector2Int(1, 1) + chunkSize / 2)
         );
-        foreach(TObject obj in dirtyObjects)
-            CheckDirty(obj);
-        dirtyObjects.Clear();
-        AddNewChunks();
-        _light.UpdateQueued();
-        UpdateChunksInBounds(time, cameraChunks);
+        for(int x = cameraChunks.min.x; x != cameraChunks.max.x + 1; x++) {
+            if(x > _maxChunkPos.x)
+                x = _minChunkPos.x;
+            for(int y = cameraChunks.min.y; y != cameraChunks.max.y + 1; y++) {
+                if(y > _maxChunkPos.y)
+                    y = _minChunkPos.y;
+                Vector2Int pos = new(x, y);
+                TChunk chunk = GetChunkAt(pos);
+                chunk.Update(time);
+                chunk.Draw(ChunkToScreenPosition(pos));
+            }
+        }
         updateState = LevelUpdateState.None;
     }
 
     public virtual void Tick(TimeSpan time) {
+        shouldGenerateChunks = true;
         updateState = LevelUpdateState.Tick;
-        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TChunk chunk in _chunks.Values) {
+
+        // always load chunk 0, 0
+        LoadChunkAt(new Vector2Int(0, 0));
+
+        // ReSharper disable once ForCanBeConvertedToForeach
+        for(int i = 0; i < _chunkValues.Count; i++) {
+            TChunk chunk = _chunkValues[i];
             if(chunk.ticks <= 0)
                 continue;
-            chunk.Tick(time);
             chunk.ticks--;
+            chunk.Tick(time);
         }
         foreach(TObject obj in dirtyObjects)
             CheckDirty(obj);
         dirtyObjects.Clear();
-        AddNewChunks();
-        _light.UpdateQueued();
+
         updateState = LevelUpdateState.None;
+
+        TimeSpan startTime = _generationTimer.time;
+        while((maxGenerationTime == TimeSpan.Zero || _generationTimer.time - startTime < maxGenerationTime) &&
+            _chunksToGenerate.TryDequeue(out Chunk<TLevel, TChunk, TObject>? chunk)) {
+            Vector2Int levelPosition = ChunkToLevelPosition(chunk.position);
+            // weird chunk size, skip gen
+            if(LevelToChunkPosition(levelPosition + chunkSize - new Vector2Int(1, 1)) != chunk.position)
+                continue;
+            GenerateChunk(levelPosition);
+        }
+        if(_chunksToGenerate.Count > 0)
+            Console.WriteLine($"delaying {_chunksToGenerate.Count}");
+
+        _light.UpdateQueued();
     }
 
     public void CheckDirty(TObject obj) {
@@ -164,37 +198,19 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         obj.ClearDirty();
     }
 
-    private void UpdateChunksInBounds(TimeSpan time, Bounds bounds) {
-        for(int x = bounds.min.x; x != bounds.max.x + 1; x++) {
-            if(x > _maxChunkPos.x)
-                x = _minChunkPos.x;
-            for(int y = bounds.min.y; y != bounds.max.y + 1; y++) {
-                if(y > _maxChunkPos.y)
-                    y = _minChunkPos.y;
-                Vector2Int pos = new(x, y);
-                TChunk chunk = GetChunkAt(pos);
-                chunk.ticks++;
-                chunk.Update(time);
-                chunk.Draw(ChunkToScreenPosition(pos));
-            }
-        }
-    }
+    internal void QueueGenerateChunk(Chunk<TLevel, TChunk, TObject> chunk) => _chunksToGenerate.Enqueue(chunk);
 
-    private void AddNewChunks() {
-        foreach((Vector2Int pos, TChunk chunk) in _autoChunks) {
-            if(chunk.ticks <= 0)
-                continue;
-            _chunks.Add(pos, chunk);
-            _chunksToGenerate.Add((ChunkToLevelPosition(pos), pos));
-        }
-        foreach((Vector2Int levelPosition, Vector2Int pos) in _chunksToGenerate) {
-            _autoChunks.Remove(pos);
-            // weird chunk size, skip gen
-            if(LevelToChunkPosition(levelPosition + chunkSize - new Vector2Int(1, 1)) != pos)
-                continue;
-            chunkCreated?.Invoke(levelPosition, chunkSize);
-        }
-        _chunksToGenerate.Clear();
+    protected abstract void GenerateChunk(Vector2Int start);
+
+    public void LoadChunkAt(Vector2Int chunkPosition) => GetChunkAt(chunkPosition).ticks += 2;
+    internal TChunk GetChunkAt(Vector2Int chunkPosition) {
+        if(_chunks.TryGetValue(chunkPosition, out TChunk? chunk))
+            return chunk;
+        chunk = new TChunk();
+        chunk.Initialize(this, chunkPosition);
+        _chunks.Add(chunkPosition, chunk);
+        _chunkValues.Add(chunk);
+        return chunk;
     }
 
     public bool HasObjectAt(Vector2Int position) =>
@@ -225,18 +241,6 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         GetChunkAt(LevelToChunkPosition(position)).GetObjectsAt<T>(position);
     public IEnumerable<T> GetObjectsAt<T>(Vector2Int position, int minLayer) where T : class =>
         GetChunkAt(LevelToChunkPosition(position)).GetObjectsAt<T>(position, minLayer);
-
-    public void LoadChunkAt(Vector2Int chunkPosition) => GetChunkAt(chunkPosition).ticks += 2;
-    internal TChunk GetChunkAt(Vector2Int chunkPosition) {
-        if(_chunks.TryGetValue(chunkPosition, out TChunk? chunk) ||
-            _autoChunks.TryGetValue(chunkPosition, out chunk))
-            return chunk;
-        chunk = new TChunk();
-        chunk.SetLevel(this);
-        chunk.InitLighting();
-        _autoChunks.Add(chunkPosition, chunk);
-        return chunk;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int LevelToCameraPosition(Vector2Int levelPosition) => levelPosition - cameraPosition;

@@ -14,6 +14,8 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     where TLevel : Level<TLevel, TChunk, TObject>
     where TChunk : Chunk<TLevel, TChunk, TObject>, new()
     where TObject : LevelObject<TLevel, TChunk, TObject> {
+    public Vector2Int position { get; private set; }
+
     internal int ticks { get; set; }
 
     protected abstract bool shouldUpdate { get; }
@@ -31,11 +33,19 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     private readonly List<IUpdatable?> _updatables = new();
     private readonly List<ITickable?> _tickables = new();
 
+    private bool _generated;
+
     private bool _shouldProcessRemoved;
 
-    public void InitLighting() {
+    internal void Initialize(Level<TLevel, TChunk, TObject>? level, Vector2Int position) {
+        _level = level as TLevel;
+        if(level is null)
+            return;
+        this.position = position;
         lighting = new Color[level.chunkSize.y, level.chunkSize.x];
         totalVisibility = 0f;
+        if(!level.shouldGenerateChunks)
+            _generated = true;
     }
 
     public void Add(TObject obj) {
@@ -99,16 +109,17 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
             return c;
         float v = Math.Min(lighting[pos.y, pos.x].a * (1f + level.ambientLight.a), 1f);
         Color3 l = (Color3)lighting[pos.y, pos.x] + (Color3)level.ambientLight;
-        Color final = new(Math.Min(l.r, 1f) * v, Math.Min(l.g, 1f) * v, Math.Min(l.b, 1f) * v, 1f);
-        return c with {
-            background = c.background * final,
-            foreground = c.foreground * final
-        };
+        Color final = new(Math.Min(l.r, 1f) * v, Math.Min(l.g, 1f) * v, Math.Min(l.b, 1f) * v);
+        return c with { background = c.background * final, foreground = c.foreground * final };
     }
 
     public void Tick(TimeSpan time) {
         if(!shouldTick)
             return;
+        if(!_generated) {
+            level.QueueGenerateChunk(this);
+            _generated = true;
+        }
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < _tickables.Count; i++) {
             ITickable? tickable = _tickables[i];
@@ -259,6 +270,4 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
                     obj.blockedLights![index] = null;
             }
     }
-
-    internal void SetLevel(Level<TLevel, TChunk, TObject>? level) => _level = level as TLevel;
 }
