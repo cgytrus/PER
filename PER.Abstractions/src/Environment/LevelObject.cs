@@ -87,16 +87,20 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
 
     internal void SetLevel(Level<TLevel, TChunk, TObject>? level) {
         _level = level as TLevel;
-        if(level is not null) {
-            if(blocksLight)
-                blockedLights ??= new List<ILight?>();
-            if(this is ILight)
-                contributedLight ??= new Dictionary<Vector2Int, Color>();
+        if(level is null)
+            return;
+        if(blocksLight) {
+            if(blockedLights is null)
+                blockedLights = new List<ILight?>();
+            else
+                blockedLights.Clear();
         }
-        else {
-            blockedLights?.Clear();
-            contributedLight?.Clear();
-        }
+        if(this is not ILight)
+            return;
+        if(contributedLight is null)
+            contributedLight = new Dictionary<Vector2Int, Color>();
+        else
+            contributedLight.Clear();
     }
 
     internal void ClearDirty() {
