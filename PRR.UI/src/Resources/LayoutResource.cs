@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using JetBrains.Annotations;
 
@@ -19,7 +18,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     [PublicAPI]
     public abstract record LayoutResourceElement(bool? enabled, Vector2Int position, Vector2Int size) {
         public abstract Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id);
+            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id);
 
         protected static bool TryGetPath(LayoutResource resource, string id,
             [NotNullWhen(true)] out string? fullPath) => resource.TryGetPath(id, out fullPath);
@@ -33,10 +32,10 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     protected abstract IAudio audio { get; }
 
     protected virtual string layoutsPath => "layouts";
-    protected abstract string layoutName { get; }
 
     protected ColorsResource colors { get; private set; } = new();
 
+    private List<string> _layoutNames = new();
     private Dictionary<string, Type> _elementTypes = new();
 
     protected IEnumerable<KeyValuePair<string, Element>> elements => _elements;
@@ -47,24 +46,27 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     public override void Preload() {
         _elementTypes.Clear();
         AddDependency<ColorsResource>(ColorsResource.GlobalId);
-        AddPath("layout", $"{layoutsPath}/{layoutName}.json");
     }
 
     public override void Load(string id) {
         colors = GetDependency<ColorsResource>(ColorsResource.GlobalId);
 
         Dictionary<string, LayoutResourceElement> layoutElements = new(_elementTypes.Count);
-        DeserializeAllJson("layout", layoutElements, () => layoutElements.Count == _elementTypes.Count);
+        DeserializeAllJson("layout", layoutElements);
 
-        // didn't load all the elements
-        if(layoutElements.Count != _elementTypes.Count)
-            throw new InvalidOperationException("Not all elements were loaded.");
+        List<string> missing = new();
+        foreach((string elementId, Type _) in _elementTypes)
+            if(!layoutElements.ContainsKey(elementId))
+                missing.Add(elementId);
+        if(missing.Count > 0)
+            throw new InvalidDataException(
+                $"Missing elements in layout {id}: {string.Join(", ", missing)}.");
 
         _elements.Clear();
         _elementList.Clear();
         foreach((string elementId, LayoutResourceElement layoutElement) in layoutElements) {
             Element element =
-                layoutElement.GetElement(this, renderer, input, audio, colors.colors, layoutName, elementId);
+                layoutElement.GetElement(this, renderer, input, audio, colors.colors, _layoutNames, elementId);
             _elements.Add(elementId, element);
             _elementList.Add(element);
         }
@@ -79,9 +81,9 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         if(layout is null)
             return;
 
-        foreach((string elementId, Type elementType) in _elementTypes) {
-            if(!layout.TryGetValue(elementId, out JsonElement jsonElement))
-                throw new InvalidOperationException($"Element {elementId} is missing.");
+        foreach((string elementId, JsonElement jsonElement) in layout) {
+            if(!_elementTypes.TryGetValue(elementId, out Type? elementType))
+                throw new InvalidOperationException($"Element {elementId} is extra.");
             if(elementType.GetField("serializedType")?.GetValue(null) is not Type type)
                 throw new InvalidOperationException($"Failed to deserialize {elementId}.");
             if(jsonElement.Deserialize(type) is not LayoutResourceElement layoutElement)
@@ -94,6 +96,11 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
     public override void Unload(string id) {
         _elements.Clear();
         _elementList.Clear();
+    }
+
+    protected void AddLayout(string name) {
+        AddPath("layout", $"{layoutsPath}/{name}.json");
+        _layoutNames.Insert(0, name);
     }
 
     protected void AddElement<T>(string id) where T : Element {

@@ -46,12 +46,13 @@ public class Text : Element {
         renderer.DrawText(position, text, _formatter, align, wrap ? size.x : 0);
     }
 
-    public override void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id, string? special) {
+    public override void UpdateColors(Dictionary<string, Color> colors, List<string> layoutNames, string id,
+        string? special) {
         Color foregroundColor = Color.white;
         Color backgroundColor = Color.transparent;
-        if(TryGetColor(colors, "text", layoutName, id, "fg", special, out Color color))
+        if(TryGetColor(colors, "text", layoutNames, id, "fg", special, out Color color))
             foregroundColor = color;
-        if(TryGetColor(colors, "text", layoutName, id, "bg", special, out color))
+        if(TryGetColor(colors, "text", layoutNames, id, "bg", special, out color))
             backgroundColor = color;
         formatting['\0'] = formatting.TryGetValue('\0', out Formatting oldFormatting) ?
             oldFormatting with { foregroundColor = foregroundColor, backgroundColor = backgroundColor } :
@@ -63,7 +64,7 @@ public class Text : Element {
         [property: JsonConverter(typeof(JsonStringEnumConverter))] HorizontalAlignment? align, bool? wrap) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
-            Dictionary<string, Color> colors, string layoutName, string id) {
+            Dictionary<string, Color> colors, List<string> layoutNames, string id) {
             Text element = new(renderer) {
                 position = position,
                 size = size,
@@ -78,7 +79,7 @@ public class Text : Element {
                         textFormatting.GetFormatting(colors, renderer.formattingEffects));
             if(align.HasValue) element.align = align.Value;
             if(wrap.HasValue) element.wrap = wrap.Value;
-            element.UpdateColors(colors, layoutName, id, null);
+            element.UpdateColors(colors, layoutNames, id, null);
             return element;
         }
     }

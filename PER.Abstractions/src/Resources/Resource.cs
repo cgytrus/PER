@@ -48,9 +48,11 @@ public abstract class Resource {
     protected void AddPath(string id, string path) {
         if(IResources.current is null || !IResources.current.loading)
             throw new InvalidOperationException("Cannot add paths while resources are not loading");
-        if(_fullPaths.ContainsKey(id))
-            throw new InvalidOperationException($"File with ID {id} already registered.");
-        _fullPaths.Add(id, IResources.current.GetAllPaths(Path.Combine(path.Split('/'))));
+        IEnumerable<string> newPaths = IResources.current.GetAllPaths(Path.Combine(path.Split('/')));
+        if(_fullPaths.TryGetValue(id, out IEnumerable<string>? currentPaths))
+            _fullPaths[id] = newPaths.Concat(currentPaths);
+        else
+            _fullPaths.Add(id, newPaths);
     }
 
     protected Resource GetDependency(string id) {

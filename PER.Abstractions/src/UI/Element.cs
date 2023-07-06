@@ -42,14 +42,22 @@ public abstract class Element : IUpdatable {
             playable.status = PlaybackStatus.Playing;
     }
 
-    public abstract void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id, string? special);
+    public abstract void UpdateColors(Dictionary<string, Color> colors, List<string> layoutNames, string id,
+        string? special);
 
-    protected static bool TryGetColor(Dictionary<string, Color> colors, string type, string layoutName, string id,
-        string colorName, string? special, out Color color) =>
-        special is not null && colors.TryGetValue($"{type}_{layoutName}.{id}_{colorName}_{special}", out color) ||
-        special is not null && colors.TryGetValue($"{type}_@{id}_{colorName}_{special}", out color) ||
-        special is not null && colors.TryGetValue($"{type}_{colorName}_{special}", out color) ||
-        colors.TryGetValue($"{type}_{layoutName}.{id}_{colorName}", out color) ||
-        colors.TryGetValue($"{type}_@{id}_{colorName}", out color) ||
-        colors.TryGetValue($"{type}_{colorName}", out color);
+    protected static bool TryGetColor(Dictionary<string, Color> colors, string type, List<string> layoutNames,
+        string id, string colorName, string? special, out Color color) {
+        foreach(string layoutName in layoutNames) {
+            if(special is not null &&
+                colors.TryGetValue($"{type}_{layoutName}.{id}_{colorName}_{special}", out color) ||
+                special is not null && colors.TryGetValue($"{type}_@{id}_{colorName}_{special}", out color) ||
+                special is not null && colors.TryGetValue($"{type}_{colorName}_{special}", out color) ||
+                colors.TryGetValue($"{type}_{layoutName}.{id}_{colorName}", out color) ||
+                colors.TryGetValue($"{type}_@{id}_{colorName}", out color) ||
+                colors.TryGetValue($"{type}_{colorName}", out color))
+                return true;
+        }
+        color = default(Color);
+        return false;
+    }
 }

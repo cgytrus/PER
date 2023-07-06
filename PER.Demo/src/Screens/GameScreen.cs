@@ -27,8 +27,6 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
     protected override IInput input => Core.engine.input;
     protected override IAudio audio => Core.engine.audio;
 
-    protected override string layoutName => "game";
-
     private readonly Settings _settings;
 
     private readonly List<Func<char, Formatting>> _styleFormatters = new();
@@ -51,6 +49,8 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
     public override void Preload() {
         base.Preload();
         AddDependency<ResourcePackSelectorTemplate>(ResourcePackSelectorTemplate.GlobalId);
+
+        AddLayout("game");
 
         AddElement<FilledPanel>("testPanel");
         AddElement<Text>("testText");

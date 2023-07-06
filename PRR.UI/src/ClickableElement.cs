@@ -190,18 +190,19 @@ public abstract class ClickableElement : Element {
 
     protected abstract void CustomUpdate(TimeSpan time);
 
-    public override void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id, string? special) {
-        if(TryGetColor(colors, type, layoutName, id, "inactive", special, out Color color) ||
-            TryGetColor(colors, "clickable", layoutName, id, "inactive", special, out color))
+    public override void UpdateColors(Dictionary<string, Color> colors, List<string> layoutNames, string id,
+        string? special) {
+        if(TryGetColor(colors, type, layoutNames, id, "inactive", special, out Color color) ||
+            TryGetColor(colors, "clickable", layoutNames, id, "inactive", special, out color))
             inactiveColor = color;
-        if(TryGetColor(colors, type, layoutName, id, "idle", special, out color) ||
-            TryGetColor(colors, "clickable", layoutName, id, "idle", special, out color))
+        if(TryGetColor(colors, type, layoutNames, id, "idle", special, out color) ||
+            TryGetColor(colors, "clickable", layoutNames, id, "idle", special, out color))
             idleColor = color;
-        if(TryGetColor(colors, type, layoutName, id, "hover", special, out color) ||
-            TryGetColor(colors, "clickable", layoutName, id, "hover", special, out color))
+        if(TryGetColor(colors, type, layoutNames, id, "hover", special, out color) ||
+            TryGetColor(colors, "clickable", layoutNames, id, "hover", special, out color))
             hoverColor = color;
-        if(TryGetColor(colors, type, layoutName, id, "click", special, out color) ||
-            TryGetColor(colors, "clickable", layoutName, id, "click", special, out color))
+        if(TryGetColor(colors, type, layoutNames, id, "click", special, out color) ||
+            TryGetColor(colors, "clickable", layoutNames, id, "click", special, out color))
             clickColor = color;
         // if UpdateColors is called from some update function,
         // _lastTime will be time at the current frame (or at least the last frame)

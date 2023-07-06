@@ -98,24 +98,25 @@ public class ProgressBar : Element {
                     effect);
     }
 
-    public override void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id, string? special) {
-        if(TryGetColor(colors, "progressBar", layoutName, id, "low", special, out Color color))
+    public override void UpdateColors(Dictionary<string, Color> colors, List<string> layoutNames, string id,
+        string? special) {
+        if(TryGetColor(colors, "progressBar", layoutNames, id, "low", special, out Color color))
             lowColor = color;
-        if(TryGetColor(colors, "progressBar", layoutName, id, "high", special, out color))
+        if(TryGetColor(colors, "progressBar", layoutNames, id, "high", special, out color))
             highColor = color;
     }
 
     private record LayoutResourceProgressBar(bool? enabled, Vector2Int position, Vector2Int size, float? value) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
             ProgressBar element = new(renderer) {
                 position = position,
                 size = size
             };
             if(enabled.HasValue) element.enabled = enabled.Value;
             if(value.HasValue) element.value = value.Value;
-            element.UpdateColors(colors, layoutName, id, null);
+            element.UpdateColors(colors, layoutNames, id, null);
             return element;
         }
     }

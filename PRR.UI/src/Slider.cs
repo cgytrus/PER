@@ -83,7 +83,7 @@ public class Slider : ClickableElement {
         float? minValue, float? maxValue, bool? active) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
             Slider element = new(renderer, input, audio) {
                 position = position,
                 size = size
@@ -94,7 +94,7 @@ public class Slider : ClickableElement {
             if(maxValue.HasValue) element.maxValue = maxValue.Value;
             if(value.HasValue) element.value = value.Value;
             if(active.HasValue) element.active = active.Value;
-            element.UpdateColors(colors, layoutName, id, null);
+            element.UpdateColors(colors, layoutNames, id, null);
             return element;
         }
     }

@@ -87,19 +87,19 @@ public class ScrollablePanel : Element {
         }
     }
 
-    public override void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id,
+    public override void UpdateColors(Dictionary<string, Color> colors, List<string> layoutNames, string id,
         string? special) { }
 
     protected record LayoutResourceScrollablePanel(bool? enabled, Vector2Int position, Vector2Int size) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
             ScrollablePanel element = new(renderer, input) {
                 position = position,
                 size = size
             };
             if(enabled.HasValue) element.enabled = enabled.Value;
-            element.UpdateColors(colors, layoutName, id, null);
+            element.UpdateColors(colors, layoutNames, id, null);
             return element;
         }
     }

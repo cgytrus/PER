@@ -71,7 +71,7 @@ public class Button : ClickableElement {
         [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style, bool? active, bool? toggled) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
             Button element = new(renderer, input, audio) {
                 position = position,
                 size = size,
@@ -81,7 +81,7 @@ public class Button : ClickableElement {
             if(style.HasValue) element.style = style.Value;
             if(active.HasValue) element.active = active.Value;
             if(toggled.HasValue) element.toggled = toggled.Value;
-            element.UpdateColors(colors, layoutName, id, null);
+            element.UpdateColors(colors, layoutNames, id, null);
             return element;
         }
     }

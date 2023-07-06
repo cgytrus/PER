@@ -19,7 +19,7 @@ public class ColorsResource : JsonResource<IDictionary<string, (string?, Color)>
 
     public override void Load(string id) {
         Dictionary<string, (string?, Color)> tempValues = new();
-        DeserializeAllJson("colors", tempValues, () => false);
+        DeserializeAllJson("colors", tempValues);
 
         foreach((string key, (string? value, Color color)) in tempValues)
             if(value is null)

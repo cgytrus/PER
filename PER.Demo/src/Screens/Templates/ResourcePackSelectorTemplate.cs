@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
@@ -19,7 +18,6 @@ public class ResourcePackSelectorTemplate : ListBoxTemplateResource<ResourcePack
     protected override IRenderer renderer => Core.engine.renderer;
     protected override IInput input => Core.engine.input;
     protected override IAudio audio => Core.engine.audio;
-    protected override string layoutName => "resourcePackItem";
 
     private readonly GameScreen _screen;
     private readonly IList<ResourcePackData> _availablePacks;
@@ -34,6 +32,7 @@ public class ResourcePackSelectorTemplate : ListBoxTemplateResource<ResourcePack
 
     public override void Preload() {
         base.Preload();
+        AddLayout("resourcePackItem");
         AddElement<Button>("toggle");
         AddElement<Button>("up");
         AddElement<Button>("down");

@@ -45,10 +45,11 @@ public class FilledPanel : Element {
                 renderer.DrawCharacter(new Vector2Int(x, y), rc, effect);
     }
 
-    public override void UpdateColors(Dictionary<string, Color> colors, string layoutName, string id, string? special) {
-        if(TryGetColor(colors, "panel", layoutName, id, "fg", special, out Color color))
+    public override void UpdateColors(Dictionary<string, Color> colors, List<string> layoutNames, string id,
+        string? special) {
+        if(TryGetColor(colors, "panel", layoutNames, id, "fg", special, out Color color))
             foregroundColor = color;
-        if(TryGetColor(colors, "panel", layoutName, id, "bg", special, out color))
+        if(TryGetColor(colors, "panel", layoutNames, id, "bg", special, out color))
             backgroundColor = color;
     }
 
@@ -56,7 +57,7 @@ public class FilledPanel : Element {
         [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
-            Dictionary<string, Color> colors, string layoutName, string id) {
+            Dictionary<string, Color> colors, List<string> layoutNames, string id) {
             FilledPanel element = new(renderer) {
                 position = position,
                 size = size
@@ -64,7 +65,7 @@ public class FilledPanel : Element {
             if(enabled.HasValue) element.enabled = enabled.Value;
             if(character.HasValue) element.character = character.Value;
             if(style.HasValue) element.style = style.Value;
-            element.UpdateColors(colors, layoutName, id, null);
+            element.UpdateColors(colors, layoutNames, id, null);
             return element;
         }
     }

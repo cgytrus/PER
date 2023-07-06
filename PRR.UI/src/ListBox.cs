@@ -113,7 +113,7 @@ public class ListBox<TItem> : ScrollablePanel {
     private record LayoutResourceListBox(bool? enabled, Vector2Int position, Vector2Int size, string template) :
         LayoutResourceScrollablePanel(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
             ListBoxTemplateResource<TItem> templateFactory =
                 GetDependency<ListBoxTemplateResource<TItem>>(resource, $"layouts/templates/{template}");
             ListBox<TItem> element = new(renderer, input, templateFactory) {
@@ -121,7 +121,7 @@ public class ListBox<TItem> : ScrollablePanel {
                 size = size
             };
             if(enabled.HasValue) element.enabled = enabled.Value;
-            element.UpdateColors(colors, layoutName, id, null);
+            element.UpdateColors(colors, layoutNames, id, null);
             return element;
         }
     }

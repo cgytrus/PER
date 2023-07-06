@@ -346,7 +346,7 @@ public class InputField : ClickableElement {
         [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style, bool? active) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
         public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, string layoutName, string id) {
+            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
             InputField element = new(renderer, input, audio) {
                 position = position,
                 size = size,
@@ -359,7 +359,7 @@ public class InputField : ClickableElement {
             if(blinkRate.HasValue) element.blinkRate = blinkRate.Value;
             if(style.HasValue) element.style = style.Value;
             if(active.HasValue) element.active = active.Value;
-            element.UpdateColors(colors, layoutName, id, null);
+            element.UpdateColors(colors, layoutNames, id, null);
             return element;
         }
     }
