@@ -79,7 +79,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     public void Draw(Vector2Int start) {
-        if(!shouldUpdate || totalVisibility == 0f)
+        if(!shouldUpdate || level.doLighting && totalVisibility == 0f)
             return;
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < _objects.Count; i++) {
@@ -88,13 +88,15 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
                 continue;
             Vector2Int screenPos = level.LevelToScreenPosition(obj.position);
             Vector2Int localPos = screenPos - start;
-            if(lighting[localPos.y, localPos.x].a == 0f)
+            if(level.doLighting && lighting[localPos.y, localPos.x].a == 0f)
                 continue;
             level.renderer.DrawCharacter(screenPos, ApplyLight(obj.character, localPos), obj.effect);
         }
     }
 
     private RenderCharacter ApplyLight(RenderCharacter c, Vector2Int pos) {
+        if(!level.doLighting)
+            return c;
         float v = Math.Min(lighting[pos.y, pos.x].a * (1f + level.ambientLight.a), 1f);
         Color3 l = (Color3)lighting[pos.y, pos.x] + (Color3)level.ambientLight;
         Color final = new(Math.Min(l.r, 1f) * v, Math.Min(l.g, 1f) * v, Math.Min(l.b, 1f) * v, 1f);
