@@ -105,7 +105,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         objectRemoved?.Invoke(obj);
     }
 
-    public void Update(TimeSpan time) {
+    public virtual void Update(TimeSpan time) {
         updateState = LevelUpdateState.Update;
         Bounds cameraChunks = new(
             ScreenToChunkPosition(-chunkSize / 2),
@@ -120,7 +120,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         updateState = LevelUpdateState.None;
     }
 
-    public void Tick(TimeSpan time) {
+    public virtual void Tick(TimeSpan time) {
         updateState = LevelUpdateState.Tick;
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
         foreach(TChunk chunk in _chunks.Values) {
