@@ -165,8 +165,6 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
                 continue;
             GenerateChunk(levelPosition);
         }
-        if(_chunksToGenerate.Count > 0)
-            Console.WriteLine($"delaying {_chunksToGenerate.Count}");
 
         _light.UpdateQueued();
     }
