@@ -24,9 +24,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     internal List<ILight?> litBy { get; } = new();
 
-    public float[,] lighting { get; private set; } = new float[0, 0];
-    public float[,] visibility { get; private set; } = new float[0, 0];
-
+    public Color[,] lighting { get; private set; } = new Color[0, 0];
     public float totalVisibility { get; set; }
 
     private readonly List<TObject?> _objects = new();
@@ -36,8 +34,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     private bool _shouldProcessRemoved;
 
     public void InitLighting() {
-        lighting = new float[level.chunkSize.y, level.chunkSize.x];
-        visibility = new float[level.chunkSize.y, level.chunkSize.x];
+        lighting = new Color[level.chunkSize.y, level.chunkSize.x];
         totalVisibility = 0f;
     }
 
@@ -91,18 +88,19 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
                 continue;
             Vector2Int screenPos = level.LevelToScreenPosition(obj.position);
             Vector2Int localPos = screenPos - start;
-            if(visibility[localPos.y, localPos.x] == 0f)
+            if(lighting[localPos.y, localPos.x].a == 0f)
                 continue;
             level.renderer.DrawCharacter(screenPos, ApplyLight(obj.character, localPos), obj.effect);
         }
     }
 
     private RenderCharacter ApplyLight(RenderCharacter c, Vector2Int pos) {
-        float final = Math.Min(visibility[pos.y, pos.x] * (1f + level.visibilityStay), 1f);
-        final *= Math.Min(lighting[pos.y, pos.x] + level.ambientLight, 1f);
+        float v = Math.Min(lighting[pos.y, pos.x].a * (1f + level.ambientLight.a), 1f);
+        Color3 l = (Color3)lighting[pos.y, pos.x] + (Color3)level.ambientLight;
+        Color final = new(Math.Min(l.r, 1f) * v, Math.Min(l.g, 1f) * v, Math.Min(l.b, 1f) * v, 1f);
         return c with {
-            background = (c.background * final) with { a = c.background.a },
-            foreground = (c.foreground * final) with { a = c.foreground.a }
+            background = c.background * final,
+            foreground = c.foreground * final
         };
     }
 

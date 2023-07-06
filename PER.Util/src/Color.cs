@@ -43,8 +43,9 @@ public readonly struct Color : IEquatable<Color> {
     private readonly Vector4 _vec;
 
     public Color(Vector4 vec) => _vec = vec;
-    public Color(float r, float g, float b, float a) => _vec = new Vector4(r, g, b, a);
-    public Color(byte r, byte g, byte b, byte a) => _vec = new Vector4(r / 255f, g / 255f, b / 255f, a / 255f);
+    public Color(float r, float g, float b, float a = 1f) => _vec = new Vector4(r, g, b, a);
+    public Color(byte r, byte g, byte b, byte a = 255) => _vec = new Vector4(r / 255f, g / 255f, b / 255f, a / 255f);
+    public Color(Color3 rgb, float a = 1f) => _vec = new Vector4(rgb.r, rgb.g, rgb.b, a);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Color Blend(Color bottom, Color top) {

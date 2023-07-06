@@ -1,7 +1,9 @@
-﻿namespace PER.Abstractions.Environment;
+﻿using PER.Util;
+
+namespace PER.Abstractions.Environment;
 
 public interface ILight {
-    public float brightness { get; }
+    public Color3 color { get; }
     public byte emission { get; }
     public byte reveal => 0;
 }

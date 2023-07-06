@@ -76,7 +76,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     }
 
     internal List<ILight?>? blockedLights { get; private set; }
-    internal Dictionary<Vector2Int, (float lighting, float visibility)>? contributedLight { get; private set; }
+    internal Dictionary<Vector2Int, Color>? contributedLight { get; private set; }
 
     private TLevel? _level;
 
@@ -91,7 +91,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
             if(blocksLight)
                 blockedLights ??= new List<ILight?>();
             if(this is ILight)
-                contributedLight ??= new Dictionary<Vector2Int, (float, float)>();
+                contributedLight ??= new Dictionary<Vector2Int, Color>();
         }
         else {
             blockedLights?.Clear();

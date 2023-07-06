@@ -13,7 +13,7 @@ public class PlayerObject : LevelObject, IUpdatable, ITickable, ILight {
     public override RenderCharacter character { get; } = new('@', Color.transparent, new Color(0, 255, 255, 255));
     public override bool blocksLight => false;
 
-    public float brightness => 0f;
+    public Color3 color => new(0f, 0f, 0f);
     public byte emission => 0;
     public byte reveal => 8;
 

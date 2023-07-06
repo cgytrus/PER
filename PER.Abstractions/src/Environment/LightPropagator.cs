@@ -71,13 +71,12 @@ public class LightPropagator<TLevel, TChunk, TObject>
         // silencing null checks as everything in here should already be checked before by
         // QueueResetLight, QueuePropagateLight and UpdateQueued
         ILight light = (obj as ILight)!;
-        foreach((Vector2Int pos, (float lighting, float visibility)) in obj.contributedLight!) {
+        foreach((Vector2Int pos, Color lighting) in obj.contributedLight!) {
             Vector2Int inChunk = _level.LevelToInChunkPosition(pos);
             TChunk chunk = _level.GetChunkAt(_level.LevelToChunkPosition(pos));
 
             chunk.lighting[inChunk.y, inChunk.x] -= lighting;
-            chunk.visibility[inChunk.y, inChunk.x] -= visibility;
-            chunk.totalVisibility -= visibility;
+            chunk.totalVisibility -= lighting.a;
 
             int index = chunk.litBy.IndexOf(light);
             if(index >= 0)
@@ -98,10 +97,11 @@ public class LightPropagator<TLevel, TChunk, TObject>
 
         prop.Add(obj.position);
         while(emission > 0 || reveal > 0) {
-            float lighting = light.emission == 0 ? 0f : emission * light.brightness / light.emission;
-            float visibility = light.reveal == 0 ? 0f : reveal / (float)light.reveal;
+            Color3 rgb = emission == 0 ? Color3.black : emission * light.color / light.emission;
+            float a = reveal == 0 ? 0f : reveal / (float)light.reveal;
+            Color lighting = new(rgb, a);
             foreach(Vector2Int pos in prop)
-                PropagateStep(obj, pos, lighting, visibility);
+                PropagateStep(obj, pos, lighting);
             prop.Clear();
             _swapProp = !_swapProp;
             if(emission > 0)
@@ -116,8 +116,7 @@ public class LightPropagator<TLevel, TChunk, TObject>
         _visited.Clear();
     }
 
-    private void PropagateStep(LevelObject<TLevel, TChunk, TObject> obj, Vector2Int pos, float lighting,
-        float visibility) {
+    private void PropagateStep(LevelObject<TLevel, TChunk, TObject> obj, Vector2Int pos, Color lighting) {
         ILight light = (obj as ILight)!;
 
         _visited.Add(pos);
@@ -126,11 +125,10 @@ public class LightPropagator<TLevel, TChunk, TObject>
         TChunk chunk = _level.GetChunkAt(_level.LevelToChunkPosition(pos));
 
         chunk.lighting[inChunk.y, inChunk.x] += lighting;
-        chunk.visibility[inChunk.y, inChunk.x] += visibility;
-        chunk.totalVisibility += visibility;
+        chunk.totalVisibility += lighting.a;
 
         chunk.litBy.Add(light);
-        obj.contributedLight!.Add(pos, (lighting, visibility));
+        obj.contributedLight!.Add(pos, lighting);
         if(chunk.TryMarkBlockingLightAt(pos, light))
             return;
 
