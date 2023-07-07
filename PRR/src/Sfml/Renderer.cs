@@ -24,7 +24,7 @@ public class Renderer : BasicRenderer, IDisposable {
         get => base.background;
         set {
             base.background = value;
-            _background = SfmlConverters.ToSfmlColor(value);
+            _background = Converters.ToSfmlColor(value);
         }
     }
 

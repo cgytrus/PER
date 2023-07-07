@@ -60,14 +60,14 @@ public class InputManager : IInput {
 
         _renderer.window.SetKeyRepeatEnabled(false);
 
-        _renderer.window.KeyPressed += (_, key) => UpdateKeyPressed(SfmlConverters.ToPerKey(key.Code), true);
-        _renderer.window.KeyReleased += (_, key) => UpdateKeyPressed(SfmlConverters.ToPerKey(key.Code), false);
+        _renderer.window.KeyPressed += (_, key) => UpdateKeyPressed(Converters.ToPerKey(key.Code), true);
+        _renderer.window.KeyReleased += (_, key) => UpdateKeyPressed(Converters.ToPerKey(key.Code), false);
         _renderer.window.TextEntered += (_, text) => EnterText(text.Unicode);
 
         _renderer.window.MouseButtonPressed += (_, button) =>
-            UpdateMouseButtonPressed(SfmlConverters.ToPerMouseButton(button.Button), true);
+            UpdateMouseButtonPressed(Converters.ToPerMouseButton(button.Button), true);
         _renderer.window.MouseButtonReleased += (_, button) =>
-            UpdateMouseButtonPressed(SfmlConverters.ToPerMouseButton(button.Button), false);
+            UpdateMouseButtonPressed(Converters.ToPerMouseButton(button.Button), false);
 
         _renderer.window.MouseMoved += (_, mouse) => UpdateMousePosition(mouse.X, mouse.Y);
         _renderer.window.MouseWheelScrolled += (_, scroll) => ScrollMouse(scroll.Delta);

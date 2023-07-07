@@ -46,7 +46,7 @@ public class Text : IDisposable {
         _displayEffects = displayEffects;
         _globalDrawableEffects = globalDrawableEffects;
         _globalModEffects = globalModEffects;
-        _texture = font is null ? new Texture(0, 0) : new Texture(SfmlConverters.ToSfmlImage(font.image));
+        _texture = font is null ? new Texture(0, 0) : new Texture(Converters.ToSfmlImage(font.image));
         _charWidth = (uint)(font?.size.x ?? 0);
         _charHeight = (uint)(font?.size.y ?? 0);
         _charBottomRight = new Vector2f(_charWidth, 0f);
@@ -57,13 +57,13 @@ public class Text : IDisposable {
         imageWidth = textWidth * _charWidth;
         imageHeight = textHeight * _charHeight;
         _quads = new Vertex[8 * textWidth * textHeight];
-        _backgroundCharacter = font?.backgroundCharacter.Select(SfmlConverters.ToSfmlVector2).ToArray() ??
+        _backgroundCharacter = font?.backgroundCharacter.Select(Converters.ToSfmlVector2).ToArray() ??
             Array.Empty<Vector2f>();
         _characters = new Vector2f[]?[0xFFFFFF];
         if(font is null)
             return;
         foreach(((char c, RenderStyle s), Vector2[] arr) in font.characters)
-            _characters[(int)s | (c << (sizeof(RenderStyle) * 8))] = arr.Select(SfmlConverters.ToSfmlVector2).ToArray();
+            _characters[(int)s | (c << (sizeof(RenderStyle) * 8))] = arr.Select(Converters.ToSfmlVector2).ToArray();
     }
 
     public void RebuildQuads(Vector2f offset) {
@@ -97,7 +97,7 @@ public class Text : IDisposable {
                     _globalModEffects[i].ApplyModifiers(pos, ref modPosition, ref character);
 
                 Vector2f position = new(modPosition.X * _charWidth + offset.X, modPosition.Y * _charHeight + offset.Y);
-                Color background = SfmlConverters.ToSfmlColor(character.background);
+                Color background = Converters.ToSfmlColor(character.background);
 
                 _quads[index].Position = position;
                 _quads[index].Color = background;
@@ -125,7 +125,7 @@ public class Text : IDisposable {
 
                 bool italic = (character.style & RenderStyle.Italic) != 0;
                 Vector2f italicOffset = new(italic.ToByte(), 0f);
-                Color foreground = SfmlConverters.ToSfmlColor(character.foreground);
+                Color foreground = Converters.ToSfmlColor(character.foreground);
 
                 _quads[index].Position = position + italicOffset;
                 _quads[index].Color = foreground;

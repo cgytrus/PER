@@ -18,7 +18,7 @@ public class CachedPipelineEffect {
             pipeline = value?.pipeline?.Select(step => {
                 Shader? shader = step.vertexShader is null || step.fragmentShader is null ? null :
                     Shader.FromString(step.vertexShader, null, step.fragmentShader);
-                BlendMode blendMode = SfmlConverters.ToSfmlBlendMode(step.blendMode);
+                BlendMode blendMode = Converters.ToSfmlBlendMode(step.blendMode);
                 CachedPipelineStep cachedStep = new() {
                     type = step.stepType,
                     shader = shader,

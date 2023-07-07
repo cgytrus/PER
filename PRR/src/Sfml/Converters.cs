@@ -14,7 +14,7 @@ using Color = PER.Util.Color;
 
 namespace PRR.Sfml;
 
-public static class SfmlConverters {
+public static class Converters {
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Color ToPerColor(SFML.Graphics.Color color) =>
         new(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f);
