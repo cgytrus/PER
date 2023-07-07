@@ -247,7 +247,11 @@ public abstract class BasicRenderer : IRenderer {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual bool IsCharacterEmpty(Vector2Int position) => !displayUsed[position.y, position.x];
+    public virtual bool IsCharacterEmpty(Vector2Int position) {
+        if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
+            return true;
+        return !displayUsed[position.y, position.x];
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual bool IsCharacterEmpty(RenderCharacter renderCharacter) =>

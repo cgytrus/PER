@@ -47,7 +47,7 @@ public class Game : IGame, ISetupable, IUpdatable {
         resources.TryAddResource(FontResource.GlobalId, new FontResource());
         resources.TryAddResource(ColorsResource.GlobalId, new ColorsResource());
 
-        _drawTextEffect = new DrawTextEffect();
+        resources.TryAddResource(DrawTextEffect.GlobalId, new DrawTextEffect());
         resources.TryAddResource(BloomEffect.GlobalId, new BloomEffect());
 
         renderer.formattingEffects.Clear();
@@ -73,6 +73,7 @@ public class Game : IGame, ISetupable, IUpdatable {
         if(!colors.colors.TryGetValue("fps_bad", out _fpsBadColor))
             _fpsBadColor = Color.white;
 
+        Core.engine.resources.TryGetResource(DrawTextEffect.GlobalId, out _drawTextEffect);
         Core.engine.resources.TryGetResource(BloomEffect.GlobalId, out _bloomEffect);
 
         _settings.Apply();
@@ -99,7 +100,7 @@ public class Game : IGame, ISetupable, IUpdatable {
         if(_drawTextEffect is null || _bloomEffect is null)
             return;
         renderer.AddEffect(_drawTextEffect);
-        renderer.AddEffect(_bloomEffect);
+        //renderer.AddEffect(_bloomEffect);
         _frameTimeDisplay?.Update(time);
     }
 

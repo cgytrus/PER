@@ -12,8 +12,7 @@ namespace PRR;
 [PublicAPI]
 public class Font : BasicFont {
     public Font(string imagePath, string mappingsPath) : base(imagePath, mappingsPath) { }
-    public Font(Image image, string mappings, Vector2Int size, char backgroundCharacter) :
-        base(image, mappings, size, backgroundCharacter) { }
+    public Font(Image image, string mappings, Vector2Int size) : base(image, mappings, size) { }
 
     protected override Image ReadImage(string path) {
         QoiImage qoiImage = QoiDecoder.Decode(File.ReadAllBytes(path));

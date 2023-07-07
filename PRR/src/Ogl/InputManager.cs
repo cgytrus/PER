@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
 
 using PER.Abstractions.Input;
 using PER.Util;
 
-using SFML.Window;
-
-namespace PRR.Sfml;
+namespace PRR.Ogl;
 
 public class InputManager : IInput {
     public bool block { get; set; }
@@ -20,19 +17,15 @@ public class InputManager : IInput {
     public Vector2 previousAccurateMousePosition => block ? new Vector2(-1f, -1f) : _previousAccurateMousePosition;
     public Vector2 previousNormalizedMousePosition => block ? new Vector2(-1f, -1f) : _previousNormalizedMousePosition;
 
-    public bool keyRepeat {
-        get => _keyRepeat;
+    public bool keyRepeat { get; set; }
+
+    public string clipboard {
+        get => _renderer.window?.ClipboardString ?? "";
         set {
             if(_renderer.window is null)
                 return;
-            _keyRepeat = value;
-            _renderer.window.SetKeyRepeatEnabled(value);
+            _renderer.window.ClipboardString = value;
         }
-    }
-
-    public string clipboard {
-        get => Clipboard.Contents;
-        set => Clipboard.Contents = value;
     }
 
     public event EventHandler<IInput.KeyDownEventArgs>? keyDown;
@@ -46,10 +39,6 @@ public class InputManager : IInput {
     private Vector2 _previousAccurateMousePosition = new(-1f, -1f);
     private Vector2 _previousNormalizedMousePosition = new(-1f, -1f);
 
-    private readonly HashSet<KeyCode> _pressedKeys = new();
-    private readonly HashSet<MouseButton> _pressedMouseButtons = new();
-    private bool _keyRepeat;
-
     private readonly Renderer _renderer;
 
     public InputManager(Renderer renderer) => _renderer = renderer;
@@ -58,19 +47,12 @@ public class InputManager : IInput {
         if(_renderer.window is null)
             return;
 
-        _renderer.window.SetKeyRepeatEnabled(false);
+        _renderer.window.KeyDown +=
+            key => keyDown?.Invoke(this, new IInput.KeyDownEventArgs(Converters.ToPerKey(key.Key)));
+        _renderer.window.TextInput += text => EnterText(text.AsString);
 
-        _renderer.window.KeyPressed += (_, key) => UpdateKeyPressed(Converters.ToPerKey(key.Code), true);
-        _renderer.window.KeyReleased += (_, key) => UpdateKeyPressed(Converters.ToPerKey(key.Code), false);
-        _renderer.window.TextEntered += (_, text) => EnterText(text.Unicode);
-
-        _renderer.window.MouseButtonPressed += (_, button) =>
-            UpdateMouseButtonPressed(Converters.ToPerMouseButton(button.Button), true);
-        _renderer.window.MouseButtonReleased += (_, button) =>
-            UpdateMouseButtonPressed(Converters.ToPerMouseButton(button.Button), false);
-
-        _renderer.window.MouseMoved += (_, mouse) => UpdateMousePosition(mouse.X, mouse.Y);
-        _renderer.window.MouseWheelScrolled += (_, scroll) => ScrollMouse(scroll.Delta);
+        _renderer.window.MouseMove += mouse => UpdateMousePosition(mouse.X, mouse.Y);
+        _renderer.window.MouseWheel += scroll => ScrollMouse(scroll.Offset.Y);
     }
 
     public void Update(TimeSpan time) {
@@ -81,7 +63,8 @@ public class InputManager : IInput {
 
     public void Finish() { }
 
-    public bool KeyPressed(KeyCode key) => !block && _pressedKeys.Contains(key);
+    public bool KeyPressed(KeyCode key) =>
+        !block && _renderer.window is not null && _renderer.window.IsKeyDown(Converters.ToOtkKey(key));
 
     public bool KeysPressed(KeyCode key1, KeyCode key2) => !block && KeyPressed(key1) && KeyPressed(key2);
 
@@ -103,24 +86,12 @@ public class InputManager : IInput {
         return true;
     }
 
-    public bool MouseButtonPressed(MouseButton button) => !block && _pressedMouseButtons.Contains(button);
-
-    private void UpdateKeyPressed(KeyCode key, bool pressed) {
-        if(pressed) {
-            _pressedKeys.Add(key);
-            keyDown?.Invoke(this, new IInput.KeyDownEventArgs(key));
-        }
-        else _pressedKeys.Remove(key);
-    }
+    public bool MouseButtonPressed(MouseButton button) => !block && _renderer.window is not null &&
+        _renderer.window.IsMouseButtonDown(Converters.ToOtkMouseButton(button));
 
     private void EnterText(string text) => textEntered?.Invoke(this, new IInput.TextEnteredEventArgs(text));
 
-    private void UpdateMouseButtonPressed(MouseButton button, bool pressed) {
-        if(pressed) _pressedMouseButtons.Add(button);
-        else _pressedMouseButtons.Remove(button);
-    }
-
-    private void UpdateMousePosition(int mouseX, int mouseY) {
+    private void UpdateMousePosition(float mouseX, float mouseY) {
         if(!_renderer.focused) {
             _mousePosition = new Vector2Int(-1, -1);
             _accurateMousePosition = new Vector2(-1f, -1f);

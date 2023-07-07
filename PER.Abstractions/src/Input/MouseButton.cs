@@ -2,12 +2,14 @@
 
 namespace PER.Abstractions.Input;
 
-// yeaaah, you're right, i should probably stop with that copying enums from sfml thing
 [PublicAPI]
 public enum MouseButton {
     Left,
     Right,
     Middle,
-    XButton1,
-    XButton2
+    Extra1,
+    Extra2,
+    Extra3,
+    Extra4,
+    Extra5
 }

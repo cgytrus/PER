@@ -13,7 +13,6 @@ namespace PER.Abstractions.Rendering;
 [PublicAPI]
 public abstract class BasicFont : IFont {
     public IReadOnlyDictionary<(char, RenderStyle), Vector2[]> characters => _characters;
-    public Vector2[] backgroundCharacter { get; private set; } = { new(), new(), new(), new() };
     public Vector2Int size { get; }
     public Image image { get; private set; }
     public string mappings { get; }
@@ -29,14 +28,14 @@ public abstract class BasicFont : IFont {
         size = new Vector2Int(int.Parse(fontSizeStr[0], CultureInfo.InvariantCulture),
             int.Parse(fontSizeStr[1], CultureInfo.InvariantCulture));
 
-        Setup(imagePath, fontSizeStr[2][0]);
+        Setup(imagePath);
     }
 
-    protected BasicFont(Image image, string mappings, Vector2Int size, char backgroundCharacter) {
+    protected BasicFont(Image image, string mappings, Vector2Int size) {
         this.image = image;
         this.size = size;
         this.mappings = mappings;
-        Setup(backgroundCharacter);
+        Setup();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -45,12 +44,12 @@ public abstract class BasicFont : IFont {
 
     protected abstract Image ReadImage(string path);
 
-    private void Setup(string imagePath, char backgroundCharacter) {
+    private void Setup(string imagePath) {
         image = ReadImage(imagePath);
-        Setup(backgroundCharacter);
+        Setup();
     }
 
-    private void Setup(char backgroundCharacter) {
+    private void Setup() {
         int originalHeight = image.height;
         image = GenerateFontStyles(image, size);
 
@@ -59,10 +58,10 @@ public abstract class BasicFont : IFont {
         int index = 0;
         for(int y = 0; y < image.height; y += size.y)
             for(int x = 0; x < image.width; x += size.x)
-                AddCharacter(x, y, ref index, originalHeight, backgroundCharacter);
+                AddCharacter(x, y, ref index, originalHeight);
     }
 
-    private void AddCharacter(int x, int y, ref int index, int originalHeight, char backgroundCharacter) {
+    private void AddCharacter(int x, int y, ref int index, int originalHeight) {
         if(mappings.Length <= index)
             index = 0;
 
@@ -82,9 +81,6 @@ public abstract class BasicFont : IFont {
         texCoords[2] = new Vector2(x + size.x, y + size.y); // bottom right
         texCoords[3] = new Vector2(x, y + size.y); // bottom left
         _characters.Add((character, style), texCoords);
-
-        if(character == backgroundCharacter && style == RenderStyle.None)
-            this.backgroundCharacter = texCoords;
 
         index++;
     }

@@ -4,7 +4,7 @@ using PER.Audio.Sfml;
 using PER.Common.Resources;
 using PER.Common.Screens;
 
-using PRR.Sfml;
+using PRR.Ogl;
 
 namespace PER.Demo;
 
