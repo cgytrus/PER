@@ -141,87 +141,99 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     public bool HasObjectAt(Vector2Int position) {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject? obj in _objects)
+        for(int i = _objects.Count - 1; i >= 0; i--) {
+            TObject? obj = _objects[i];
             if(obj is not null && obj.inLevelInt && obj.position == position)
                 return true;
+        }
         return false;
     }
     public bool HasObjectAt(Vector2Int position, int minLayer) {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject? obj in _objects)
+        for(int i = _objects.Count - 1; i >= 0; i--) {
+            TObject? obj = _objects[i];
             if(obj is not null && obj.inLevelInt && obj.position == position && obj.layer >= minLayer)
                 return true;
+        }
         return false;
     }
 
     public bool HasObjectAt(Vector2Int position, Type type) {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject? obj in _objects)
+        for(int i = _objects.Count - 1; i >= 0; i--) {
+            TObject? obj = _objects[i];
             if(obj is not null && obj.inLevelInt && obj.GetType() == type && obj.position == position)
                 return true;
+        }
         return false;
     }
     public bool HasObjectAt(Vector2Int position, int minLayer, Type type) {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject? obj in _objects)
+        for(int i = _objects.Count - 1; i >= 0; i--) {
+            TObject? obj = _objects[i];
             if(obj is not null && obj.inLevelInt && obj.GetType() == type && obj.position == position &&
                 obj.layer >= minLayer)
                 return true;
+        }
         return false;
     }
 
     public bool HasObjectAt<T>(Vector2Int position) where T : class {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject? obj in _objects)
+        for(int i = _objects.Count - 1; i >= 0; i--) {
+            TObject? obj = _objects[i];
             if(obj is T && obj.inLevelInt && obj.position == position)
                 return true;
+        }
         return false;
     }
     public bool HasObjectAt<T>(Vector2Int position, int minLayer) where T : class {
-        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject? obj in _objects)
+        for(int i = _objects.Count - 1; i >= 0; i--) {
+            TObject? obj = _objects[i];
             if(obj is T && obj.inLevelInt && obj.position == position && obj.layer >= minLayer)
                 return true;
+        }
         return false;
     }
 
     public bool TryGetObjectAt(Vector2Int position, [NotNullWhen(true)] out TObject? ret) {
-        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject? obj in _objects)
-            if(obj is not null && obj.inLevelInt && obj.position == position) {
-                ret = obj;
-                return true;
-            }
+        for(int i = _objects.Count - 1; i >= 0; i--) {
+            TObject? obj = _objects[i];
+            if(obj is null || !obj.inLevelInt || obj.position != position)
+                continue;
+            ret = obj;
+            return true;
+        }
         ret = null;
         return false;
     }
     public bool TryGetObjectAt(Vector2Int position, int minLayer, [NotNullWhen(true)] out TObject? ret) {
-        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach(TObject? obj in _objects)
-            if(obj is not null && obj.inLevelInt && obj.position == position && obj.layer >= minLayer) {
-                ret = obj;
-                return true;
-            }
+        for(int i = _objects.Count - 1; i >= 0; i--) {
+            TObject? obj = _objects[i];
+            if(obj is null || !obj.inLevelInt || obj.position != position || obj.layer < minLayer)
+                continue;
+            ret = obj;
+            return true;
+        }
         ret = null;
         return false;
     }
 
     public bool TryGetObjectAt<T>(Vector2Int position, [NotNullWhen(true)] out T? ret) where T : class {
-        foreach(TObject? obj in _objects)
-            if(obj is T objT && obj.inLevelInt && obj.position == position) {
-                ret = objT;
-                return true;
-            }
+        for(int i = _objects.Count - 1; i >= 0; i--) {
+            TObject? obj = _objects[i];
+            if(obj is not T objT || !obj.inLevelInt || obj.position != position)
+                continue;
+            ret = objT;
+            return true;
+        }
         ret = null;
         return false;
     }
     public bool TryGetObjectAt<T>(Vector2Int position, int minLayer, [NotNullWhen(true)] out T? ret) where T : class {
-        foreach(TObject? obj in _objects)
-            if(obj is T objT && obj.inLevelInt && obj.position == position && obj.layer >= minLayer) {
-                ret = objT;
-                return true;
-            }
+        for(int i = _objects.Count - 1; i >= 0; i--) {
+            TObject? obj = _objects[i];
+            if(obj is not T objT || !obj.inLevelInt || obj.position != position || obj.layer < minLayer)
+                continue;
+            ret = objT;
+            return true;
+        }
         ret = null;
         return false;
     }
