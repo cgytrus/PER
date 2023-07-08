@@ -13,7 +13,7 @@ out vec4 fragColor;
 
 void main() {
     vec4 top = foregroundColor * texture(font, texCoord.st);
-    float t = (1f - top.a) * backgroundColor.a;
+    float t = (1.0 - top.a) * backgroundColor.a;
     float a = t + top.a;
     vec3 final = (t * backgroundColor.rgb + top.a * top.rgb) / a;
     fragColor = vec4(final, a);
