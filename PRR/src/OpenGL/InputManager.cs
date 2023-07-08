@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Numerics;
 
+using OpenTK.Windowing.GraphicsLibraryFramework;
+
 using PER.Abstractions.Input;
 using PER.Util;
+
+using MouseButton = PER.Abstractions.Input.MouseButton;
 
 namespace PRR.OpenGL;
 
@@ -68,8 +72,12 @@ public class InputManager : IInput {
 
     public void Finish() { }
 
-    public bool KeyPressed(KeyCode key) =>
-        !block && _renderer.window is not null && _renderer.window.IsKeyDown(Converters.ToOtkKey(key));
+    public bool KeyPressed(KeyCode key) {
+        if(block || _renderer.window is null)
+            return false;
+        Keys otkKey = Converters.ToOtkKey(key);
+        return otkKey != Keys.Unknown && _renderer.window.IsKeyDown(otkKey);
+    }
 
     public bool KeysPressed(KeyCode key1, KeyCode key2) => !block && KeyPressed(key1) && KeyPressed(key2);
 

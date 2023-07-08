@@ -259,6 +259,7 @@ public static class Converters {
         KeyCode.Right => Keys.Right,
         KeyCode.Left => Keys.Left,
         KeyCode.Up => Keys.Up,
+        KeyCode.Down => Keys.Down,
         KeyCode.PageUp => Keys.PageUp,
         KeyCode.PageDown => Keys.PageDown,
         KeyCode.Home => Keys.Home,
