@@ -215,10 +215,14 @@ public class InputField : ClickableElement {
         StartTypingInternal();
     }
 
-    private void KeyDown(object? called, IInput.KeyDownEventArgs args) {
+    private void KeyDown(IInput.KeyDownArgs args) {
         switch(args.key) {
             case KeyCode.Delete:
                 EraseRight();
+                _lastTypeTime = _lastTime;
+                break;
+            case KeyCode.Backspace:
+                EraseLeft();
                 _lastTypeTime = _lastTime;
                 break;
             case KeyCode.Left:
@@ -241,32 +245,26 @@ public class InputField : ClickableElement {
                 _lastTypeTime = _lastTime;
                 Animate();
                 break;
+            case KeyCode.C when args.control:
+                Copy();
+                _lastTypeTime = _lastTime;
+                break;
+            case KeyCode.V when args.control:
+                Paste();
+                _lastTypeTime = _lastTime;
+                break;
+            case KeyCode.X when args.control:
+                Cut();
+                _lastTypeTime = _lastTime;
+                break;
         }
     }
 
-    private void Type(object? caller, IInput.TextEnteredEventArgs args) {
-        foreach(char character in args.text)
-            switch(character) {
-                case '\b':
-                    EraseLeft();
-                    break;
-                // ^C
-                case '\u0003':
-                    Copy();
-                    break;
-                // ^V
-                case '\u0016':
-                    Paste();
-                    break;
-                // ^X
-                case '\u0018':
-                    Cut();
-                    break;
-                default:
-                    PlaySound(audio, typeSound, TypeSoundId);
-                    TypeDrawable(character);
-                    break;
-            }
+    private void Type(IInput.TextEnteredArgs args) {
+        foreach(char character in args.text) {
+            PlaySound(audio, typeSound, TypeSoundId);
+            TypeDrawable(character);
+        }
         _lastTypeTime = _lastTime;
     }
 

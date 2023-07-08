@@ -10,21 +10,31 @@ namespace PER.Abstractions.Input;
 [PublicAPI]
 public interface IInput : IUpdatable {
     [PublicAPI]
-    public sealed class KeyDownEventArgs : EventArgs {
+    public struct KeyDownArgs {
         public KeyCode key { get; }
-        public KeyDownEventArgs(KeyCode key) => this.key = key;
+        public bool system { get; }
+        public bool shift { get; }
+        public bool control { get; }
+        public bool alt { get; }
+        public KeyDownArgs(KeyCode key, bool system, bool shift, bool control, bool alt) {
+            this.key = key;
+            this.system = system;
+            this.shift = shift;
+            this.control = control;
+            this.alt = alt;
+        }
     }
 
     [PublicAPI]
-    public sealed class TextEnteredEventArgs : EventArgs {
+    public struct TextEnteredArgs {
         public string text { get; }
-        public TextEnteredEventArgs(string text) => this.text = text;
+        public TextEnteredArgs(string text) => this.text = text;
     }
 
     [PublicAPI]
-    public sealed class ScrolledEventArgs : EventArgs {
+    public struct ScrolledArgs {
         public float delta { get; }
-        public ScrolledEventArgs(float delta) => this.delta = delta;
+        public ScrolledArgs(float delta) => this.delta = delta;
     }
 
     public bool block { get; set; }
@@ -41,9 +51,9 @@ public interface IInput : IUpdatable {
 
     public string clipboard { get; set; }
 
-    public event EventHandler<KeyDownEventArgs>? keyDown;
-    public event EventHandler<TextEnteredEventArgs>? textEntered;
-    public event EventHandler<IInput.ScrolledEventArgs>? scrolled;
+    public event Action<KeyDownArgs>? keyDown;
+    public event Action<TextEnteredArgs>? textEntered;
+    public event Action<ScrolledArgs>? scrolled;
 
     public void Reset();
     public void Finish();

@@ -28,9 +28,9 @@ public class InputManager : IInput {
         }
     }
 
-    public event EventHandler<IInput.KeyDownEventArgs>? keyDown;
-    public event EventHandler<IInput.TextEnteredEventArgs>? textEntered;
-    public event EventHandler<IInput.ScrolledEventArgs>? scrolled;
+    public event Action<IInput.KeyDownArgs>? keyDown;
+    public event Action<IInput.TextEnteredArgs>? textEntered;
+    public event Action<IInput.ScrolledArgs>? scrolled;
 
     private Vector2Int _mousePosition = new(-1, -1);
     private Vector2 _accurateMousePosition = new(-1f, -1f);
@@ -48,7 +48,12 @@ public class InputManager : IInput {
             return;
 
         _renderer.window.KeyDown +=
-            key => keyDown?.Invoke(this, new IInput.KeyDownEventArgs(Converters.ToPerKey(key.Key)));
+            key => {
+                if(key.IsRepeat && !keyRepeat)
+                    return;
+                keyDown?.Invoke(new IInput.KeyDownArgs(Converters.ToPerKey(key.Key), key.Command, key.Shift,
+                    key.Control, key.Alt));
+            };
         _renderer.window.TextInput += text => EnterText(text.AsString);
 
         _renderer.window.MouseMove += mouse => UpdateMousePosition(mouse.X, mouse.Y);
@@ -89,7 +94,7 @@ public class InputManager : IInput {
     public bool MouseButtonPressed(MouseButton button) => !block && _renderer.window is not null &&
         _renderer.window.IsMouseButtonDown(Converters.ToOtkMouseButton(button));
 
-    private void EnterText(string text) => textEntered?.Invoke(this, new IInput.TextEnteredEventArgs(text));
+    private void EnterText(string text) => textEntered?.Invoke(new IInput.TextEnteredArgs(text));
 
     private void UpdateMousePosition(float mouseX, float mouseY) {
         if(!_renderer.focused) {
@@ -111,5 +116,5 @@ public class InputManager : IInput {
                 pixelMousePosition.Y / ((_renderer.text?.imageHeight ?? 0) - 1));
     }
 
-    private void ScrollMouse(float delta) => scrolled?.Invoke(this, new IInput.ScrolledEventArgs(delta));
+    private void ScrollMouse(float delta) => scrolled?.Invoke(new IInput.ScrolledArgs(delta));
 }
