@@ -14,8 +14,6 @@ public interface IAudio {
 
     public IPlayable CreateSound(string filename, IAudioMixer mixer);
     public IPlayable CreateMusic(string filename, IAudioMixer mixer);
-    public IPlayable CreateMusic(byte[] bytes, IAudioMixer mixer);
-    public IPlayable CreateMusic(Stream stream, IAudioMixer mixer);
 
     public bool TryStorePlayable(string id, IPlayable playable);
     public bool TryGetPlayable(string id, [MaybeNullWhen(false)] out IPlayable playable);
