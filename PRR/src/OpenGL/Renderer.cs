@@ -56,8 +56,6 @@ public class Renderer : BasicRenderer, IDisposable {
     //private Sprite? _mainSprite;
     //private Sprite? _additionalSprite;
 
-    private Vector2 _textPosition;
-
     public override void Update(TimeSpan time) => NativeWindow.ProcessWindowEvents(false);
 
     public override void Close() {
