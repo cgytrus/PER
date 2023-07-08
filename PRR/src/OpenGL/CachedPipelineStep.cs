@@ -1,6 +1,6 @@
 ﻿using PER.Abstractions.Rendering;
 
-namespace PRR.Ogl;
+namespace PRR.OpenGL;
 
 public struct CachedPipelineStep {
     public PipelineStep.Type type { get; init; }

@@ -9,7 +9,7 @@ using OpenTK.Mathematics;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
-namespace PRR.Ogl;
+namespace PRR.OpenGL;
 
 public class Text : IDisposable {
     public int imageWidth { get; }

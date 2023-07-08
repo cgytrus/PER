@@ -4,9 +4,8 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
 using PER.Abstractions.Rendering;
-using PER.Util;
 
-namespace PRR.Ogl;
+namespace PRR.OpenGL;
 
 public class CachedPipelineEffect {
     public CachedPipelineEffect(Vector2i viewSize, Vector2i imageSize, IPipelineEffect? effect) {

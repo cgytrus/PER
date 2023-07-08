@@ -17,7 +17,7 @@ using QoiSharp;
 using Color = PER.Util.Color;
 using Image = OpenTK.Windowing.Common.Input.Image;
 
-namespace PRR.Ogl;
+namespace PRR.OpenGL;
 
 public class Renderer : BasicRenderer, IDisposable {
     public override bool open => window is not null && !_shouldClose;

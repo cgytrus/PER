@@ -4,7 +4,7 @@ using System.Numerics;
 using PER.Abstractions.Input;
 using PER.Util;
 
-namespace PRR.Ogl;
+namespace PRR.OpenGL;
 
 public class InputManager : IInput {
     public bool block { get; set; }

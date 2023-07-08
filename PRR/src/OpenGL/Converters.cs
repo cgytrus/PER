@@ -12,7 +12,7 @@ using Color = PER.Util.Color;
 using Image = PER.Abstractions.Rendering.Image;
 using MouseButton = PER.Abstractions.Input.MouseButton;
 
-namespace PRR.Ogl;
+namespace PRR.OpenGL;
 
 public static class Converters {
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

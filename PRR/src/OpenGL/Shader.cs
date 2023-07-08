@@ -2,7 +2,7 @@
 
 using OpenTK.Graphics.OpenGL;
 
-namespace PRR.Ogl;
+namespace PRR.OpenGL;
 
 public class Shader : IDisposable {
     private int _handle;
