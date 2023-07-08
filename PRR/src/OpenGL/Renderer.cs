@@ -100,9 +100,9 @@ public class Renderer : BasicRenderer, IDisposable {
             API = ContextAPI.OpenGL,
             Profile = ContextProfile.Core,
 #if DEBUG
-            Flags = ContextFlags.Debug,
+            Flags = ContextFlags.ForwardCompatible | ContextFlags.Debug,
 #else
-            Flags = ContextFlags.Default,
+            Flags = ContextFlags.ForwardCompatible,
 #endif
             AutoLoadBindings = true,
             APIVersion = new Version(3, 3),
