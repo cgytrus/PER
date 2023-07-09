@@ -186,8 +186,6 @@ public class InputField : ClickableElement {
 
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
         Vector2Int position = new(this.position.x + x, this.position.y + y);
-        RenderCharacter character = renderer.GetCharacter(position);
-        char characterCharacter = character.character;
 
         Vector2Int cursor = cursorPos;
 
@@ -195,19 +193,16 @@ public class InputField : ClickableElement {
             (_lastTime - _lastTypeTime).TotalSeconds * blinkRate % 1d <= 0.5d;
 
         RenderStyle style = this.style;
-        if(isCursor) {
+        if(isCursor)
             style |= RenderStyle.Underline;
-            if(!renderer.IsCharacterDrawable(characterCharacter, style))
-                characterCharacter = ' ';
-        }
 
         float speed = _animSpeeds[y, x];
         float t = speed == 0f ? 1f : (float)(_lastTime - _animStartTimes[y, x]).TotalSeconds * speed;
         foregroundColor = new Color(foregroundColor.r, foregroundColor.g, foregroundColor.b,
             MoreMath.Lerp(0f, foregroundColor.a, t) * (usePlaceholder ? 0.5f : 1f));
 
-        character = new RenderCharacter(characterCharacter, backgroundColor, foregroundColor, style);
-        renderer.DrawCharacter(position, character, effect);
+        renderer.DrawColor(position, backgroundColor, foregroundColor, effect);
+        renderer.SetStyle(position, style);
     }
 
     protected override void Click() {
@@ -284,7 +279,7 @@ public class InputField : ClickableElement {
     }
 
     private void TypeDrawable(char character) {
-        if(renderer.IsCharacterDrawable(character, RenderStyle.None) || character == ' ')
+        if(renderer.font.IsCharacterDrawable(character) || character == ' ')
             Type(character);
     }
 

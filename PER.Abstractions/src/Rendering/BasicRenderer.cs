@@ -63,6 +63,8 @@ public abstract class BasicRenderer : IRenderer {
     public abstract void Draw();
 
     public abstract void DrawCharacter(Vector2Int position, RenderCharacter character, IDisplayEffect? effect = null);
+    public abstract void DrawColor(Vector2Int position, Color background, Color foreground, IDisplayEffect? effect = null);
+    public abstract void SetStyle(Vector2Int position, RenderStyle style);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual void DrawText(Vector2Int position, ReadOnlySpan<char> text, Func<char, Formatting> formatter,
@@ -131,7 +133,8 @@ public abstract class BasicRenderer : IRenderer {
         _ => 0
     };
 
-    public abstract RenderCharacter GetCharacter(Vector2Int position);
+    public abstract Color GetBackground(Vector2Int position);
+    public abstract Color GetForeground(Vector2Int position);
 
     public virtual void AddEffect(IEffect effect) {
         // ReSharper disable once ConvertIfStatementToSwitchStatement
@@ -144,7 +147,7 @@ public abstract class BasicRenderer : IRenderer {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual void AddEffect(Vector2Int position, IDisplayEffect? effect) {
+    public virtual void DrawEffect(Vector2Int position, IDisplayEffect? effect) {
         if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
             return;
         if(displayEffects[position.y, position.x] is IUpdatableEffect prevUpdatable)
@@ -153,8 +156,4 @@ public abstract class BasicRenderer : IRenderer {
             updatableEffects.Add(updatable);
         displayEffects[position.y, position.x] = effect;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual bool IsCharacterDrawable(char character, RenderStyle style) =>
-        font.IsCharacterDrawable(character, style & RenderStyle.AllPerFont);
 }

@@ -31,13 +31,15 @@ public interface IRenderer : IUpdatable {
 
     public void Draw();
     public void DrawCharacter(Vector2Int position, RenderCharacter character, IDisplayEffect? effect = null);
+    public void DrawColor(Vector2Int position, Color background, Color foreground, IDisplayEffect? effect = null);
+    public void SetStyle(Vector2Int position, RenderStyle style);
+    public void DrawEffect(Vector2Int position, IDisplayEffect? effect);
+
     public void DrawText(Vector2Int position, ReadOnlySpan<char> text, Func<char, Formatting> formatter,
         HorizontalAlignment align = HorizontalAlignment.Left, int maxWidth = 0);
 
-    public RenderCharacter GetCharacter(Vector2Int position);
+    public Color GetBackground(Vector2Int position);
+    public Color GetForeground(Vector2Int position);
 
     public void AddEffect(IEffect effect);
-    public void AddEffect(Vector2Int position, IDisplayEffect? effect);
-
-    public bool IsCharacterDrawable(char character, RenderStyle style);
 }

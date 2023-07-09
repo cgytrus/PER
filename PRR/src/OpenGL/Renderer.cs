@@ -49,11 +49,11 @@ uniform ivec2 viewSize;
 uniform ivec2 imageSize;
 
 layout(location = 0) in vec2 aPosition;
-layout(location = 1) in vec2 aTexCoord;
+layout(location = 1) in vec4 aTexCoord;
 layout(location = 2) in vec4 aBackgroundColor;
 layout(location = 3) in vec4 aForegroundColor;
 
-out vec2 texCoord;
+out vec4 texCoord;
 out vec4 backgroundColor;
 out vec4 foregroundColor;
 
@@ -68,15 +68,16 @@ void main() {
 #version 330 core
 
 uniform sampler2D font;
+uniform sampler2D formatting;
 
-in vec2 texCoord;
+in vec4 texCoord;
 in vec4 backgroundColor;
 in vec4 foregroundColor;
 
 out vec4 fragColor;
 
 void main() {
-    vec4 top = foregroundColor * texture(font, texCoord.st);
+    vec4 top = foregroundColor * max(texture(font, texCoord.st), texture(formatting, texCoord.pq));
     float t = (1.0 - top.a) * backgroundColor.a;
     float a = t + top.a;
     vec3 final = (t * backgroundColor.rgb + top.a * top.rgb) / a;
@@ -149,6 +150,9 @@ void main() {
             int font = _shader.GetUniformLocation("font");
             if(font != -1)
                 GL.Uniform1(font, 0);
+            int formatting = _shader.GetUniformLocation("formatting");
+            if(formatting != -1)
+                GL.Uniform1(formatting, 1);
         }
         _shader.Use();
         int viewSize = _shader.GetUniformLocation("viewSize");
@@ -221,21 +225,43 @@ void main() {
     public override void DrawCharacter(Vector2Int position, RenderCharacter character, IDisplayEffect? effect = null) {
         if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
             return;
-        AddEffect(position, effect);
+        DrawEffect(position, effect);
         if(character.background.a == 0f &&
-            (!IsCharacterDrawable(character.character, character.style) || character.foreground.a == 0f))
+            (!font.IsCharacterDrawable(character.character) || character.foreground.a == 0f))
             return;
         if(displayUsed[position.y, position.x])
-            character = character with { background = GetCharacter(position).background.Blend(character.background) };
+            character = character with { background = GetBackground(position).Blend(character.background) };
         display[position.y, position.x] = character;
         displayUsed[position.y, position.x] = true;
     }
+    public override void DrawColor(Vector2Int position, Color background, Color foreground,
+        IDisplayEffect? effect = null) {
+        if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
+            return;
+        DrawEffect(position, effect);
+        if(background.a == 0f && foreground.a == 0f || !displayUsed[position.y, position.x])
+            return;
+        background = GetBackground(position).Blend(background);
+        display[position.y, position.x] = display[position.y, position.x] with {
+            background = background,
+            foreground = foreground
+        };
+    }
+    public override void SetStyle(Vector2Int position, RenderStyle style) {
+        if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
+            return;
+        display[position.y, position.x] = display[position.y, position.x] with { style = style };
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public override RenderCharacter GetCharacter(Vector2Int position) =>
+    public override Color GetBackground(Vector2Int position) =>
         position.x < 0 || position.y < 0 || position.x >= width || position.y >= height ||
-        !displayUsed[position.y, position.x] ?
-            new RenderCharacter('\0', Color.transparent, Color.transparent) : display[position.y, position.x];
+        !displayUsed[position.y, position.x] ? Color.transparent : display[position.y, position.x].background;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public override Color GetForeground(Vector2Int position) =>
+        position.x < 0 || position.y < 0 || position.x >= width || position.y >= height ||
+        !displayUsed[position.y, position.x] ? Color.transparent : display[position.y, position.x].foreground;
 
     public void Dispose() {
         window?.Dispose();

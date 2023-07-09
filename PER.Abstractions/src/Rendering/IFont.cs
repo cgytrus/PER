@@ -9,10 +9,11 @@ namespace PER.Abstractions.Rendering;
 
 [PublicAPI]
 public interface IFont {
-    public IReadOnlyDictionary<(char, RenderStyle), Vector2[]> characters { get; }
+    public IReadOnlyDictionary<char, Vector2[]> characters { get; }
     public Vector2Int size { get; }
     public Image image { get; }
+    public Image formattingImage { get; }
     public string mappings { get; }
 
-    public bool IsCharacterDrawable(char character, RenderStyle style);
+    public bool IsCharacterDrawable(char character);
 }
