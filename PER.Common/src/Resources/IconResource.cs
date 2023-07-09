@@ -11,7 +11,7 @@ public class IconResource : Resource {
     public string? icon { get; private set; }
 
     public override void Preload() {
-        AddPath( "icon", "graphics/icon.png");
+        AddPath( "icon", "graphics/icon.qoi");
     }
 
     public override void Load(string id) {

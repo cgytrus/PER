@@ -10,48 +10,18 @@ namespace PER.Abstractions.Rendering;
 
 [PublicAPI]
 public abstract class BasicRenderer : IRenderer {
-    public virtual string title {
-        get => _title;
-        set {
-            _title = value;
-            UpdateTitle();
-        }
-    }
-
-    public virtual int width { get; private set; }
-    public virtual int height { get; private set; }
+    public virtual int width => _settings.width;
+    public virtual int height => _settings.height;
 
     public virtual bool verticalSync {
-        get => _verticalSync;
+        get => _settings.verticalSync;
         set {
-            _verticalSync = value;
+            _settings = _settings with { verticalSync = value };
             UpdateVerticalSync();
         }
     }
 
-    public virtual bool fullscreen {
-        get => _fullscreen;
-        set {
-            _fullscreen = value;
-            Reset();
-        }
-    }
-
-    public virtual IFont? font {
-        get => _font;
-        set {
-            _font = value;
-            Reset();
-        }
-    }
-
-    public virtual string? icon {
-        get => _icon;
-        set {
-            _icon = value;
-            UpdateIcon();
-        }
-    }
+    public virtual IFont font => _settings.font;
 
     public abstract bool open { get; }
     public abstract bool focused { get; }
@@ -62,101 +32,43 @@ public abstract class BasicRenderer : IRenderer {
 
     public Dictionary<string, IDisplayEffect?> formattingEffects { get; } = new();
 
-    protected RenderCharacter[,] display { get; private set; } = new RenderCharacter[0, 0];
-    protected bool[,] displayUsed { get; private set; } = new bool[0, 0];
-
     protected List<IUpdatableEffect> updatableEffects { get; private set; } = new();
-    protected List<IPipelineEffect> pipelineEffects { get; private set; } = new();
     protected List<IDrawableEffect> globalDrawableEffects { get; private set; } = new();
     protected List<IModifierEffect> globalModEffects { get; private set; } = new();
     protected IDisplayEffect?[,] displayEffects { get; private set; } = new IDisplayEffect?[0, 0];
 
-    private bool _verticalSync;
-    private bool _fullscreen;
-    private IFont? _font;
-    private string _title = "";
-    private string? _icon;
+    private RendererSettings _settings;
 
-    public virtual void Setup(RendererSettings settings) {
-        _title = settings.title;
-        width = settings.width;
-        height = settings.height;
-        _verticalSync = settings.verticalSync;
-        _fullscreen = settings.fullscreen;
-        _font = settings.font;
-        _icon = settings.icon;
+    public virtual void Setup(RendererSettings settings) => _settings = settings;
 
-        CreateWindow();
-    }
-
-    protected abstract void CreateWindow();
     protected abstract void UpdateVerticalSync();
-    protected abstract void UpdateTitle();
-    protected abstract void UpdateIcon();
 
     public abstract void Update(TimeSpan time);
     public abstract void Close();
     public abstract void Finish();
 
     public virtual bool Reset(RendererSettings settings) {
-        if(settings.width != width || settings.height != height || settings.font != _font ||
-            settings.fullscreen != _fullscreen) {
-            Finish();
-            Setup(settings);
-            return true;
+        if(settings.width == width && settings.height == height && settings.font == font &&
+            settings.fullscreen == _settings.fullscreen) {
+            _settings = settings;
+            return false;
         }
-        title = settings.title;
-        verticalSync = settings.verticalSync;
-        icon = settings.icon;
-        return false;
+        Finish();
+        Setup(settings);
+        return true;
     }
 
-    protected bool Reset() => Reset(new RendererSettings(this));
+    protected virtual void UpdateFont() => displayEffects = new IDisplayEffect?[height, width];
 
-    protected virtual void UpdateFont() {
-        display = new RenderCharacter[height, width];
-        displayUsed = new bool[height, width];
-        displayEffects = new IDisplayEffect?[height, width];
+    public abstract void Draw();
 
-        updatableEffects.Clear();
-        pipelineEffects.Clear();
-        globalDrawableEffects.Clear();
-        globalModEffects.Clear();
-
-        CreateText();
-    }
-
-    protected abstract void CreateText();
-
-    public virtual void Draw() {
-        updatableEffects.Clear();
-        pipelineEffects.Clear();
-        globalDrawableEffects.Clear();
-        globalModEffects.Clear();
-    }
-
-    protected void UpdateEffects() {
-        foreach(IUpdatableEffect effect in updatableEffects)
-            effect.Update();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual void DrawCharacter(Vector2Int position, RenderCharacter character, IDisplayEffect? effect = null) {
-        if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
-            return;
-        AddEffect(position, effect);
-        if(IsCharacterEmpty(character))
-            return;
-        if(!IsCharacterEmpty(position))
-            character = character with { background = GetCharacter(position).background.Blend(character.background) };
-        display[position.y, position.x] = character;
-        displayUsed[position.y, position.x] = true;
-    }
+    public abstract void DrawCharacter(Vector2Int position, RenderCharacter character, IDisplayEffect? effect = null);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual void DrawText(Vector2Int position, ReadOnlySpan<char> text, Func<char, Formatting> formatter,
         HorizontalAlignment align = HorizontalAlignment.Left, int maxWidth = 0) {
-        if(text.Length == 0) return;
+        if(text.Length == 0)
+            return;
 
         char formattingFlag = '\0';
         int startIndex = 0;
@@ -219,16 +131,12 @@ public abstract class BasicRenderer : IRenderer {
         _ => 0
     };
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual RenderCharacter GetCharacter(Vector2Int position) => IsCharacterEmpty(position) ?
-        new RenderCharacter('\0', Color.transparent, Color.transparent) : display[position.y, position.x];
+    public abstract RenderCharacter GetCharacter(Vector2Int position);
 
     public virtual void AddEffect(IEffect effect) {
         // ReSharper disable once ConvertIfStatementToSwitchStatement
         if(effect is IUpdatableEffect updatable)
             updatableEffects.Add(updatable);
-        if(effect is IPipelineEffect pipeline)
-            pipelineEffects.Add(pipeline);
         if(effect is IDrawableEffect drawable)
             globalDrawableEffects.Add(drawable);
         if(effect is IModifierEffect mod)
@@ -247,19 +155,6 @@ public abstract class BasicRenderer : IRenderer {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual bool IsCharacterEmpty(Vector2Int position) {
-        if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
-            return true;
-        return !displayUsed[position.y, position.x];
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual bool IsCharacterEmpty(RenderCharacter renderCharacter) =>
-        renderCharacter.background.a == 0f &&
-        (!IsCharacterDrawable(renderCharacter.character, renderCharacter.style) ||
-         renderCharacter.foreground.a == 0f);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual bool IsCharacterDrawable(char character, RenderStyle style) =>
-        font?.IsCharacterDrawable(character, style & RenderStyle.AllPerFont) ?? false;
+        font.IsCharacterDrawable(character, style & RenderStyle.AllPerFont);
 }

@@ -8,6 +8,7 @@ namespace PER.Headless;
 
 internal class HeadlessRenderer : IRenderer {
     public bool open { get; private set; }
+    public event EventHandler? closed;
     public void Setup(RendererSettings settings) => open = true;
     public void Close() {
         open = false;
@@ -16,34 +17,18 @@ internal class HeadlessRenderer : IRenderer {
 
     // everything else is an invalid operation.
 
-    public string title {
-        get => throw new InvalidOperationException();
-        set => throw new InvalidOperationException();
-    }
     public int width => throw new InvalidOperationException();
     public int height => throw new InvalidOperationException();
     public bool verticalSync {
         get => throw new InvalidOperationException();
         set => throw new InvalidOperationException();
     }
-    public bool fullscreen {
-        get => throw new InvalidOperationException();
-        set => throw new InvalidOperationException();
-    }
-    public IFont? font {
-        get => throw new InvalidOperationException();
-        set => throw new InvalidOperationException();
-    }
-    public string? icon {
-        get => throw new InvalidOperationException();
-        set => throw new InvalidOperationException();
-    }
+    public IFont font => throw new InvalidOperationException();
     public bool focused => throw new InvalidOperationException();
     // it's an interface implementation dumbass
 #pragma warning disable CS0067
     public event EventHandler? focusChanged;
 #pragma warning restore CS0067
-    public event EventHandler? closed;
     public Color background {
         get => throw new InvalidOperationException();
         set => throw new InvalidOperationException();
@@ -61,7 +46,5 @@ internal class HeadlessRenderer : IRenderer {
     public RenderCharacter GetCharacter(Vector2Int position) => throw new InvalidOperationException();
     public void AddEffect(IEffect effect) => throw new InvalidOperationException();
     public void AddEffect(Vector2Int position, IDisplayEffect? effect) => throw new InvalidOperationException();
-    public bool IsCharacterEmpty(Vector2Int position) => throw new InvalidOperationException();
-    public bool IsCharacterEmpty(RenderCharacter renderCharacter) => throw new InvalidOperationException();
     public bool IsCharacterDrawable(char character, RenderStyle style) => throw new InvalidOperationException();
 }

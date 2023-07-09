@@ -18,9 +18,6 @@ public class Game : IGame, ISetupable, IUpdatable {
     private const string SettingsPath = "config.json";
     private Settings _settings = new();
 
-    private DrawTextEffect? _drawTextEffect;
-    private BloomEffect? _bloomEffect;
-
     private static IRenderer renderer => Core.engine.renderer;
 
     private static TimeSpan fpsGood => (Core.engine.updateInterval > TimeSpan.Zero ? Core.engine.updateInterval :
@@ -47,9 +44,6 @@ public class Game : IGame, ISetupable, IUpdatable {
         resources.TryAddResource(FontResource.GlobalId, new FontResource());
         resources.TryAddResource(ColorsResource.GlobalId, new ColorsResource());
 
-        resources.TryAddResource(DrawTextEffect.GlobalId, new DrawTextEffect());
-        resources.TryAddResource(BloomEffect.GlobalId, new BloomEffect());
-
         renderer.formattingEffects.Clear();
         renderer.formattingEffects.Add("none", null);
         renderer.formattingEffects.Add("glitch", new GlitchEffect(renderer));
@@ -73,9 +67,6 @@ public class Game : IGame, ISetupable, IUpdatable {
         if(!colors.colors.TryGetValue("fps_bad", out _fpsBadColor))
             _fpsBadColor = Color.white;
 
-        Core.engine.resources.TryGetResource(DrawTextEffect.GlobalId, out _drawTextEffect);
-        Core.engine.resources.TryGetResource(BloomEffect.GlobalId, out _bloomEffect);
-
         _settings.Apply();
 
         return new RendererSettings {
@@ -97,10 +88,6 @@ public class Game : IGame, ISetupable, IUpdatable {
     }
 
     public void Update(TimeSpan time) {
-        if(_drawTextEffect is null || _bloomEffect is null)
-            return;
-        renderer.AddEffect(_drawTextEffect);
-        //renderer.AddEffect(_bloomEffect);
         _frameTimeDisplay?.Update(time);
     }
 

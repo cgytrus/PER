@@ -116,8 +116,8 @@ public class InputManager : IInput {
             mouseX - _renderer.window?.Size.X * 0.5f + _renderer.text?.imageWidth * 0.5f ?? 0f,
             mouseY - _renderer.window?.Size.Y * 0.5f + _renderer.text?.imageHeight * 0.5f ?? 0f);
         _accurateMousePosition = new Vector2(
-            pixelMousePosition.X / _renderer.font?.size.x ?? 0,
-            pixelMousePosition.Y / _renderer.font?.size.y ?? 0);
+            pixelMousePosition.X / _renderer.font.size.x,
+            pixelMousePosition.Y / _renderer.font.size.y);
         _mousePosition = new Vector2Int((int)_accurateMousePosition.X, (int)_accurateMousePosition.Y);
         _normalizedMousePosition =
             new Vector2(pixelMousePosition.X / ((_renderer.text?.imageWidth ?? 0) - 1),

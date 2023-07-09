@@ -17,7 +17,7 @@ public class GlitchEffect : IModifierEffect, IDrawableEffect {
 
     public void ApplyModifiers(Vector2Int at, ref Vector2 position, ref RenderCharacter character) {
         position.X += RandomFloat() * 0.1f;
-        string mappings = _renderer.font?.mappings ?? "";
+        string mappings = _renderer.font.mappings;
         character = new RenderCharacter(
             RandomNonNegativeFloat() <= 0.98f ? character.character : mappings[Random.Shared.Next(0, mappings.Length)],
             RandomizeColor(character.background), RandomizeColor(character.foreground),
@@ -30,7 +30,7 @@ public class GlitchEffect : IModifierEffect, IDrawableEffect {
             _draw = RandomNonNegativeFloat() > 0.95f;
         if(!_draw)
             return;
-        string mappings = _renderer.font?.mappings ?? "";
+        string mappings = _renderer.font.mappings;
         _renderer.DrawCharacter(position, new RenderCharacter(
             mappings[Random.Shared.Next(0, mappings.Length)],
             RandomizeColor(Color.transparent), RandomizeColor(Color.white),

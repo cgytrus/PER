@@ -9,14 +9,11 @@ namespace PER.Abstractions.Rendering;
 
 [PublicAPI]
 public interface IRenderer : IUpdatable {
-    public string title { get; set; }
     public int width { get; }
     public int height { get; }
     public Vector2Int size => new(width, height);
     public bool verticalSync { get; set; }
-    public bool fullscreen { get; set; }
-    public IFont? font { get; set; }
-    public string? icon { get; set; }
+    public IFont font { get; }
 
     public bool open { get; }
     public bool focused { get; }
@@ -42,7 +39,5 @@ public interface IRenderer : IUpdatable {
     public void AddEffect(IEffect effect);
     public void AddEffect(Vector2Int position, IDisplayEffect? effect);
 
-    public bool IsCharacterEmpty(Vector2Int position);
-    public bool IsCharacterEmpty(RenderCharacter renderCharacter);
     public bool IsCharacterDrawable(char character, RenderStyle style);
 }
