@@ -69,10 +69,12 @@ public class AudioManager : IAudio {
     }
 
     private void AudioThread() {
-        while(!_shouldStop)
+        while(!_shouldStop) {
             lock(_playablesLock)
                 foreach(IPlayable playable in _allPlayables)
                     if(playable is IUpdatable updatable)
                         updatable.Update(TimeSpan.Zero);
+            Thread.Sleep(1000);
+        }
     }
 }
