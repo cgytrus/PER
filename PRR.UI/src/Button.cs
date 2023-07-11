@@ -62,7 +62,7 @@ public class Button : ClickableElement {
 
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
         Vector2Int position = new(this.position.x + x, this.position.y + y);
-        renderer.DrawColor(position, backgroundColor, foregroundColor, effect);
+        renderer.DrawCharacter(position, new RenderCharacter('\0', backgroundColor, foregroundColor), effect);
     }
 
     private record LayoutResourceButton(bool? enabled, Vector2Int position, Vector2Int size, string? text,

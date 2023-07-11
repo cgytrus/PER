@@ -9,7 +9,7 @@ namespace PER.Abstractions.Rendering;
 
 [PublicAPI]
 public interface IFont {
-    public IReadOnlyDictionary<char, Vector2[]> characters { get; }
+    public IReadOnlyDictionary<char, Vector2Int> characters { get; }
     public Vector2Int size { get; }
     public Image image { get; }
     public Image formattingImage { get; }

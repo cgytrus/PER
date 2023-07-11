@@ -33,9 +33,8 @@ public abstract class BasicRenderer : IRenderer {
     public Dictionary<string, IDisplayEffect?> formattingEffects { get; } = new();
 
     protected List<IUpdatableEffect> updatableEffects { get; private set; } = new();
-    protected List<IDrawableEffect> globalDrawableEffects { get; private set; } = new();
-    protected List<IModifierEffect> globalModEffects { get; private set; } = new();
-    protected IDisplayEffect?[,] displayEffects { get; private set; } = new IDisplayEffect?[0, 0];
+    protected List<IDrawableEffect> drawableEffects { get; private set; } = new();
+    protected List<IModifierEffect> modEffects { get; private set; } = new();
 
     private RendererSettings _settings;
 
@@ -43,7 +42,6 @@ public abstract class BasicRenderer : IRenderer {
 
     protected abstract void UpdateVerticalSync();
 
-    public abstract void Update(TimeSpan time);
     public abstract void Close();
     public abstract void Finish();
 
@@ -58,13 +56,10 @@ public abstract class BasicRenderer : IRenderer {
         return true;
     }
 
-    protected virtual void UpdateFont() => displayEffects = new IDisplayEffect?[height, width];
-
-    public abstract void Draw();
+    public abstract void BeginDraw();
+    public abstract void EndDraw();
 
     public abstract void DrawCharacter(Vector2Int position, RenderCharacter character, IDisplayEffect? effect = null);
-    public abstract void DrawColor(Vector2Int position, Color background, Color foreground, IDisplayEffect? effect = null);
-    public abstract void SetStyle(Vector2Int position, RenderStyle style);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual void DrawText(Vector2Int position, ReadOnlySpan<char> text, Func<char, Formatting> formatter,
@@ -133,27 +128,13 @@ public abstract class BasicRenderer : IRenderer {
         _ => 0
     };
 
-    public abstract Color GetBackground(Vector2Int position);
-    public abstract Color GetForeground(Vector2Int position);
-
     public virtual void AddEffect(IEffect effect) {
         // ReSharper disable once ConvertIfStatementToSwitchStatement
         if(effect is IUpdatableEffect updatable)
             updatableEffects.Add(updatable);
         if(effect is IDrawableEffect drawable)
-            globalDrawableEffects.Add(drawable);
+            drawableEffects.Add(drawable);
         if(effect is IModifierEffect mod)
-            globalModEffects.Add(mod);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public virtual void DrawEffect(Vector2Int position, IDisplayEffect? effect) {
-        if(position.x < 0 || position.y < 0 || position.x >= width || position.y >= height)
-            return;
-        if(displayEffects[position.y, position.x] is IUpdatableEffect prevUpdatable)
-            updatableEffects.Remove(prevUpdatable);
-        if(effect is IUpdatableEffect updatable)
-            updatableEffects.Add(updatable);
-        displayEffects[position.y, position.x] = effect;
+            modEffects.Add(mod);
     }
 }

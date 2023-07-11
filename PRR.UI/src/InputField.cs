@@ -201,8 +201,7 @@ public class InputField : ClickableElement {
         foregroundColor = new Color(foregroundColor.r, foregroundColor.g, foregroundColor.b,
             MoreMath.Lerp(0f, foregroundColor.a, t) * (usePlaceholder ? 0.5f : 1f));
 
-        renderer.DrawColor(position, backgroundColor, foregroundColor, effect);
-        renderer.SetStyle(position, style);
+        renderer.DrawCharacter(position, new RenderCharacter('\0', backgroundColor, foregroundColor, style), effect);
     }
 
     protected override void Click() {

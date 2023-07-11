@@ -42,7 +42,7 @@ public class FadeEffect : IModifierEffect, IUpdatableEffect {
         _startTicks = (int)globalTimer.ticks;
     }
 
-    public void ApplyModifiers(Vector2Int at, ref Vector2 position, ref RenderCharacter character) {
+    public void ApplyModifiers(Vector2Int at, ref Vector2Int offset, ref RenderCharacter character) {
         float rand;
         unchecked {
             // idk what im doing xd

@@ -73,7 +73,7 @@ public class Game : IGame, ISetupable, IUpdatable {
             title = "PER Demo Pog",
             width = 80,
             height = 60,
-            verticalSync = true,
+            verticalSync = false,
             fullscreen = false,
             font = font.font,
             icon = icon?.icon

@@ -113,15 +113,15 @@ public class InputManager : IInput {
         }
 
         Vector2 pixelMousePosition = new(
-            mouseX - _renderer.window?.Size.X * 0.5f + _renderer.text?.imageWidth * 0.5f ?? 0f,
-            mouseY - _renderer.window?.Size.Y * 0.5f + _renderer.text?.imageHeight * 0.5f ?? 0f);
+            mouseX - _renderer.window?.Size.X * 0.5f + _renderer.width * _renderer.font.size.x * 0.5f ?? 0f,
+            mouseY - _renderer.window?.Size.Y * 0.5f + _renderer.height * _renderer.font.size.y * 0.5f ?? 0f);
         _accurateMousePosition = new Vector2(
             pixelMousePosition.X / _renderer.font.size.x,
             pixelMousePosition.Y / _renderer.font.size.y);
         _mousePosition = new Vector2Int((int)_accurateMousePosition.X, (int)_accurateMousePosition.Y);
         _normalizedMousePosition =
-            new Vector2(pixelMousePosition.X / ((_renderer.text?.imageWidth ?? 0) - 1),
-                pixelMousePosition.Y / ((_renderer.text?.imageHeight ?? 0) - 1));
+            new Vector2(pixelMousePosition.X / (_renderer.width * _renderer.font.size.x - 1),
+                pixelMousePosition.Y / (_renderer.height * _renderer.font.size.y - 1));
     }
 
     private void ScrollMouse(float delta) => scrolled?.Invoke(new IInput.ScrolledArgs(delta));

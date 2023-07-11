@@ -109,7 +109,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
             return c;
         float v = Math.Min(lighting[pos.y, pos.x].a * (1f + level.ambientLight.a), 1f);
         Color3 l = (Color3)lighting[pos.y, pos.x] + (Color3)level.ambientLight;
-        Color final = new(Math.Min(l.r, 1f) * v, Math.Min(l.g, 1f) * v, Math.Min(l.b, 1f) * v);
+        Color final = new(l.r * v, l.g * v, l.b * v);
         return c with { background = c.background * final, foreground = c.foreground * final };
     }
 

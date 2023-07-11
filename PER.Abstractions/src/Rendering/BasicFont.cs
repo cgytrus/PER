@@ -12,7 +12,7 @@ namespace PER.Abstractions.Rendering;
 
 [PublicAPI]
 public abstract class BasicFont : IFont {
-    public IReadOnlyDictionary<char, Vector2[]> characters => _characters;
+    public IReadOnlyDictionary<char, Vector2Int> characters => _characters;
     public Vector2Int size { get; }
     public Image image { get; private set; }
     public Image formattingImage { get; private set; }
@@ -20,7 +20,7 @@ public abstract class BasicFont : IFont {
 
     private readonly bool[] _drawable = new bool[0xFFFF];
 
-    private readonly Dictionary<char, Vector2[]> _characters = new();
+    private readonly Dictionary<char, Vector2Int> _characters = new();
 
     protected BasicFont(string imagePath, string mappingsPath) {
         string[] fontMappingsLines = File.ReadAllLines(mappingsPath);
@@ -55,11 +55,11 @@ public abstract class BasicFont : IFont {
         for(int y = 0; y < image.height; y += size.y)
             for(int x = 0; x < image.width; x += size.x)
                 AddCharacter(x, y, ref index);
-        formattingImage = new Image(size.x * 2, size.y * 2);
-        AddUnderline(formattingImage, new Vector2Int(size.x, 0), size);
-        AddStrikethrough(formattingImage, new Vector2Int(0, size.y), size);
-        AddUnderline(formattingImage, size, size);
-        AddStrikethrough(formattingImage, size, size);
+        formattingImage = new Image(4, size.y);
+        AddUnderline(formattingImage, 1, size.y);
+        AddStrikethrough(formattingImage, 2, size.y);
+        AddUnderline(formattingImage, 3, size.y);
+        AddStrikethrough(formattingImage, 4, size.y);
     }
 
     private void AddCharacter(int x, int y, ref int index) {
@@ -74,27 +74,19 @@ public abstract class BasicFont : IFont {
             return;
         }
 
-        Vector2[] texCoords = new Vector2[4];
-        // Clockwise
-        texCoords[0] = new Vector2(x, y); // top left
-        texCoords[1] = new Vector2(x + size.x, y); // top right
-        texCoords[2] = new Vector2(x + size.x, y + size.y); // bottom right
-        texCoords[3] = new Vector2(x, y + size.y); // bottom left
-        _characters.Add(character, texCoords);
+        _characters.Add(character, new Vector2Int(x, y));
 
         index++;
     }
 
-    private static void AddUnderline(Image image, Vector2Int pos, Vector2Int size) {
-        for(int x = 0; x < size.x; x++)
-            for(int i = 0; i < size.y / 10; i++)
-                image[pos.x + x, pos.y + size.y - 1 - i] = Color.white;
+    private static void AddUnderline(Image image, int x, int height) {
+        for(int i = 0; i < height / 10; i++)
+            image[x, height - 1 - i] = Color.white;
     }
 
-    private static void AddStrikethrough(Image image, Vector2Int pos, Vector2Int size) {
-        for(int x = 0; x < size.x; x++)
-            for(int i = 0; i < size.y / 10; i++)
-                image[pos.x + x, pos.y + size.y * 9 / 20 + i] = Color.white;
+    private static void AddStrikethrough(Image image, int x, int height) {
+        for(int i = 0; i < height / 10; i++)
+            image[x, height * 9 / 20 + i] = Color.white;
     }
 
     private static bool IsCharacterEmpty(Image image, int startX, int startY, Vector2Int characterSize) {
