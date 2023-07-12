@@ -63,7 +63,7 @@ void main() {
 
     vec2 processedPos = aPosition + position + (vec2(italic * (1.0 - aPosition.y), 0.0) + offset) / charSize;
 
-    gl_Position = vec4(processedPos * normCharSize * vec2(2.0, -2.0) - vec2(1.0, -1.0), 0.0, 1.0);
+    gl_Position = vec4((processedPos * vec2(2.0, -2.0) - vec2(size.x, -size.y)) * normCharSize, 0.0, 1.0);
     texCoord = aPosition * charSize;
 }
 """;
@@ -213,6 +213,8 @@ void main() {
     public override void Finish() {
         Dispose();
         window = null;
+        _shader = null;
+        _pixelShader = null;
     }
 
     public override void Setup(RendererSettings settings) {
@@ -282,8 +284,6 @@ void main() {
 
         window.FocusedChanged += _ => focusChanged?.Invoke(this, EventArgs.Empty);
         window.Closing += _ => closed?.Invoke(this, EventArgs.Empty);
-
-        ResetGl();
 
         _displayTex = new int[] {
             CreateDisplayTexture(PixelInternalFormat.Rgba32f, PixelFormat.Rgba, PixelType.Float),
@@ -515,7 +515,7 @@ void main() {
             updatableEffects.Add(updatableEffect);
     }
 
-    private void ResetGl() {
+    public void Dispose() {
         GL.BindTexture(TextureTarget.Texture2D, 0);
         GL.BindVertexArray(0);
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
@@ -532,10 +532,8 @@ void main() {
         GL.DeleteBuffer(_pixelVbo);
         GL.DeleteTexture(_font);
         GL.DeleteTexture(_formatting);
-    }
-
-    public void Dispose() {
-        ResetGl();
+        _shader?.Dispose();
+        _pixelShader?.Dispose();
         window?.Dispose();
         GC.SuppressFinalize(this);
     }
