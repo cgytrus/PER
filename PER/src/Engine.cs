@@ -64,7 +64,7 @@ public class Engine {
     }
 
     public void Reload() {
-        //try {
+        try {
             if(resources.loaded) {
                 logger.Info("Reloading game");
                 resources.Unload();
@@ -90,11 +90,11 @@ public class Engine {
                 input.Reset();
             else
                 Run(rendererSettings);
-        //}
-        //catch(Exception exception) {
-        //    logger.Fatal(exception, "Uncaught exception! Please, report this file to the developer of the game.");
-        //    throw;
-        //}
+        }
+        catch(Exception exception) {
+            logger.Fatal(exception, "Uncaught exception! Please, report this file to the developer of the game.");
+            throw;
+        }
     }
 
     public void SoftReload() {
