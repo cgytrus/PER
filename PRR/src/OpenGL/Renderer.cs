@@ -14,8 +14,6 @@ using OpenTK.Windowing.Desktop;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
-using QoiSharp;
-
 using Color = PER.Util.Color;
 using Image = OpenTK.Windowing.Common.Input.Image;
 
@@ -253,10 +251,8 @@ void main() {
             SrgbCapable = false,
             TransparentFramebuffer = false
         };
-        if(!string.IsNullOrWhiteSpace(settings.icon) && File.Exists(settings.icon)) {
-            QoiImage image = QoiDecoder.Decode(File.ReadAllBytes(settings.icon));
-            windowSettings.Icon = new WindowIcon(new Image(image.Width, image.Height, image.Data));
-        }
+        if(settings.icon.HasValue)
+            windowSettings.Icon = new WindowIcon(Converters.ToOtkImage(settings.icon.Value));
 
         window = new NativeWindow(windowSettings);
         if(_shader is null) {
@@ -431,7 +427,6 @@ void main() {
 
     public override void BeginDraw() {
         _pixels.Clear();
-        updatableEffects.Clear();
         drawableEffects.Clear();
         modEffects.Clear();
 
@@ -451,8 +446,6 @@ void main() {
         if(window is null || _shader is null || _displayTex is null)
             return;
 
-        foreach(IUpdatableEffect effect in updatableEffects)
-            effect.Update();
         foreach(IDrawableEffect effect in drawableEffects)
             for(int y = 0; y < height; y++)
                 for(int x = 0; x < width; x++)
@@ -488,7 +481,7 @@ void main() {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public override void DrawCharacter(Vector2Int position, RenderCharacter character, IDisplayEffect? effect = null) {
+    public override void DrawCharacter(Vector2Int position, RenderCharacter character, IEffect? effect = null) {
         Vector2Int offset = new(0, 0);
         if(effect is IModifierEffect modifierEffect)
             modifierEffect.ApplyModifiers(position, ref offset, ref character);
@@ -511,8 +504,6 @@ void main() {
 
         if(effect is IDrawableEffect drawableEffect)
             drawableEffect.Draw(position);
-        if(effect is IUpdatableEffect updatableEffect && !updatableEffects.Contains(updatableEffect))
-            updatableEffects.Add(updatableEffect);
     }
 
     public void Dispose() {

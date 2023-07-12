@@ -10,11 +10,11 @@ namespace PRR.UI.Resources;
 [PublicAPI]
 public readonly record struct LayoutResourceTextFormatting(string? foregroundColor, string? backgroundColor,
     [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style, string? effect = null) {
-    public Formatting GetFormatting(Dictionary<string, Color> colors, Dictionary<string, IDisplayEffect?> effects) {
+    public Formatting GetFormatting(Dictionary<string, Color> colors, Dictionary<string, IEffect?> effects) {
         Color foregroundColor = Color.white;
         Color backgroundColor = Color.transparent;
         RenderStyle style = RenderStyle.None;
-        IDisplayEffect? effect = null;
+        IEffect? effect = null;
         if(this.foregroundColor is not null && colors.TryGetValue(this.foregroundColor, out Color color))
             foregroundColor = color;
         if(this.backgroundColor is not null && colors.TryGetValue(this.backgroundColor, out color))

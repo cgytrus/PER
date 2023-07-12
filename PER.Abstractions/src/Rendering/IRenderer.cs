@@ -22,7 +22,7 @@ public interface IRenderer {
 
     public Color background { get; set; }
 
-    public Dictionary<string, IDisplayEffect?> formattingEffects { get; }
+    public Dictionary<string, IEffect?> formattingEffects { get; }
 
     public void Setup(RendererSettings settings);
     public void Close();
@@ -32,7 +32,7 @@ public interface IRenderer {
     public void BeginDraw();
     public void EndDraw();
 
-    public void DrawCharacter(Vector2Int position, RenderCharacter character, IDisplayEffect? effect = null);
+    public void DrawCharacter(Vector2Int position, RenderCharacter character, IEffect? effect = null);
 
     public void DrawText(Vector2Int position, ReadOnlySpan<char> text, Func<char, Formatting> formatter,
         HorizontalAlignment align = HorizontalAlignment.Left, int maxWidth = 0);

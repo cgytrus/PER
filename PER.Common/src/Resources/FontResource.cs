@@ -1,8 +1,9 @@
 ﻿using JetBrains.Annotations;
 
 using PER.Abstractions.Resources;
+using PER.Common.Rendering;
 
-namespace PRR.Resources;
+namespace PER.Common.Resources;
 
 [PublicAPI]
 public class FontResource : Resource {

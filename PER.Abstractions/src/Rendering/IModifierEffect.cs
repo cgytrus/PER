@@ -1,12 +1,10 @@
-﻿using System.Numerics;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 using PER.Util;
 
 namespace PER.Abstractions.Rendering;
 
 [PublicAPI]
-public interface IModifierEffect : IDisplayEffect {
+public interface IModifierEffect : IEffect {
     public void ApplyModifiers(Vector2Int at, ref Vector2Int offset, ref RenderCharacter character);
 }

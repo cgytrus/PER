@@ -28,7 +28,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
 
     public abstract int layer { get; }
     public abstract RenderCharacter character { get; }
-    public virtual IDisplayEffect? effect => null;
+    public virtual IEffect? effect => null;
     public abstract bool blocksLight { get; }
 
     public bool dirty {

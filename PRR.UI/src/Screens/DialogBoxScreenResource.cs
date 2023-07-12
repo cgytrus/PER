@@ -19,7 +19,7 @@ public abstract class DialogBoxScreenResource : LayoutResource, IScreen, IUpdata
 
     protected virtual string foregroundColorId => "dialogBox_fg";
     protected virtual string backgroundColorId => "dialogBox_bg";
-    protected virtual IDisplayEffect? frameEffect => null;
+    protected virtual IEffect? frameEffect => null;
 
     private ColorsResource? _colors;
     private DialogBoxPaletteResource? _palette;

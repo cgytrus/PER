@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="NLog" Version="5.2.2" />
+    <PackageReference Include="QoiSharp" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

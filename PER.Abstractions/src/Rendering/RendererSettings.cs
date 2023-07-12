@@ -10,5 +10,5 @@ public readonly struct RendererSettings {
     public bool verticalSync { get; init; }
     public bool fullscreen { get; init; }
     public IFont font { get; init; }
-    public string? icon { get; init; }
+    public Image? icon { get; init; }
 }

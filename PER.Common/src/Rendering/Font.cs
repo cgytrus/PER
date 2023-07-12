@@ -1,13 +1,11 @@
-﻿using System.IO;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 using PER.Abstractions.Rendering;
 using PER.Util;
 
 using QoiSharp;
 
-namespace PRR;
+namespace PER.Common.Rendering;
 
 [PublicAPI]
 public class Font : BasicFont {

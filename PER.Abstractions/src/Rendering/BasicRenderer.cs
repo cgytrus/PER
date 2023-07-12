@@ -30,9 +30,8 @@ public abstract class BasicRenderer : IRenderer {
 
     public virtual Color background { get; set; } = Color.black;
 
-    public Dictionary<string, IDisplayEffect?> formattingEffects { get; } = new();
+    public Dictionary<string, IEffect?> formattingEffects { get; } = new();
 
-    protected List<IUpdatableEffect> updatableEffects { get; private set; } = new();
     protected List<IDrawableEffect> drawableEffects { get; private set; } = new();
     protected List<IModifierEffect> modEffects { get; private set; } = new();
 
@@ -59,7 +58,7 @@ public abstract class BasicRenderer : IRenderer {
     public abstract void BeginDraw();
     public abstract void EndDraw();
 
-    public abstract void DrawCharacter(Vector2Int position, RenderCharacter character, IDisplayEffect? effect = null);
+    public abstract void DrawCharacter(Vector2Int position, RenderCharacter character, IEffect? effect = null);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual void DrawText(Vector2Int position, ReadOnlySpan<char> text, Func<char, Formatting> formatter,
@@ -129,9 +128,6 @@ public abstract class BasicRenderer : IRenderer {
     };
 
     public virtual void AddEffect(IEffect effect) {
-        // ReSharper disable once ConvertIfStatementToSwitchStatement
-        if(effect is IUpdatableEffect updatable)
-            updatableEffects.Add(updatable);
         if(effect is IDrawableEffect drawable)
             drawableEffects.Add(drawable);
         if(effect is IModifierEffect mod)

@@ -27,7 +27,6 @@
   <ItemGroup>
     <PackageReference Include="OpenTK.Graphics" Version="4.7.7" />
     <PackageReference Include="OpenTK.Windowing.Desktop" Version="4.7.7" />
-    <PackageReference Include="QoiSharp" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>

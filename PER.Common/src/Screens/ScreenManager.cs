@@ -47,6 +47,7 @@ public class ScreenManager : IScreens, ISetupable, IUpdatable, ITickable {
     public void Setup() => renderer.closed += (_, _) => SwitchScreen(null);
 
     public void Update(TimeSpan time) {
+        _screenFade.Update(time);
         if(_screenFade.fading)
             renderer.AddEffect(_screenFade);
         if(currentScreen is IUpdatable updatable)

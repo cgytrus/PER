@@ -10,8 +10,6 @@ using PER.Demo.Resources;
 using PER.Demo.Screens;
 using PER.Util;
 
-using PRR.Resources;
-
 namespace PER.Demo;
 
 public class Game : IGame, ISetupable, IUpdatable {
