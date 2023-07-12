@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -15,7 +14,6 @@ using PER.Abstractions.Rendering;
 using PER.Util;
 
 using Color = PER.Util.Color;
-using Image = OpenTK.Windowing.Common.Input.Image;
 
 namespace PRR.OpenGL;
 
@@ -167,6 +165,7 @@ void main() {
     private int _pixelVao;
     private int _pixelVbo;
     private readonly List<Pixel> _pixels = new();
+    private int _lastPixelsCapacity;
 
     private int _font;
     private int _formatting;
@@ -446,23 +445,19 @@ void main() {
         if(window is null || _shader is null || _displayTex is null)
             return;
 
-        foreach(IDrawableEffect effect in drawableEffects)
-            for(int y = 0; y < height; y++)
-                for(int x = 0; x < width; x++)
-                    effect.Draw(new Vector2Int(x, y));
+        DrawEffects();
 
         _blend.Use();
         _pixelShader?.Use();
         BindAllTextures();
         GL.BindVertexArray(_pixelVao);
         GL.BindBuffer(BufferTarget.ArrayBuffer, _pixelVbo);
-        GL.BufferData(BufferTarget.ArrayBuffer, 4 * 17 * _pixels.Capacity, IntPtr.Zero, BufferUsageHint.StreamDraw);
-        unsafe {
-            Pixel* buf = (Pixel*)GL.MapBufferRange(BufferTarget.ArrayBuffer, IntPtr.Zero, 4 * 17 * _pixels.Count,
-                BufferAccessMask.MapInvalidateRangeBit | BufferAccessMask.MapWriteBit);
-            CollectionsMarshal.AsSpan(_pixels).CopyTo(new Span<Pixel>(buf, 4 * 17 * _pixels.Count));
+        if(_lastPixelsCapacity != _pixels.Capacity) {
+            GL.BufferData(BufferTarget.ArrayBuffer, 4 * 17 * _pixels.Capacity, IntPtr.Zero, BufferUsageHint.StreamDraw);
+            _lastPixelsCapacity = _pixels.Capacity;
         }
-        GL.UnmapBuffer(BufferTarget.ArrayBuffer);
+        GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, 4 * 17 * _pixels.Count,
+            ref MemoryMarshal.GetReference(CollectionsMarshal.AsSpan(_pixels)));
         GL.DrawArrays(PrimitiveType.Points, 0, _pixels.Count);
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -478,6 +473,12 @@ void main() {
         GL.DrawArraysInstanced(PrimitiveType.Triangles, 0, 6, width * height);
 
         window.Context.SwapBuffers();
+    }
+    private void DrawEffects() {
+        foreach(IDrawableEffect effect in drawableEffects)
+            for(int y = 0; y < height; y++)
+                for(int x = 0; x < width; x++)
+                    effect.Draw(new Vector2Int(x, y));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
