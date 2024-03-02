@@ -17,7 +17,7 @@ using Color = PER.Util.Color;
 
 namespace PRR.OpenGL;
 
-public class Renderer : BasicRenderer, IDisposable {
+public class Renderer(string title, Vector2Int size) : BasicRenderer(size), IDisposable {
     public override bool open => window is not null && !_shouldClose;
     public override bool focused => window?.IsFocused ?? false;
     public override event EventHandler? focusChanged;
@@ -30,8 +30,6 @@ public class Renderer : BasicRenderer, IDisposable {
             _background = Converters.ToOtkColor(value);
         }
     }
-
-    private readonly string _title;
 
     public NativeWindow? window { get; private set; }
 
@@ -220,8 +218,6 @@ void main() {
         _shouldClose = false;
     }
 
-    public Renderer(string title, Vector2Int size) : base(size) => _title = title;
-
     public override void Setup(RendererSettings settings) {
         base.Setup(settings);
 
@@ -243,7 +239,7 @@ void main() {
 #endif
             AutoLoadBindings = true,
             APIVersion = new Version(3, 3),
-            Title = _title,
+            Title = title,
             StartFocused = true,
             StartVisible = true,
             WindowState = settings.fullscreen ? WindowState.Fullscreen : WindowState.Normal,

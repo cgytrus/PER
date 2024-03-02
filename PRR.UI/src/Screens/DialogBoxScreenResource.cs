@@ -12,10 +12,10 @@ using PRR.UI.Resources;
 namespace PRR.UI.Screens;
 
 [PublicAPI]
-public abstract class DialogBoxScreenResource : LayoutResource, IScreen, IUpdatable {
+public abstract class DialogBoxScreenResource(Vector2Int size) : LayoutResource, IScreen, IUpdatable {
     protected abstract IResources resources { get; }
 
-    protected Vector2Int size { get; set; }
+    protected Vector2Int size { get; set; } = size;
 
     protected virtual string foregroundColorId => "dialogBox_fg";
     protected virtual string backgroundColorId => "dialogBox_bg";
@@ -23,8 +23,6 @@ public abstract class DialogBoxScreenResource : LayoutResource, IScreen, IUpdata
 
     private ColorsResource? _colors;
     private DialogBoxPaletteResource? _palette;
-
-    protected DialogBoxScreenResource(Vector2Int size) => this.size = size;
 
     public virtual void Open() {
         if(!resources.TryGetResource(ColorsResource.GlobalId, out _colors) ||

@@ -8,8 +8,8 @@ using PER.Util;
 namespace PRR.UI;
 
 [PublicAPI]
-public abstract class Element : IUpdatable {
-    public IRenderer renderer { get; set; }
+public abstract class Element(IRenderer renderer) : IUpdatable {
+    public IRenderer renderer { get; set; } = renderer;
     public virtual bool enabled { get; set; } = true;
     public virtual Vector2Int position { get; set; }
     public virtual Vector2Int size { get; set; }
@@ -26,8 +26,6 @@ public abstract class Element : IUpdatable {
         new(position.x + (int)(size.x / 2f - 0.5f), position.y + (int)(size.y / 2f - 0.5f));
 
     public IEffect? effect { get; set; }
-
-    protected Element(IRenderer renderer) => this.renderer = renderer;
 
     public abstract Element Clone();
 

@@ -9,8 +9,8 @@ using PER.Util;
 namespace PER.Abstractions.Rendering;
 
 [PublicAPI]
-public abstract class BasicRenderer : IRenderer {
-    public virtual Vector2Int size { get; }
+public abstract class BasicRenderer(Vector2Int size) : IRenderer {
+    public virtual Vector2Int size { get; } = size;
     public int width => size.x;
     public int height => size.y;
 
@@ -38,8 +38,6 @@ public abstract class BasicRenderer : IRenderer {
 
     private RendererSettings _settings;
     private bool _vsync;
-
-    protected BasicRenderer(Vector2Int size) => this.size = size;
 
     public virtual void Setup(RendererSettings settings) => _settings = settings;
 

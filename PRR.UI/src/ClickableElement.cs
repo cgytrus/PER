@@ -8,14 +8,14 @@ using PER.Util;
 namespace PRR.UI;
 
 [PublicAPI]
-public abstract class ClickableElement : Element {
+public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio? audio = null) : Element(renderer) {
     public enum State { None, Inactive, Idle, FakeHovered, Hovered, FakeClicked, Clicked, Hotkey }
     public const string ClickSoundId = "buttonClick";
 
     protected abstract string type { get; }
 
-    public IInput input { get; set; }
-    public IAudio? audio { get; set; }
+    public IInput input { get; set; } = input;
+    public IAudio? audio { get; set; } = audio;
 
     public override Vector2Int size {
         get => base.size;
@@ -67,11 +67,6 @@ public abstract class ClickableElement : Element {
     private bool _toggled;
     private bool _toggledChanged;
     private TimeSpan _lastTime;
-
-    protected ClickableElement(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer) {
-        this.input = input;
-        this.audio = audio;
-    }
 
     protected virtual void UpdateState(TimeSpan time) {
         State prevState = currentState;

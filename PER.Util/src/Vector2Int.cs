@@ -11,15 +11,10 @@ namespace PER.Util;
 
 [PublicAPI]
 [JsonConverter(typeof(JsonConverter))]
-public readonly struct Vector2Int : IEquatable<Vector2Int> {
-    public int x { get; }
-    public int y { get; }
-
-    [JsonConstructor]
-    public Vector2Int(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
+[method: JsonConstructor]
+public readonly struct Vector2Int(int x, int y) : IEquatable<Vector2Int> {
+    public int x { get; } = x;
+    public int y { get; } = y;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool InBounds(int minX, int minY, int maxX, int maxY) => x >= minX && x <= maxX && y >= minY && y <= maxY;

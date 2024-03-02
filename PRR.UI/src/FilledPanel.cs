@@ -12,15 +12,13 @@ using PRR.UI.Resources;
 namespace PRR.UI;
 
 [PublicAPI]
-public class FilledPanel : Element {
+public class FilledPanel(IRenderer renderer) : Element(renderer) {
     public static readonly Type serializedType = typeof(LayoutResourceFilledPanel);
 
     public char character { get; set; } = '\0';
     public Color foregroundColor { get; set; } = Color.white;
     public Color backgroundColor { get; set; } = Color.transparent;
     public RenderStyle style { get; set; } = RenderStyle.None;
-
-    public FilledPanel(IRenderer renderer) : base(renderer) { }
 
     public static FilledPanel Clone(FilledPanel template) => new(template.renderer) {
         enabled = template.enabled,

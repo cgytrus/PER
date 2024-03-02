@@ -15,7 +15,13 @@ using PER.Util;
 namespace PER;
 
 [PublicAPI]
-public class Engine {
+public class Engine(
+    IResources resources,
+    IScreens screens,
+    IGame game,
+    IRenderer renderer,
+    IInput input,
+    IAudio audio) {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     public static readonly string version = Helper.GetVersion();
@@ -28,12 +34,12 @@ public class Engine {
     public TimeSpan updateInterval { get; set; }
     public TimeSpan tickInterval { get; set; }
 
-    public IResources resources { get; }
-    public IScreens screens { get; }
-    public IGame game { get; }
-    public IRenderer renderer { get; }
-    public IInput input { get; }
-    public IAudio audio { get; }
+    public IResources resources { get; } = resources;
+    public IScreens screens { get; } = screens;
+    public IGame game { get; } = game;
+    public IRenderer renderer { get; } = renderer;
+    public IInput input { get; } = input;
+    public IAudio audio { get; } = audio;
 
     // TODO: not sure what's the best way to force Game.Loaded() to set rendererSettings here
     public RendererSettings rendererSettings { get; set; }
@@ -41,15 +47,6 @@ public class Engine {
     private readonly Stopwatch _clock = new();
     private TimeSpan _lastUpdateTime;
     private TimeSpan _lastTickTime;
-
-    public Engine(IResources resources, IScreens screens, IGame game, IRenderer renderer, IInput input, IAudio audio) {
-        this.resources = resources;
-        this.screens = screens;
-        this.game = game;
-        this.renderer = renderer;
-        this.input = input;
-        this.audio = audio;
-    }
 
     public void Run() {
         try {

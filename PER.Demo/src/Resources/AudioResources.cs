@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 
 using PER.Abstractions.Audio;
-using PER.Abstractions.Resources;
 using PER.Common.Resources;
 
 using PRR.UI;

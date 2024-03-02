@@ -10,31 +10,22 @@ namespace PER.Abstractions.Input;
 [PublicAPI]
 public interface IInput : IUpdatable, ISetupable {
     [PublicAPI]
-    public struct KeyDownArgs {
-        public KeyCode key { get; }
-        public bool system { get; }
-        public bool shift { get; }
-        public bool control { get; }
-        public bool alt { get; }
-        public KeyDownArgs(KeyCode key, bool system, bool shift, bool control, bool alt) {
-            this.key = key;
-            this.system = system;
-            this.shift = shift;
-            this.control = control;
-            this.alt = alt;
-        }
+    public struct KeyDownArgs(KeyCode key, bool system, bool shift, bool control, bool alt) {
+        public KeyCode key { get; } = key;
+        public bool system { get; } = system;
+        public bool shift { get; } = shift;
+        public bool control { get; } = control;
+        public bool alt { get; } = alt;
     }
 
     [PublicAPI]
-    public struct TextEnteredArgs {
-        public string text { get; }
-        public TextEnteredArgs(string text) => this.text = text;
+    public struct TextEnteredArgs(string text) {
+        public string text { get; } = text;
     }
 
     [PublicAPI]
-    public struct ScrolledArgs {
-        public float delta { get; }
-        public ScrolledArgs(float delta) => this.delta = delta;
+    public struct ScrolledArgs(float delta) {
+        public float delta { get; } = delta;
     }
 
     public bool block { get; set; }

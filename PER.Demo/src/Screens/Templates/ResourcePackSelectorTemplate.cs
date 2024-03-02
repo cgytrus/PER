@@ -11,23 +11,20 @@ using PRR.UI.Resources;
 
 namespace PER.Demo.Screens.Templates;
 
-public class ResourcePackSelectorTemplate : ListBoxTemplateResource<ResourcePackData> {
+public class ResourcePackSelectorTemplate(
+    GameScreen screen,
+    IList<ResourcePackData> availablePacks,
+    ISet<ResourcePackData> loadedPacks)
+    : ListBoxTemplateResource<ResourcePackData> {
     public const string GlobalId = "layouts/templates/resourcePackItem";
 
     protected override IRenderer renderer => Core.engine.renderer;
     protected override IInput input => Core.engine.input;
     protected override IAudio audio => Core.engine.audio;
 
-    private readonly GameScreen _screen;
-    private readonly IList<ResourcePackData> _availablePacks;
-    private readonly ISet<ResourcePackData> _loadedPacks;
-
-    public ResourcePackSelectorTemplate(GameScreen screen, IList<ResourcePackData> availablePacks,
-        ISet<ResourcePackData> loadedPacks) {
-        _screen = screen;
-        _availablePacks = availablePacks;
-        _loadedPacks = loadedPacks;
-    }
+    private readonly GameScreen _screen = screen;
+    private readonly IList<ResourcePackData> _availablePacks = availablePacks;
+    private readonly ISet<ResourcePackData> _loadedPacks = loadedPacks;
 
     public override void Preload() {
         base.Preload();

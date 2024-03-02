@@ -11,7 +11,7 @@ using MouseButton = PER.Abstractions.Input.MouseButton;
 
 namespace PRR.OpenGL;
 
-public class Input : IInput {
+public class Input(Renderer renderer) : IInput {
     public bool block { get; set; }
 
     public Vector2Int mousePosition => block ? new Vector2Int(-1, -1) : _mousePosition;
@@ -25,11 +25,11 @@ public class Input : IInput {
     public bool keyRepeat { get; set; }
 
     public string clipboard {
-        get => _renderer.window?.ClipboardString ?? "";
+        get => renderer.window?.ClipboardString ?? "";
         set {
-            if(_renderer.window is null)
+            if(renderer.window is null)
                 return;
-            _renderer.window.ClipboardString = value;
+            renderer.window.ClipboardString = value;
         }
     }
 
@@ -44,26 +44,22 @@ public class Input : IInput {
     private Vector2 _previousAccurateMousePosition = new(-1f, -1f);
     private Vector2 _previousNormalizedMousePosition = new(-1f, -1f);
 
-    private readonly Renderer _renderer;
-
-    public Input(Renderer renderer) => _renderer = renderer;
-
     public void Setup() {
-        if(_renderer.window is null)
+        if(renderer.window is null)
             return;
-        _renderer.window.KeyDown += OnKeyDown;
-        _renderer.window.TextInput += OnTextInput;
-        _renderer.window.MouseMove += OnMouseMove;
-        _renderer.window.MouseWheel += OnMouseWheel;
+        renderer.window.KeyDown += OnKeyDown;
+        renderer.window.TextInput += OnTextInput;
+        renderer.window.MouseMove += OnMouseMove;
+        renderer.window.MouseWheel += OnMouseWheel;
     }
 
     public void Finish() {
-        if(_renderer.window is null)
+        if(renderer.window is null)
             return;
-        _renderer.window.KeyDown -= OnKeyDown;
-        _renderer.window.TextInput -= OnTextInput;
-        _renderer.window.MouseMove -= OnMouseMove;
-        _renderer.window.MouseWheel -= OnMouseWheel;
+        renderer.window.KeyDown -= OnKeyDown;
+        renderer.window.TextInput -= OnTextInput;
+        renderer.window.MouseMove -= OnMouseMove;
+        renderer.window.MouseWheel -= OnMouseWheel;
     }
 
     private void OnKeyDown(KeyboardKeyEventArgs key) {
@@ -83,10 +79,10 @@ public class Input : IInput {
     }
 
     public bool KeyPressed(KeyCode key) {
-        if(block || _renderer.window is null)
+        if(block || renderer.window is null)
             return false;
         Keys otkKey = Converters.ToOtkKey(key);
-        return otkKey != Keys.Unknown && _renderer.window.IsKeyDown(otkKey);
+        return otkKey != Keys.Unknown && renderer.window.IsKeyDown(otkKey);
     }
 
     public bool KeysPressed(KeyCode key1, KeyCode key2) => !block && KeyPressed(key1) && KeyPressed(key2);
@@ -109,13 +105,13 @@ public class Input : IInput {
         return true;
     }
 
-    public bool MouseButtonPressed(MouseButton button) => !block && _renderer.window is not null &&
-        _renderer.window.IsMouseButtonDown(Converters.ToOtkMouseButton(button));
+    public bool MouseButtonPressed(MouseButton button) => !block && renderer.window is not null &&
+        renderer.window.IsMouseButtonDown(Converters.ToOtkMouseButton(button));
 
     private void EnterText(string text) => textEntered?.Invoke(new IInput.TextEnteredArgs(text));
 
     private void UpdateMousePosition(float mouseX, float mouseY) {
-        if(!_renderer.focused) {
+        if(!renderer.focused) {
             _mousePosition = new Vector2Int(-1, -1);
             _accurateMousePosition = new Vector2(-1f, -1f);
             _normalizedMousePosition = new Vector2(-1f, -1f);
@@ -123,15 +119,15 @@ public class Input : IInput {
         }
 
         Vector2 pixelMousePosition = new(
-            mouseX - _renderer.window?.ClientSize.X * 0.5f + _renderer.size.x * _renderer.font.size.x * 0.5f ?? 0f,
-            mouseY - _renderer.window?.ClientSize.Y * 0.5f + _renderer.size.y * _renderer.font.size.y * 0.5f ?? 0f);
+            mouseX - renderer.window?.ClientSize.X * 0.5f + renderer.size.x * renderer.font.size.x * 0.5f ?? 0f,
+            mouseY - renderer.window?.ClientSize.Y * 0.5f + renderer.size.y * renderer.font.size.y * 0.5f ?? 0f);
         _accurateMousePosition = new Vector2(
-            pixelMousePosition.X / _renderer.font.size.x,
-            pixelMousePosition.Y / _renderer.font.size.y);
+            pixelMousePosition.X / renderer.font.size.x,
+            pixelMousePosition.Y / renderer.font.size.y);
         _mousePosition = new Vector2Int((int)_accurateMousePosition.X, (int)_accurateMousePosition.Y);
         _normalizedMousePosition =
-            new Vector2(pixelMousePosition.X / (_renderer.size.x * _renderer.font.size.x - 1),
-                pixelMousePosition.Y / (_renderer.size.y * _renderer.font.size.y - 1));
+            new Vector2(pixelMousePosition.X / (renderer.size.x * renderer.font.size.x - 1),
+                pixelMousePosition.Y / (renderer.size.y * renderer.font.size.y - 1));
     }
 
     private void ScrollMouse(float delta) => scrolled?.Invoke(new IInput.ScrolledArgs(delta));

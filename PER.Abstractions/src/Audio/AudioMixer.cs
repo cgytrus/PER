@@ -3,8 +3,8 @@
 namespace PER.Abstractions.Audio;
 
 [PublicAPI]
-public class AudioMixer : IAudioMixer {
-    public IAudioMixer? parent { get; set; }
+public class AudioMixer(IAudioMixer? parent = null) : IAudioMixer {
+    public IAudioMixer? parent { get; set; } = parent;
 
     public float volume {
         get => _volume * (parent?.volume ?? 1f);
@@ -12,6 +12,4 @@ public class AudioMixer : IAudioMixer {
     }
 
     private float _volume = 1f;
-
-    public AudioMixer(IAudioMixer? parent = null) => this.parent = parent;
 }

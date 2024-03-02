@@ -6,16 +6,12 @@ using PER.Util;
 namespace PER.Common.Effects;
 
 [PublicAPI]
-public class GlitchEffect : IModifierEffect, IDrawableEffect {
+public class GlitchEffect(IRenderer renderer) : IModifierEffect, IDrawableEffect {
     private bool _draw = true;
-
-    private readonly IRenderer _renderer;
-
-    public GlitchEffect(IRenderer renderer) => _renderer = renderer;
 
     public void ApplyModifiers(Vector2Int at, ref Vector2Int offset, ref RenderCharacter character) {
         offset += new Vector2Int(RandomInt(), 0);
-        string mappings = _renderer.font.mappings;
+        string mappings = renderer.font.mappings;
         character = new RenderCharacter(
             RandomNonNegativeFloat() <= 0.98f ? character.character : mappings[Random.Shared.Next(0, mappings.Length)],
             RandomizeColor(character.background), RandomizeColor(character.foreground),
@@ -28,8 +24,8 @@ public class GlitchEffect : IModifierEffect, IDrawableEffect {
             _draw = RandomNonNegativeFloat() > 0.95f;
         if(!_draw)
             return;
-        string mappings = _renderer.font.mappings;
-        _renderer.DrawCharacter(position, new RenderCharacter(
+        string mappings = renderer.font.mappings;
+        renderer.DrawCharacter(position, new RenderCharacter(
             mappings[Random.Shared.Next(0, mappings.Length)],
             RandomizeColor(Color.transparent), RandomizeColor(Color.white),
             (RenderStyle)Random.Shared.Next((int)RenderStyle.None, (int)RenderStyle.All + 1)));

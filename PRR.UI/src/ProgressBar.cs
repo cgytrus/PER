@@ -10,7 +10,7 @@ using PRR.UI.Resources;
 namespace PRR.UI;
 
 [PublicAPI]
-public class ProgressBar : Element {
+public class ProgressBar(IRenderer renderer) : Element(renderer) {
     public static readonly Type serializedType = typeof(LayoutResourceProgressBar);
 
     private struct AnimatedCharacter {
@@ -53,8 +53,6 @@ public class ProgressBar : Element {
     private bool _resized;
     private AnimatedCharacter[,] _anim = new AnimatedCharacter[0, 0];
     private float _prevValue;
-
-    public ProgressBar(IRenderer renderer) : base(renderer) { }
 
     public static ProgressBar Clone(ProgressBar template) => new(template.renderer) {
         enabled = template.enabled,

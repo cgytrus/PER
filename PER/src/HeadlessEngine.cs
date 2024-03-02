@@ -11,7 +11,7 @@ using PER.Util;
 namespace PER;
 
 [PublicAPI]
-public class HeadlessEngine {
+public class HeadlessEngine(IResources resources, IGame game) {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     public static readonly string version = Helper.GetVersion();
@@ -23,17 +23,12 @@ public class HeadlessEngine {
 
     public TimeSpan tickInterval { get; set; }
 
-    public IResources resources { get; }
-    public IGame game { get; }
+    public IResources resources { get; } = resources;
+    public IGame game { get; } = game;
 
     private readonly Stopwatch _clock = new();
     private TimeSpan _lastUpdateTime;
     private TimeSpan _lastTickTime;
-
-    public HeadlessEngine(IResources resources, IGame game) {
-        this.resources = resources;
-        this.game = game;
-    }
 
     public void Run() {
         try {

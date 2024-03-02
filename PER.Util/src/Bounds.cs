@@ -7,15 +7,10 @@ using JetBrains.Annotations;
 namespace PER.Util;
 
 [PublicAPI]
-public readonly struct Bounds : IEquatable<Bounds> {
-    public Vector2Int min { get; }
-    public Vector2Int max { get; }
-
-    [JsonConstructor]
-    public Bounds(Vector2Int min, Vector2Int max) {
-        this.min = min;
-        this.max = max;
-    }
+[method: JsonConstructor]
+public readonly struct Bounds(Vector2Int min, Vector2Int max) : IEquatable<Bounds> {
+    public Vector2Int min { get; } = min;
+    public Vector2Int max { get; } = max;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     // https://stackoverflow.com/a/100165/10484146

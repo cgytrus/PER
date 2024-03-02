@@ -22,7 +22,8 @@ public interface IListBoxTemplateFactory<TItem> {
 }
 
 [PublicAPI]
-public class ListBox<TItem> : ScrollablePanel {
+public class ListBox<TItem>(IRenderer renderer, IInput input, IListBoxTemplateFactory<TItem> templateFactory)
+    : ScrollablePanel(renderer, input) {
     public new static readonly Type serializedType = typeof(LayoutResourceListBox);
 
     public IReadOnlyList<TItem> items => _items;
@@ -31,11 +32,6 @@ public class ListBox<TItem> : ScrollablePanel {
 
     private List<TItem> _items = new();
     private List<IListBoxTemplateFactory<TItem>.Template> _elements = new();
-
-    private IListBoxTemplateFactory<TItem> _templateFactory;
-
-    public ListBox(IRenderer renderer, IInput input, IListBoxTemplateFactory<TItem> templateFactory) :
-        base(renderer, input) => _templateFactory = templateFactory;
 
     public void Clear() {
         _items.Clear();
@@ -79,7 +75,7 @@ public class ListBox<TItem> : ScrollablePanel {
 
     private void UpdateElementAt(int index) {
         if(index == _elements.Count) {
-            IListBoxTemplateFactory<TItem>.Template template = _templateFactory.CreateTemplate();
+            IListBoxTemplateFactory<TItem>.Template template = templateFactory.CreateTemplate();
             _elements.Add(template);
             elements.AddRange(template.elements);
         }

@@ -6,7 +6,14 @@ namespace PER.Abstractions.Rendering;
 
 // *i totally didn't just steal this from sfml*
 [PublicAPI]
-public readonly struct BlendMode : IEquatable<BlendMode> {
+public readonly struct BlendMode(
+    BlendMode.Factor colorSourceFactor,
+    BlendMode.Factor colorDestinationFactor,
+    BlendMode.Equation colorBlendEquation,
+    BlendMode.Factor alphaSourceFactor,
+    BlendMode.Factor alphaDestinationFactor,
+    BlendMode.Equation alphaBlendEquation)
+    : IEquatable<BlendMode> {
     [PublicAPI]
     public enum Factor {
         Zero, One, SrcColor, OneMinusSrcColor, DstColor, OneMinusDstColor, SrcAlpha, OneMinusSrcAlpha, DstAlpha,
@@ -29,16 +36,6 @@ public readonly struct BlendMode : IEquatable<BlendMode> {
     public BlendMode(Factor sourceFactor, Factor destinationFactor, Equation blendEquation = Equation.Add)
         : this(sourceFactor, destinationFactor, blendEquation, sourceFactor, destinationFactor, blendEquation) { }
 
-    public BlendMode(Factor colorSourceFactor, Factor colorDestinationFactor, Equation colorBlendEquation,
-        Factor alphaSourceFactor, Factor alphaDestinationFactor, Equation alphaBlendEquation) {
-        colorSrcFactor = colorSourceFactor;
-        colorDstFactor = colorDestinationFactor;
-        colorEquation = colorBlendEquation;
-        alphaSrcFactor = alphaSourceFactor;
-        alphaDstFactor = alphaDestinationFactor;
-        alphaEquation = alphaBlendEquation;
-    }
-
     public static bool operator ==(BlendMode left, BlendMode right) => left.Equals(right);
 
     public static bool operator !=(BlendMode left, BlendMode right) => !left.Equals(right);
@@ -55,10 +52,10 @@ public readonly struct BlendMode : IEquatable<BlendMode> {
     public override int GetHashCode() => HashCode.Combine(colorSrcFactor, colorDstFactor, colorEquation, alphaSrcFactor,
         alphaDstFactor, alphaEquation);
 
-    public Factor colorSrcFactor { get; }
-    public Factor colorDstFactor { get; }
-    public Equation colorEquation { get; }
-    public Factor alphaSrcFactor { get; }
-    public Factor alphaDstFactor { get; }
-    public Equation alphaEquation { get; }
+    public Factor colorSrcFactor { get; } = colorSourceFactor;
+    public Factor colorDstFactor { get; } = colorDestinationFactor;
+    public Equation colorEquation { get; } = colorBlendEquation;
+    public Factor alphaSrcFactor { get; } = alphaSourceFactor;
+    public Factor alphaDstFactor { get; } = alphaDestinationFactor;
+    public Equation alphaEquation { get; } = alphaBlendEquation;
 }

@@ -10,7 +10,7 @@ using PRR.UI.Resources;
 namespace PRR.UI;
 
 [PublicAPI]
-public class Slider : ClickableElement {
+public class Slider(IRenderer renderer, IInput input, IAudio? audio = null) : ClickableElement(renderer, input, audio) {
     public static readonly Type serializedType = typeof(LayoutResourceSlider);
 
     protected override string type => "slider";
@@ -48,8 +48,6 @@ public class Slider : ClickableElement {
 
     private int _relativeValue;
     private float _value = float.NaN; // make first value set always work
-
-    public Slider(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) { }
 
     public override Element Clone() => throw new NotImplementedException();
 

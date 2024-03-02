@@ -4,12 +4,10 @@ using PER.Util;
 
 namespace PER.Abstractions.Environment;
 
-public class LightPropagator<TLevel, TChunk, TObject>
+public class LightPropagator<TLevel, TChunk, TObject>(Level<TLevel, TChunk, TObject> level)
     where TLevel : Level<TLevel, TChunk, TObject>
     where TChunk : Chunk<TLevel, TChunk, TObject>, new()
     where TObject : LevelObject<TLevel, TChunk, TObject> {
-    private readonly Level<TLevel, TChunk, TObject> _level;
-
     private bool _swapProp;
     private readonly HashSet<Vector2Int> _prop0 = new();
     private readonly HashSet<Vector2Int> _prop1 = new();
@@ -20,10 +18,8 @@ public class LightPropagator<TLevel, TChunk, TObject>
     private readonly HashSet<LevelObject<TLevel, TChunk, TObject>> _lightsToReset = new();
     private readonly HashSet<LevelObject<TLevel, TChunk, TObject>> _lightsToPropagate = new();
 
-    public LightPropagator(Level<TLevel, TChunk, TObject> level) => _level = level;
-
     public void QueueLitBy(Chunk<TLevel, TChunk, TObject> chunk) {
-        if(!_level.doLighting)
+        if(!level.doLighting)
             return;
         for(int i = chunk.litBy.Count - 1; i >= 0; i--) {
             if(chunk.litBy[i] is not TObject { inLevelInt: true } lightObj)
@@ -35,7 +31,7 @@ public class LightPropagator<TLevel, TChunk, TObject>
     }
 
     public void QueueBlockedBy(LevelObject<TLevel, TChunk, TObject> obj) {
-        if(!_level.doLighting || obj.blockedLights is null || !obj.blocksLight)
+        if(!level.doLighting || obj.blockedLights is null || !obj.blocksLight)
             return;
         for(int i = obj.blockedLights.Count - 1; i >= 0; i--) {
             if(obj.blockedLights[i] is not TObject { inLevelInt: true } lightObj)
@@ -47,17 +43,17 @@ public class LightPropagator<TLevel, TChunk, TObject>
     }
 
     public void QueueReset(LevelObject<TLevel, TChunk, TObject> obj) {
-        if(_level.doLighting && obj.contributedLight is not null && obj is ILight)
+        if(level.doLighting && obj.contributedLight is not null && obj is ILight)
             _lightsToReset.Add(obj);
     }
 
     public void QueuePropagate(LevelObject<TLevel, TChunk, TObject> obj) {
-        if(_level.doLighting && obj.contributedLight is not null && obj is ILight)
+        if(level.doLighting && obj.contributedLight is not null && obj is ILight)
             _lightsToPropagate.Add(obj);
     }
 
     public void UpdateQueued() {
-        if(!_level.doLighting)
+        if(!level.doLighting)
             return;
         foreach(LevelObject<TLevel, TChunk, TObject> obj in _lightsToReset)
             Reset(obj);
@@ -72,8 +68,8 @@ public class LightPropagator<TLevel, TChunk, TObject>
         // QueueResetLight, QueuePropagateLight and UpdateQueued
         ILight light = (obj as ILight)!;
         foreach((Vector2Int pos, Color lighting) in obj.contributedLight!) {
-            Vector2Int inChunk = _level.LevelToInChunkPosition(pos);
-            TChunk chunk = _level.GetChunkAt(_level.LevelToChunkPosition(pos));
+            Vector2Int inChunk = level.LevelToInChunkPosition(pos);
+            TChunk chunk = level.GetChunkAt(level.LevelToChunkPosition(pos));
 
             chunk.lighting[inChunk.y, inChunk.x] -= lighting;
             chunk.totalVisibility -= lighting.a;
@@ -121,8 +117,8 @@ public class LightPropagator<TLevel, TChunk, TObject>
 
         _visited.Add(pos);
 
-        Vector2Int inChunk = _level.LevelToInChunkPosition(pos);
-        TChunk chunk = _level.GetChunkAt(_level.LevelToChunkPosition(pos));
+        Vector2Int inChunk = level.LevelToInChunkPosition(pos);
+        TChunk chunk = level.GetChunkAt(level.LevelToChunkPosition(pos));
 
         chunk.lighting[inChunk.y, inChunk.x] += lighting;
         chunk.totalVisibility += lighting.a;
