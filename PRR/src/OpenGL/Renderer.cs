@@ -250,7 +250,7 @@ void main() {
             WindowBorder = WindowBorder.Fixed,
             Location = new Vector2i(monitor.CurrentVideoMode.Width / 2 - windowSize.x / 2,
                 monitor.CurrentVideoMode.Height / 2 - windowSize.y / 2),
-            Size = Converters.ToOtkVector2Int(windowSize),
+            ClientSize = Converters.ToOtkVector2Int(windowSize),
             NumberOfSamples = 0,
             // no stencil or depth needed
             StencilBits = 0,
@@ -361,7 +361,7 @@ void main() {
         int normCharSize = _shader.GetUniformLocation("normCharSize");
         if(normCharSize != -1)
             GL.Uniform2(normCharSize,
-                new Vector2(font.size.x / (float)window.Size.X, font.size.y / (float)window.Size.Y));
+                new Vector2(font.size.x / (float)window.ClientSize.X, font.size.y / (float)window.ClientSize.Y));
     }
 
     private int CreateDisplayTexture(PixelInternalFormat internalFormat, PixelFormat format, PixelType type) {
@@ -477,7 +477,7 @@ void main() {
         GL.DrawArrays(PrimitiveType.Points, 0, _pixels.Count);
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        GL.Viewport(0, 0, window.Size.X, window.Size.Y);
+        GL.Viewport(0, 0, window.ClientSize.X, window.ClientSize.Y);
 
         GL.ClearColor(_background);
         GL.Clear(ClearBufferMask.ColorBufferBit);

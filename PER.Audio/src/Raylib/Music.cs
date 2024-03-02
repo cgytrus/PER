@@ -51,8 +51,8 @@ public class Music : IPlayable, IUpdatable, IDisposable {
     }
 
     public bool looped {
-        get => _music.looping;
-        set => _music.looping = value;
+        get => _music.Looping;
+        set => _music.Looping = value;
     }
 
     public float pitch {

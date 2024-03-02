@@ -123,8 +123,8 @@ public class Input : IInput {
         }
 
         Vector2 pixelMousePosition = new(
-            mouseX - _renderer.window?.Size.X * 0.5f + _renderer.size.x * _renderer.font.size.x * 0.5f ?? 0f,
-            mouseY - _renderer.window?.Size.Y * 0.5f + _renderer.size.y * _renderer.font.size.y * 0.5f ?? 0f);
+            mouseX - _renderer.window?.ClientSize.X * 0.5f + _renderer.size.x * _renderer.font.size.x * 0.5f ?? 0f,
+            mouseY - _renderer.window?.ClientSize.Y * 0.5f + _renderer.size.y * _renderer.font.size.y * 0.5f ?? 0f);
         _accurateMousePosition = new Vector2(
             pixelMousePosition.X / _renderer.font.size.x,
             pixelMousePosition.Y / _renderer.font.size.y);
