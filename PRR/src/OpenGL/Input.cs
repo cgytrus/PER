@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 
+using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using PER.Abstractions.Input;
@@ -10,7 +11,7 @@ using MouseButton = PER.Abstractions.Input.MouseButton;
 
 namespace PRR.OpenGL;
 
-public class InputManager : IInput {
+public class Input : IInput {
     public bool block { get; set; }
 
     public Vector2Int mousePosition => block ? new Vector2Int(-1, -1) : _mousePosition;
@@ -45,32 +46,41 @@ public class InputManager : IInput {
 
     private readonly Renderer _renderer;
 
-    public InputManager(Renderer renderer) => _renderer = renderer;
+    public Input(Renderer renderer) => _renderer = renderer;
 
-    public void Reset() {
+    public void Setup() {
         if(_renderer.window is null)
             return;
-
-        _renderer.window.KeyDown +=
-            key => {
-                if(key.IsRepeat && !keyRepeat)
-                    return;
-                keyDown?.Invoke(new IInput.KeyDownArgs(Converters.ToPerKey(key.Key), key.Command, key.Shift,
-                    key.Control, key.Alt));
-            };
-        _renderer.window.TextInput += text => EnterText(text.AsString);
-
-        _renderer.window.MouseMove += mouse => UpdateMousePosition(mouse.X, mouse.Y);
-        _renderer.window.MouseWheel += scroll => ScrollMouse(scroll.Offset.Y);
+        _renderer.window.KeyDown += OnKeyDown;
+        _renderer.window.TextInput += OnTextInput;
+        _renderer.window.MouseMove += OnMouseMove;
+        _renderer.window.MouseWheel += OnMouseWheel;
     }
+
+    public void Finish() {
+        if(_renderer.window is null)
+            return;
+        _renderer.window.KeyDown -= OnKeyDown;
+        _renderer.window.TextInput -= OnTextInput;
+        _renderer.window.MouseMove -= OnMouseMove;
+        _renderer.window.MouseWheel -= OnMouseWheel;
+    }
+
+    private void OnKeyDown(KeyboardKeyEventArgs key) {
+        if(key.IsRepeat && !keyRepeat)
+            return;
+        keyDown?.Invoke(new IInput.KeyDownArgs(Converters.ToPerKey(key.Key), key.Command, key.Shift, key.Control,
+            key.Alt));
+    }
+    private void OnTextInput(TextInputEventArgs text) => EnterText(text.AsString);
+    private void OnMouseMove(MouseMoveEventArgs mouse) => UpdateMousePosition(mouse.X, mouse.Y);
+    private void OnMouseWheel(MouseWheelEventArgs scroll) => ScrollMouse(scroll.Offset.Y);
 
     public void Update(TimeSpan time) {
         _previousMousePosition = _mousePosition;
         _previousAccurateMousePosition = _accurateMousePosition;
         _previousNormalizedMousePosition = _normalizedMousePosition;
     }
-
-    public void Finish() { }
 
     public bool KeyPressed(KeyCode key) {
         if(block || _renderer.window is null)
@@ -113,15 +123,15 @@ public class InputManager : IInput {
         }
 
         Vector2 pixelMousePosition = new(
-            mouseX - _renderer.window?.Size.X * 0.5f + _renderer.width * _renderer.font.size.x * 0.5f ?? 0f,
-            mouseY - _renderer.window?.Size.Y * 0.5f + _renderer.height * _renderer.font.size.y * 0.5f ?? 0f);
+            mouseX - _renderer.window?.Size.X * 0.5f + _renderer.size.x * _renderer.font.size.x * 0.5f ?? 0f,
+            mouseY - _renderer.window?.Size.Y * 0.5f + _renderer.size.y * _renderer.font.size.y * 0.5f ?? 0f);
         _accurateMousePosition = new Vector2(
             pixelMousePosition.X / _renderer.font.size.x,
             pixelMousePosition.Y / _renderer.font.size.y);
         _mousePosition = new Vector2Int((int)_accurateMousePosition.X, (int)_accurateMousePosition.Y);
         _normalizedMousePosition =
-            new Vector2(pixelMousePosition.X / (_renderer.width * _renderer.font.size.x - 1),
-                pixelMousePosition.Y / (_renderer.height * _renderer.font.size.y - 1));
+            new Vector2(pixelMousePosition.X / (_renderer.size.x * _renderer.font.size.x - 1),
+                pixelMousePosition.Y / (_renderer.size.y * _renderer.font.size.y - 1));
     }
 
     private void ScrollMouse(float delta) => scrolled?.Invoke(new IInput.ScrolledArgs(delta));

@@ -1,6 +1,5 @@
 ﻿using JetBrains.Annotations;
 
-using PER.Abstractions.UI;
 using PER.Util;
 
 namespace PRR.UI.Resources;

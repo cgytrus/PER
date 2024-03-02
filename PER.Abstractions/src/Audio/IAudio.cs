@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.IO;
 
 using JetBrains.Annotations;
 
@@ -20,6 +19,6 @@ public interface IAudio {
 
     public void UpdateVolumes();
 
-    public void Reset();
+    public void Clear();
     public void Finish();
 }

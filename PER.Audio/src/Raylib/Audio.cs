@@ -8,7 +8,7 @@ using PER.Abstractions.Audio;
 namespace PER.Audio.Raylib;
 
 [PublicAPI]
-public class AudioManager : IAudio {
+public class Audio : IAudio {
     private readonly Dictionary<string, IAudioMixer> _storedMixers = new();
 
     private readonly List<IPlayable> _allPlayables = new();
@@ -17,7 +17,7 @@ public class AudioManager : IAudio {
     private object _playablesLock = new();
     private bool _shouldStop;
 
-    public AudioManager() {
+    public Audio() {
         Raylib_cs.Raylib.InitAudioDevice();
         new Thread(AudioThread).Start();
     }
@@ -51,7 +51,7 @@ public class AudioManager : IAudio {
                 playable.volume = playable.volume;
     }
 
-    public void Reset() {
+    public void Clear() {
         lock(_playablesLock) {
             foreach(IPlayable? playable in _allPlayables)
                 if(playable is IDisposable disposable)
@@ -64,7 +64,7 @@ public class AudioManager : IAudio {
 
     public void Finish() {
         _shouldStop = true;
-        Reset();
+        Clear();
         Raylib_cs.Raylib.CloseAudioDevice();
     }
 

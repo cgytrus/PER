@@ -31,6 +31,8 @@ public class Renderer : BasicRenderer, IDisposable {
         }
     }
 
+    private readonly string _title;
+
     public NativeWindow? window { get; private set; }
 
     private readonly BlendMode _blend = Converters.ToPrrBlendMode(PER.Abstractions.Rendering.BlendMode.alpha);
@@ -174,6 +176,7 @@ void main() {
     private Vector2i?[] _characters = Array.Empty<Vector2i?>();
 
     private bool _shouldClose;
+    private bool _drawing;
 
     private Color4 _background = Color4.Black;
 
@@ -208,11 +211,16 @@ void main() {
     }
 
     public override void Finish() {
+        if(_drawing)
+            EndDraw();
         Dispose();
         window = null;
         _shader = null;
         _pixelShader = null;
+        _shouldClose = false;
     }
+
+    public Renderer(string title, Vector2Int size) : base(size) => _title = title;
 
     public override void Setup(RendererSettings settings) {
         base.Setup(settings);
@@ -235,7 +243,7 @@ void main() {
 #endif
             AutoLoadBindings = true,
             APIVersion = new Version(3, 3),
-            Title = settings.title,
+            Title = _title,
             StartFocused = true,
             StartVisible = true,
             WindowState = settings.fullscreen ? WindowState.Fullscreen : WindowState.Normal,
@@ -425,6 +433,10 @@ void main() {
     }
 
     public override void BeginDraw() {
+        if(_drawing)
+            return;
+        _drawing = true;
+
         _pixels.Clear();
         drawableEffects.Clear();
         modEffects.Clear();
@@ -442,6 +454,10 @@ void main() {
     }
 
     public override void EndDraw() {
+        if(!_drawing)
+            return;
+        _drawing = false;
+
         if(window is null || _shader is null || _displayTex is null)
             return;
 
@@ -522,6 +538,7 @@ void main() {
         GL.DeleteBuffer(_vbo);
         GL.DeleteVertexArray(_pixelVao);
         GL.DeleteBuffer(_pixelVbo);
+        _lastPixelsCapacity = 0;
         GL.DeleteTexture(_font);
         GL.DeleteTexture(_formatting);
         _shader?.Dispose();

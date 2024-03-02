@@ -9,11 +9,11 @@ namespace PER.Abstractions.Rendering;
 
 [PublicAPI]
 public interface IRenderer {
-    public int width { get; }
-    public int height { get; }
-    public Vector2Int size => new(width, height);
-    public bool verticalSync { get; set; }
+    public Vector2Int size { get; }
+    public int width => size.x;
+    public int height => size.y;
     public IFont font { get; }
+    public bool verticalSync { get; set; }
 
     public bool open { get; }
     public bool focused { get; }
@@ -27,7 +27,6 @@ public interface IRenderer {
     public void Setup(RendererSettings settings);
     public void Close();
     public void Finish();
-    public bool Reset(RendererSettings settings);
 
     public void BeginDraw();
     public void EndDraw();

@@ -10,18 +10,19 @@ namespace PER.Abstractions.Rendering;
 
 [PublicAPI]
 public abstract class BasicRenderer : IRenderer {
-    public virtual int width => _settings.width;
-    public virtual int height => _settings.height;
+    public virtual Vector2Int size { get; }
+    public int width => size.x;
+    public int height => size.y;
+
+    public virtual IFont font => _settings.font;
 
     public virtual bool verticalSync {
-        get => _settings.verticalSync;
+        get => _vsync;
         set {
-            _settings = _settings with { verticalSync = value };
+            _vsync = value;
             UpdateVerticalSync();
         }
     }
-
-    public virtual IFont font => _settings.font;
 
     public abstract bool open { get; }
     public abstract bool focused { get; }
@@ -36,6 +37,9 @@ public abstract class BasicRenderer : IRenderer {
     protected List<IModifierEffect> modEffects { get; private set; } = new();
 
     private RendererSettings _settings;
+    private bool _vsync;
+
+    protected BasicRenderer(Vector2Int size) => this.size = size;
 
     public virtual void Setup(RendererSettings settings) => _settings = settings;
 
@@ -43,17 +47,6 @@ public abstract class BasicRenderer : IRenderer {
 
     public abstract void Close();
     public abstract void Finish();
-
-    public virtual bool Reset(RendererSettings settings) {
-        if(settings.width == width && settings.height == height && settings.font == font &&
-            settings.fullscreen == _settings.fullscreen) {
-            _settings = settings;
-            return false;
-        }
-        Finish();
-        Setup(settings);
-        return true;
-    }
 
     public abstract void BeginDraw();
     public abstract void EndDraw();

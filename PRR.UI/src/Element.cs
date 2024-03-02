@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using JetBrains.Annotations;
 
-using JetBrains.Annotations;
-
+using PER.Abstractions;
 using PER.Abstractions.Audio;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
-namespace PER.Abstractions.UI;
+namespace PRR.UI;
 
 [PublicAPI]
 public abstract class Element : IUpdatable {

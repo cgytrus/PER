@@ -49,7 +49,7 @@ public class Game : IGame, ISetupable, IUpdatable {
         resources.TryAddResource(GameScreen.GlobalId, new GameScreen(_settings, resources));
     }
 
-    public RendererSettings Loaded() {
+    public void Loaded() {
         if(!Core.engine.resources.TryGetResource(FontResource.GlobalId, out FontResource? font) || font.font is null)
             throw new InvalidOperationException("Missing font.");
         Core.engine.resources.TryGetResource(IconResource.GlobalId, out IconResource? icon);
@@ -67,15 +67,12 @@ public class Game : IGame, ISetupable, IUpdatable {
 
         _settings.Apply();
 
-        return new RendererSettings {
-            title = "PER Demo Pog",
-            width = 80,
-            height = 60,
-            verticalSync = false,
+        Core.engine.rendererSettings = new RendererSettings {
             fullscreen = false,
             font = font.font,
             icon = icon?.icon
         };
+        renderer.verticalSync = false;
     }
 
     public void Setup() {

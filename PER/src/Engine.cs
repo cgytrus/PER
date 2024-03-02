@@ -10,7 +10,6 @@ using PER.Abstractions.Input;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
 using PER.Abstractions.Screens;
-using PER.Headless;
 using PER.Util;
 
 namespace PER;
@@ -22,10 +21,13 @@ public class Engine {
     public static readonly string version = Helper.GetVersion();
     public static readonly string abstractionsVersion = Helper.GetVersion(typeof(IGame));
 
+    public bool running { get; set; }
+
     public FrameTime frameTime { get; } = new();
 
     public TimeSpan updateInterval { get; set; }
     public TimeSpan tickInterval { get; set; }
+
     public IResources resources { get; }
     public IScreens screens { get; }
     public IGame game { get; }
@@ -33,7 +35,8 @@ public class Engine {
     public IInput input { get; }
     public IAudio audio { get; }
 
-    private bool _headless;
+    // TODO: not sure what's the best way to force Game.Loaded() to set rendererSettings here
+    public RendererSettings rendererSettings { get; set; }
 
     private readonly Stopwatch _clock = new();
     private TimeSpan _lastUpdateTime;
@@ -48,48 +51,42 @@ public class Engine {
         this.audio = audio;
     }
 
-    // runs the engine in headless mode
-    // intended for servers
-    public Engine(IResources resources, IGame game) {
-        _headless = true;
-        this.resources = resources;
-        this.game = game;
-        renderer = new HeadlessRenderer();
-        // crashing with nre is fine in headless mode
-        // games are supposed to implement the server in a different project
-        // and not use any of the client-side stuff
-        screens = null!;
-        input = null!;
-        audio = null!;
-    }
-
-    public void Reload() {
+    public void Run() {
         try {
-            if(resources.loaded) {
-                logger.Info("Reloading game");
+            logger.Info($"PER v{version}");
+
+            renderer.closed += (_, _) => running = false;
+            running = true;
+            while(running) {
+                logger.Info("Loading");
+                game.Load();
+                resources.Load();
+                game.Loaded();
+
+                logger.Info("Setting up");
+                renderer.Setup(rendererSettings);
+                input.Setup();
+                if(screens is ISetupable setupableScreens)
+                    setupableScreens.Setup();
+                if(game is ISetupable setupableGame)
+                    setupableGame.Setup();
+
+                logger.Info("Starting");
+                _clock.Reset();
+                while(renderer.open)
+                    Update();
+
                 resources.Unload();
                 game.Unload();
-            }
-            else {
-                logger.Info($"PER v{version}");
-                if(_headless)
-                    logger.Info("RUNNING IN HEADLESS MODE");
-                logger.Info("Loading game");
+
+                input.Finish();
+                renderer.Finish();
+                game.Finish();
             }
 
-            game.Load();
-            resources.Load();
-            RendererSettings rendererSettings = game.Loaded();
-
-            if(_headless) {
-                RunHeadless(rendererSettings);
-                return;
-            }
-
-            if(renderer.open && renderer.Reset(rendererSettings))
-                input.Reset();
-            else
-                Run(rendererSettings);
+            audio.Finish();
+            logger.Info("nooooooo *dies*");
+            LogManager.Shutdown();
         }
         catch(Exception exception) {
             logger.Fatal(exception, "Uncaught exception! Please, report this file to the developer of the game.");
@@ -97,56 +94,23 @@ public class Engine {
         }
     }
 
+    public void Reload() {
+        logger.Info("Starting full reload");
+        renderer.Close();
+        running = true;
+    }
+
     public void SoftReload() {
         logger.Info("Starting soft reload");
+        renderer.Finish();
+        input.Finish();
         resources.SoftReload();
-        RendererSettings rendererSettings = game.Loaded();
-        if(!_headless && renderer.open && renderer.Reset(rendererSettings))
-            input.Reset();
-    }
-
-    private void RunHeadless(RendererSettings rendererSettings) {
-        logger.Info("Starting game");
-        _clock.Reset();
+        game.Loaded();
         renderer.Setup(rendererSettings);
-        if(screens is ISetupable setupableScreens)
-            setupableScreens.Setup();
-        if(game is ISetupable setupableGame)
-            setupableGame.Setup();
-        logger.Info("Setup finished");
-        while(renderer.open) {
-            TryTick(_clock.time);
-            if(updateInterval <= TimeSpan.Zero)
-                continue;
-            TimeSpan time = _clock.time;
-            if(updateInterval > TimeSpan.Zero && time - _lastUpdateTime < updateInterval)
-                System.Threading.Thread.Sleep(updateInterval - (time - _lastUpdateTime));
-            _lastUpdateTime = _clock.time;
-        }
-        Finish();
+        input.Setup();
     }
 
-    private void Run(RendererSettings rendererSettings) {
-        logger.Info("Starting game");
-        Setup(rendererSettings);
-        while(Update()) { }
-        Finish();
-    }
-
-    private void Setup(RendererSettings rendererSettings) {
-        _clock.Reset();
-
-        renderer.Setup(rendererSettings);
-        input.Reset();
-        if(screens is ISetupable setupableScreens)
-            setupableScreens.Setup();
-        if(game is ISetupable setupableGame)
-            setupableGame.Setup();
-
-        logger.Info("Setup finished");
-    }
-
-    private bool Update() {
+    private void Update() {
         // 1. vsync handles limiting for us
         // 2. updateInterval <= 0 means no limit
         if(!renderer.verticalSync && updateInterval > TimeSpan.Zero) {
@@ -155,7 +119,7 @@ public class Engine {
             // (that was with a 60 fps limit)
             TimeSpan updateTime = _clock.time;
             if(updateTime - _lastUpdateTime < updateInterval)
-                return renderer.open;
+                return;
             _lastUpdateTime = updateTime;
         }
 
@@ -173,7 +137,6 @@ public class Engine {
         renderer.EndDraw();
 
         frameTime.Update(_clock.time);
-        return renderer.open;
     }
 
     private void TryTick(TimeSpan time) {
@@ -190,20 +153,5 @@ public class Engine {
             if(game is ITickable tickableGame)
                 tickableGame.Tick(_lastTickTime);
         }
-    }
-
-    private void Finish() {
-        resources.Unload();
-        game.Unload();
-        if(!_headless) {
-            input.Finish();
-            renderer.Finish();
-        }
-        game.Finish();
-        if(!_headless)
-            audio.Finish();
-
-        logger.Info("nooooooo *dies*");
-        LogManager.Shutdown();
     }
 }

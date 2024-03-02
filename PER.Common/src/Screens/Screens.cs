@@ -5,7 +5,7 @@ using PER.Common.Effects;
 
 namespace PER.Common.Screens;
 
-public class ScreenManager : IScreens, ISetupable, IUpdatable, ITickable {
+public class Screens : IScreens, ISetupable, IUpdatable, ITickable {
     private const float StartupWaitTime = 0.5f;
     private const float StartupFadeTime = 2f;
     private const float ShutdownFadeTime = 2f;
@@ -16,7 +16,7 @@ public class ScreenManager : IScreens, ISetupable, IUpdatable, ITickable {
     public IScreen? currentScreen { get; private set; }
     private readonly FadeEffect _screenFade = new();
 
-    public ScreenManager(IRenderer renderer) => this.renderer = renderer;
+    public Screens(IRenderer renderer) => this.renderer = renderer;
 
     public void SwitchScreen(IScreen? screen, Func<bool>? middleCallback = null) {
         if(currentScreen is null)

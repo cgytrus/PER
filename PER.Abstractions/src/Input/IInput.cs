@@ -8,7 +8,7 @@ using PER.Util;
 namespace PER.Abstractions.Input;
 
 [PublicAPI]
-public interface IInput : IUpdatable {
+public interface IInput : IUpdatable, ISetupable {
     [PublicAPI]
     public struct KeyDownArgs {
         public KeyCode key { get; }
@@ -55,7 +55,6 @@ public interface IInput : IUpdatable {
     public event Action<TextEnteredArgs>? textEntered;
     public event Action<ScrolledArgs>? scrolled;
 
-    public void Reset();
     public void Finish();
 
     public bool KeyPressed(KeyCode key);

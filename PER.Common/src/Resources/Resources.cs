@@ -11,7 +11,7 @@ using PER.Abstractions.Resources;
 namespace PER.Common.Resources;
 
 [PublicAPI]
-public class ResourcesManager : IResources {
+public class Resources : IResources {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     public int currentVersion => 0;

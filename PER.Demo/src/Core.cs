@@ -3,18 +3,20 @@
 using PER.Audio.Raylib;
 using PER.Common.Resources;
 using PER.Common.Screens;
+using PER.Util;
 
 using PRR.OpenGL;
 
 namespace PER.Demo;
 
 public static class Core {
-    private static readonly Renderer renderer = new();
+    private static readonly Renderer renderer = new("PER Demo Pog", new Vector2Int(80, 60));
     public static Engine engine { get; } =
-        new(new ResourcesManager(), new ScreenManager(renderer), new Game(), renderer, new InputManager(renderer), new AudioManager()) {
+        new(new Common.Resources.Resources(), new Common.Screens.Screens(renderer), new Game(), renderer,
+            new Input(renderer), new Audio.Raylib.Audio()) {
             updateInterval = TimeSpan.FromSeconds(0d), // no limit
             tickInterval = TimeSpan.FromSeconds(0.08d)
         };
 
-    private static void Main() => engine.Reload();
+    private static void Main() => engine.Run();
 }

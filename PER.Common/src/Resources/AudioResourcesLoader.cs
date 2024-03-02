@@ -49,7 +49,7 @@ public abstract class AudioResourcesLoader : Resource {
         audio.TryStoreMixer(nameof(master), master);
     }
 
-    public override void Unload(string id) => audio.Reset();
+    public override void Unload(string id) => audio.Clear();
 
     protected void AddSound(string id, IAudioMixer mixer) {
         if(TryGetPath(id, out string? path)) {
