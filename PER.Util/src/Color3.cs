@@ -63,7 +63,7 @@ public readonly struct Color3 : IEquatable<Color3> {
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static Color3 operator /(Color3 left, Color3 right) => new(left._vec / right._vec);
 
-    public static implicit operator Color(Color3 x) => new(x.r, x.g, x.b, 1f);
+    public static implicit operator Color(Color3 x) => new(x.r, x.g, x.b);
     public static explicit operator Color3(Color x) => new(x.r, x.g, x.b);
 
     public bool Equals(Color3 other) => _vec.Equals(other._vec);

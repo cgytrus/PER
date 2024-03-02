@@ -40,6 +40,6 @@ public class GlitchEffect(IRenderer renderer) : IModifierEffect, IDrawableEffect
         new Color(RandomColorComponent(current.r), RandomColorComponent(current.g),
             RandomColorComponent(current.b), RandomColorComponent(current.a)) : RandomColor();
 
-    private static Color RandomColor() => Random.Shared.Next(0, 2) == 0 ? new Color(1f, 0f, 0f, 1f) :
-        Random.Shared.Next(0, 2) == 0 ? new Color(0f, 1f, 0f, 1f) : new Color(0f, 0f, 1f, 1f);
+    private static Color RandomColor() => Random.Shared.Next(0, 2) == 0 ? new Color(1f, 0f, 0f) :
+        Random.Shared.Next(0, 2) == 0 ? new Color(0f, 1f, 0f) : new Color(0f, 0f, 1f);
 }

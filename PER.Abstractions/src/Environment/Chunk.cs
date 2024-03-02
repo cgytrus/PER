@@ -79,6 +79,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     public void Update(TimeSpan time) {
         if(!shouldUpdate)
             return;
+        level.RequireClient();
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < _updatables.Count; i++) {
             IUpdatable? updatable = _updatables[i];
@@ -91,6 +92,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     public void Draw(Vector2Int start) {
         if(!shouldUpdate || level.doLighting && totalVisibility == 0f)
             return;
+        level.RequireClient();
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < _objects.Count; i++) {
             TObject? obj = _objects[i];

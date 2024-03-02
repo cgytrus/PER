@@ -112,8 +112,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     public virtual void Update(TimeSpan time) {
-        if(!isClient)
-            throw new InvalidOperationException($"{nameof(Update)} called from server");
+        RequireClient();
         shouldGenerateChunks = true;
         updateState = LevelUpdateState.Update;
         foreach(TObject obj in dirtyObjects)
@@ -305,5 +304,16 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
                 maxY = obj.position.y;
         }
         return new Bounds(new Vector2Int(minX, minY), new Vector2Int(maxX, maxY));
+    }
+
+    [MemberNotNull(nameof(client), nameof(renderer), nameof(input), nameof(audio))]
+    public void RequireClient([CallerMemberName] string caller = "unknown?") {
+        if(!isClient)
+            throw new InvalidOperationException($"{caller} can only be called from client");
+    }
+
+    public void RequireServer([CallerMemberName] string caller = "unknown?") {
+        if(isClient)
+            throw new InvalidOperationException($"{caller} can only be called from server");
     }
 }

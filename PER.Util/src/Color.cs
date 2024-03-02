@@ -9,8 +9,8 @@ namespace PER.Util;
 [PublicAPI]
 public readonly struct Color : IEquatable<Color> {
     public static Color transparent => new(0f, 0f, 0f, 0f);
-    public static Color black => new(0f, 0f, 0f, 1f);
-    public static Color white => new(1f, 1f, 1f, 1f);
+    public static Color black => new(0f, 0f, 0f);
+    public static Color white => new(1f, 1f, 1f);
 
     public float r {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

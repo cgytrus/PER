@@ -2,4 +2,4 @@
 
 namespace PER.Demo.Environment;
 
-public abstract class LevelObject : LevelObject<Level, Chunk, LevelObject> { }
+public abstract class LevelObject : LevelObject<Level, Chunk, LevelObject>;

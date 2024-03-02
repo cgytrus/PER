@@ -158,24 +158,24 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
                 tthanks for watching  everyone, shit like, subscribe, good luck, bbye!!
                 """,
             flag => flag switch {
-                'c' => new Formatting(new Color(0f, 1f, 0f, 1f), Color.transparent),
+                'c' => new Formatting(new Color(0f, 1f, 0f), Color.transparent),
                 'g' => new Formatting(Color.white, Color.transparent, RenderStyle.None,
                     renderer.formattingEffects["glitch"]),
                 'w' => new Formatting(Color.white, Color.transparent,
                     RenderStyle.Bold | RenderStyle.Italic | RenderStyle.Underline),
-                't' => new Formatting(Color.black, new Color(1f, 0f, 0f, 1f)),
+                't' => new Formatting(Color.black, new Color(1f, 0f, 0f)),
                 's' => new Formatting(Color.white, Color.transparent, RenderStyle.Underline),
                 'b' => new Formatting(Color.white, Color.transparent, RenderStyle.Underline | RenderStyle.Bold),
                 _ => new Formatting(Color.white, Color.transparent)
             });
 
         renderer.DrawText(new Vector2Int(0, 3),
-            "more test", _ => new Formatting(Color.black, new Color(0f, 1f, 0f, 1f)));
+            "more test", _ => new Formatting(Color.black, new Color(0f, 1f, 0f)));
 
         renderer.DrawText(new Vector2Int(0, 4),
             "\fieven more\f\0 test", flag => flag switch {
-                'i' => new Formatting(new Color(1f, 0f, 1f, 0.5f), new Color(0f, 1f, 0f, 1f), RenderStyle.Italic),
-                _ => new Formatting(new Color(1f, 0f, 1f, 0.5f), new Color(0f, 1f, 0f, 1f))
+                'i' => new Formatting(new Color(1f, 0f, 1f, 0.5f), new Color(0f, 1f, 0f), RenderStyle.Italic),
+                _ => new Formatting(new Color(1f, 0f, 1f, 0.5f), new Color(0f, 1f, 0f))
             });
 
         renderer.DrawText(new Vector2Int(10, 3),

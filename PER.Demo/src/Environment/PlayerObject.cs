@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using PER.Abstractions;
 using PER.Abstractions.Environment;
@@ -10,7 +11,7 @@ namespace PER.Demo.Environment;
 
 public class PlayerObject : LevelObject, IUpdatable, ITickable, ILight {
     public override int layer => 0;
-    public override RenderCharacter character { get; } = new('@', Color.transparent, new Color(0, 255, 255, 255));
+    public override RenderCharacter character { get; } = new('@', Color.transparent, new Color(0, 255, 255));
     public override bool blocksLight => false;
 
     public Color3 color => new(0f, 0f, 0f);
@@ -21,6 +22,8 @@ public class PlayerObject : LevelObject, IUpdatable, ITickable, ILight {
     private int _moveY;
 
     public void Update(TimeSpan time) {
+        RequireClient();
+
         _moveX = 0;
         _moveY = 0;
 

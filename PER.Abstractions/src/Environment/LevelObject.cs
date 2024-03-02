@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
@@ -21,9 +23,9 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
     protected bool inLevel => _level is not null;
     internal bool inLevelInt => inLevel;
 
-    protected IRenderer renderer => level.renderer;
-    protected IInput input => level.input;
-    protected IAudio audio => level.audio;
+    protected IRenderer? renderer => level.renderer;
+    protected IInput? input => level.input;
+    protected IAudio? audio => level.audio;
     protected IResources resources => level.resources;
 
     public abstract int layer { get; }
@@ -108,4 +110,11 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
         positionDirty = false;
         _lightDirty = false;
     }
+
+    // roslyn is stupid.
+#pragma warning disable CS8774 // Member must have a non-null value when exiting.
+    [MemberNotNull(nameof(renderer), nameof(input), nameof(audio))]
+    public void RequireClient([CallerMemberName] string caller = "unknown?") => level.RequireClient(caller);
+    public void RequireServer([CallerMemberName] string caller = "unknown?") => level.RequireServer(caller);
+#pragma warning restore CS8774 // Member must have a non-null value when exiting.
 }
