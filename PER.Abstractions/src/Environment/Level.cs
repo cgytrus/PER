@@ -14,13 +14,19 @@ using PER.Util;
 namespace PER.Abstractions.Environment;
 
 [PublicAPI]
+public readonly record struct LevelClientData(IRenderer renderer, IInput input, IAudio audio);
+
+[PublicAPI]
 public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     where TLevel : Level<TLevel, TChunk, TObject>
     where TChunk : Chunk<TLevel, TChunk, TObject>, new()
     where TObject : LevelObject<TLevel, TChunk, TObject> {
-    public IRenderer renderer { get; }
-    public IInput input { get; }
-    public IAudio audio { get; }
+    [MemberNotNullWhen(true, nameof(client), nameof(renderer), nameof(input), nameof(audio))]
+    public bool isClient => client is not null;
+    public LevelClientData? client { get; }
+    public IRenderer? renderer => client?.renderer;
+    public IInput? input => client?.input;
+    public IAudio? audio => client?.audio;
     public IResources resources { get; }
     public Vector2Int chunkSize { get; }
 
@@ -65,10 +71,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     private readonly Stopwatch _generationTimer = new();
 
-    protected Level(IRenderer renderer, IInput input, IAudio audio, IResources resources, Vector2Int chunkSize) {
-        this.renderer = renderer;
-        this.input = input;
-        this.audio = audio;
+    protected Level(LevelClientData? client, IResources resources, Vector2Int chunkSize) {
+        this.client = client;
         this.resources = resources;
         this.chunkSize = chunkSize;
         _light = new LightPropagator<TLevel, TChunk, TObject>(this);
@@ -108,6 +112,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
 
     public virtual void Update(TimeSpan time) {
+        if(!isClient)
+            throw new InvalidOperationException($"{nameof(Update)} called from server");
         shouldGenerateChunks = true;
         updateState = LevelUpdateState.Update;
         foreach(TObject obj in dirtyObjects)
@@ -255,7 +261,9 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToLevelPosition(Vector2Int cameraPosition) => cameraPosition + this.cameraPosition;
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public Vector2Int CameraToScreenPosition(Vector2Int cameraPosition) => cameraPosition + renderer.size / 2;
+    public Vector2Int CameraToScreenPosition(Vector2Int cameraPosition) =>
+        isClient ? cameraPosition + renderer.size / 2 :
+            throw new InvalidOperationException("Screen accessed from server");
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToChunkPosition(Vector2Int cameraPosition) =>
         LevelToChunkPosition(CameraToLevelPosition(cameraPosition));
@@ -264,7 +272,9 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     public Vector2Int ScreenToLevelPosition(Vector2Int screenPosition) =>
         ScreenToCameraPosition(CameraToLevelPosition(screenPosition));
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public Vector2Int ScreenToCameraPosition(Vector2Int screenPosition) => screenPosition - renderer.size / 2;
+    public Vector2Int ScreenToCameraPosition(Vector2Int screenPosition) =>
+        isClient ? screenPosition - renderer.size / 2 :
+            throw new InvalidOperationException("Screen accessed from server");
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ScreenToChunkPosition(Vector2Int screenPosition) =>
         LevelToChunkPosition(ScreenToLevelPosition(screenPosition));
