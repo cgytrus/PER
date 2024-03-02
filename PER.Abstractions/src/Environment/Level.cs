@@ -50,7 +50,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     }
     private bool _doLighting = true;
 
-    private LightPropagator<TLevel, TChunk, TObject> _light;
+    private Lighting<TLevel, TChunk, TObject> _light;
 
     protected abstract TimeSpan maxGenerationTime { get; }
     internal bool shouldGenerateChunks { get; private set; }
@@ -75,7 +75,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         this.client = client;
         this.resources = resources;
         this.chunkSize = chunkSize;
-        _light = new LightPropagator<TLevel, TChunk, TObject>(this);
+        _light = new SimpleLighting<TLevel, TChunk, TObject>(this);
         _minChunkPos = LevelToChunkPosition(new Vector2Int(int.MinValue, int.MinValue));
         _maxChunkPos = LevelToChunkPosition(new Vector2Int(int.MaxValue, int.MaxValue));
     }
