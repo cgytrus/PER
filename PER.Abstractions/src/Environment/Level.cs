@@ -76,7 +76,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         this.client = client;
         this.resources = resources;
         this.chunkSize = chunkSize;
-        _light = lighting ?? new SimpleLighting<TLevel, TChunk, TObject>(this);
+        _light = lighting ?? new SimpleLighting<TLevel, TChunk, TObject>();
+        _light.SetLevel(this);
         _minChunkPos = LevelToChunkPosition(new Vector2Int(int.MinValue, int.MinValue));
         _maxChunkPos = LevelToChunkPosition(new Vector2Int(int.MaxValue, int.MaxValue));
     }

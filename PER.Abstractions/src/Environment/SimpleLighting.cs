@@ -7,8 +7,7 @@ using PER.Util;
 namespace PER.Abstractions.Environment;
 
 [PublicAPI]
-public class SimpleLighting<TLevel, TChunk, TObject>(Level<TLevel, TChunk, TObject> level) :
-    Lighting<TLevel, TChunk, TObject>(level)
+public class SimpleLighting<TLevel, TChunk, TObject> : Lighting<TLevel, TChunk, TObject>
     where TLevel : Level<TLevel, TChunk, TObject>
     where TChunk : Chunk<TLevel, TChunk, TObject>, new()
     where TObject : LevelObject<TLevel, TChunk, TObject> {
@@ -16,7 +15,6 @@ public class SimpleLighting<TLevel, TChunk, TObject>(Level<TLevel, TChunk, TObje
     private readonly HashSet<Vector2Int> _prop0 = [];
     private readonly HashSet<Vector2Int> _prop1 = [];
     private readonly HashSet<Vector2Int> _visited = [];
-    private readonly Level<TLevel, TChunk, TObject> _level = level;
     private HashSet<Vector2Int> prop => _swapProp ? _prop1 : _prop0;
     private HashSet<Vector2Int> otherProp => _swapProp ? _prop0 : _prop1;
 
@@ -55,8 +53,8 @@ public class SimpleLighting<TLevel, TChunk, TObject>(Level<TLevel, TChunk, TObje
 
         _visited.Add(pos);
 
-        Vector2Int inChunk = _level.LevelToInChunkPosition(pos);
-        TChunk chunk = _level.GetChunkAt(_level.LevelToChunkPosition(pos));
+        Vector2Int inChunk = level.LevelToInChunkPosition(pos);
+        TChunk chunk = level.GetChunkAt(level.LevelToChunkPosition(pos));
 
         chunk.lighting[inChunk.y, inChunk.x] += lighting;
         chunk.totalVisibility += lighting.a;

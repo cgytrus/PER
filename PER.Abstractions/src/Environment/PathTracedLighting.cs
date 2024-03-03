@@ -9,13 +9,10 @@ using PER.Util;
 namespace PER.Abstractions.Environment;
 
 [PublicAPI]
-public class PathTracedLighting<TLevel, TChunk, TObject>(Level<TLevel, TChunk, TObject> level, byte maxIndirect) :
-    Lighting<TLevel, TChunk, TObject>(level)
+public class PathTracedLighting<TLevel, TChunk, TObject>(byte maxIndirect) : Lighting<TLevel, TChunk, TObject>
     where TLevel : Level<TLevel, TChunk, TObject>
     where TChunk : Chunk<TLevel, TChunk, TObject>, new()
     where TObject : LevelObject<TLevel, TChunk, TObject> {
-    private readonly Level<TLevel, TChunk, TObject> _level = level;
-
     private readonly HashSet<Vector2Int> _visited = [];
 
     private readonly record struct Source(Vector2Int pos, ILight light, Color3 color, float emission, float reveal,
@@ -74,8 +71,8 @@ public class PathTracedLighting<TLevel, TChunk, TObject>(Level<TLevel, TChunk, T
     }
 
     private bool Draw(Source source, Vector2Int pos, Vector2Int prev, byte depth) {
-        Vector2Int inChunk = _level.LevelToInChunkPosition(pos);
-        TChunk chunk = _level.GetChunkAt(_level.LevelToChunkPosition(pos));
+        Vector2Int inChunk = level.LevelToInChunkPosition(pos);
+        TChunk chunk = level.GetChunkAt(level.LevelToChunkPosition(pos));
 
         float dist = new Vector2(pos.x - source.pos.x, pos.y - source.pos.y).Length();
         Color3 rgb = dist >= source.emission ? Color3.black : source.color * (1f - dist / source.emission);

@@ -4,10 +4,13 @@ using PER.Util;
 
 namespace PER.Abstractions.Environment;
 
-public abstract class Lighting<TLevel, TChunk, TObject>(Level<TLevel, TChunk, TObject> level)
+public abstract class Lighting<TLevel, TChunk, TObject>
     where TLevel : Level<TLevel, TChunk, TObject>
     where TChunk : Chunk<TLevel, TChunk, TObject>, new()
     where TObject : LevelObject<TLevel, TChunk, TObject> {
+    protected TLevel level => _level!;
+    private TLevel? _level;
+
     private readonly HashSet<LevelObject<TLevel, TChunk, TObject>> _lightsToReset = [];
     private readonly HashSet<LevelObject<TLevel, TChunk, TObject>> _lightsToPropagate = [];
 
@@ -72,4 +75,8 @@ public abstract class Lighting<TLevel, TChunk, TObject>(Level<TLevel, TChunk, TO
     }
 
     protected abstract void Propagate(LevelObject<TLevel, TChunk, TObject> obj);
+
+    internal void SetLevel(Level<TLevel, TChunk, TObject>? level) {
+        _level = level as TLevel;
+    }
 }
