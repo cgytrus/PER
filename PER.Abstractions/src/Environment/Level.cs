@@ -71,11 +71,12 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     private readonly Stopwatch _generationTimer = new();
 
-    protected Level(LevelClientData? client, IResources resources, Vector2Int chunkSize) {
+    protected Level(LevelClientData? client, IResources resources, Vector2Int chunkSize,
+        Lighting<TLevel, TChunk, TObject>? lighting = null) {
         this.client = client;
         this.resources = resources;
         this.chunkSize = chunkSize;
-        _light = new SimpleLighting<TLevel, TChunk, TObject>(this);
+        _light = lighting ?? new SimpleLighting<TLevel, TChunk, TObject>(this);
         _minChunkPos = LevelToChunkPosition(new Vector2Int(int.MinValue, int.MinValue));
         _maxChunkPos = LevelToChunkPosition(new Vector2Int(int.MaxValue, int.MaxValue));
     }
