@@ -40,6 +40,8 @@ public readonly struct Color : IEquatable<Color> {
         init => _vec.W = value;
     }
 
+    public Color3 rgb => (Color3)this;
+
     private readonly Vector4 _vec;
 
     public Color(Vector4 vec) => _vec = vec;
