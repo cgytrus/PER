@@ -198,7 +198,7 @@ public class InputField : ClickableElement {
         float speed = _animSpeeds[y, x];
         float t = speed == 0f ? 1f : (float)(_lastTime - _animStartTimes[y, x]).TotalSeconds * speed;
         foregroundColor = new Color(foregroundColor.r, foregroundColor.g, foregroundColor.b,
-            MoreMath.Lerp(0f, foregroundColor.a, t) * (usePlaceholder ? 0.5f : 1f));
+            Meth.Lerp(0f, foregroundColor.a, t) * (usePlaceholder ? 0.5f : 1f));
 
         renderer.DrawCharacter(position, new RenderCharacter('\0', backgroundColor, foregroundColor, style), effect);
     }

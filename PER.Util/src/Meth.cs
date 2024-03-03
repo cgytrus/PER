@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace PER.Util;
 
 [PublicAPI]
-public static class MoreMath {
+public static class Meth {
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static double LerpUnclamped(double a, double b, double t) => (a * (1d - t)) + (b * t);
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

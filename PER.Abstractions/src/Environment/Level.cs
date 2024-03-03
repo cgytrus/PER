@@ -253,10 +253,10 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         CameraToScreenPosition(LevelToCameraPosition(levelPosition));
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int LevelToChunkPosition(Vector2Int levelPosition) =>
-        new(MoreMath.FloorDiv(levelPosition.x, chunkSize.x), MoreMath.FloorDiv(levelPosition.y, chunkSize.y));
+        new(Meth.FloorDiv(levelPosition.x, chunkSize.x), Meth.FloorDiv(levelPosition.y, chunkSize.y));
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int LevelToInChunkPosition(Vector2Int levelPosition) =>
-        new(MoreMath.Mod(levelPosition.x, chunkSize.x), MoreMath.Mod(levelPosition.y, chunkSize.y));
+        new(Meth.Mod(levelPosition.x, chunkSize.x), Meth.Mod(levelPosition.y, chunkSize.y));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToLevelPosition(Vector2Int cameraPosition) => cameraPosition + this.cameraPosition;

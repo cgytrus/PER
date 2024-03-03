@@ -46,9 +46,9 @@ public class FadeEffect : IModifierEffect, IUpdatable {
             t = 1f - t;
         character = character with {
             background = new Color(character.background.r, character.background.g, character.background.b,
-                MoreMath.Lerp(0f, character.background.a, t)),
+                Meth.Lerp(0f, character.background.a, t)),
             foreground = new Color(character.foreground.r, character.foreground.g, character.foreground.b,
-                MoreMath.Lerp(0f, character.foreground.a, t))
+                Meth.Lerp(0f, character.foreground.a, t))
         };
     }
 
