@@ -24,7 +24,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     protected TLevel level => _level!;
     private TLevel? _level;
 
-    internal List<ILight?> litBy { get; } = new();
+    internal HashSet<ILight> litBy { get; } = new();
 
     public Color[,] lighting { get; private set; } = new Color[0, 0];
     public float totalVisibility { get; set; }
@@ -264,24 +264,23 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
                 yield return objT;
     }
 
-    internal bool TryMarkBlockingLightAt(Vector2Int position, ILight light) {
+    internal bool TryMarkBlockingLightAt(Vector2Int position, ILight light, out Color color) {
         bool res = false;
+        color = Color.transparent;
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
         foreach(TObject? obj in _objects) {
             if(obj is null || !obj.inLevelInt || obj.position != position || !obj.blocksLight)
                 continue;
             res = true;
             obj.blockedLights?.Add(light);
+            color = obj.character.foreground;
         }
         return res;
     }
     internal void MarkNotBlockingLightAt(Vector2Int position, ILight light) {
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
         foreach(TObject? obj in _objects)
-            if(obj is not null && obj.inLevelInt && obj.position == position && obj.blocksLight) {
-                int index = obj.blockedLights?.IndexOf(light) ?? -1;
-                if(index >= 0)
-                    obj.blockedLights![index] = null;
-            }
+            if(obj is not null && obj.inLevelInt && obj.position == position && obj.blocksLight)
+                obj.blockedLights?.Remove(light);
     }
 }

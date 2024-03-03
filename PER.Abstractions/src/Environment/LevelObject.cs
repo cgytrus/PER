@@ -77,7 +77,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
         }
     }
 
-    internal List<ILight?>? blockedLights { get; private set; }
+    internal HashSet<ILight>? blockedLights { get; private set; }
     internal Dictionary<Vector2Int, Color>? contributedLight { get; private set; }
 
     private TLevel? _level;
@@ -93,7 +93,7 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
             return;
         if(blocksLight) {
             if(blockedLights is null)
-                blockedLights = new List<ILight?>();
+                blockedLights = new HashSet<ILight>();
             else
                 blockedLights.Clear();
         }

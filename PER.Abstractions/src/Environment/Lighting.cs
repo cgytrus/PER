@@ -14,25 +14,23 @@ public abstract class Lighting<TLevel, TChunk, TObject>(Level<TLevel, TChunk, TO
     public void QueueLitBy(Chunk<TLevel, TChunk, TObject> chunk) {
         if(!level.doLighting)
             return;
-        for(int i = chunk.litBy.Count - 1; i >= 0; i--) {
-            if(chunk.litBy[i] is not TObject { inLevelInt: true } lightObj)
+        foreach(ILight light in chunk.litBy) {
+            if(light is not TObject { inLevelInt: true } lightObj)
                 continue;
             QueueReset(lightObj);
             QueuePropagate(lightObj);
         }
-        chunk.litBy.RemoveAll(x => x is null);
     }
 
     public void QueueBlockedBy(LevelObject<TLevel, TChunk, TObject> obj) {
         if(!level.doLighting || obj.blockedLights is null || !obj.blocksLight)
             return;
-        for(int i = obj.blockedLights.Count - 1; i >= 0; i--) {
-            if(obj.blockedLights[i] is not TObject { inLevelInt: true } lightObj)
+        foreach(ILight light in obj.blockedLights) {
+            if(light is not TObject { inLevelInt: true } lightObj)
                 continue;
             QueueReset(lightObj);
             QueuePropagate(lightObj);
         }
-        obj.blockedLights.RemoveAll(x => x is null);
     }
 
     public void QueueReset(LevelObject<TLevel, TChunk, TObject> obj) {
@@ -67,9 +65,7 @@ public abstract class Lighting<TLevel, TChunk, TObject>(Level<TLevel, TChunk, TO
             chunk.lighting[inChunk.y, inChunk.x] -= lighting;
             chunk.totalVisibility -= lighting.a;
 
-            int index = chunk.litBy.IndexOf(light);
-            if(index >= 0)
-                chunk.litBy[index] = null;
+            chunk.litBy.Remove(light);
             chunk.MarkNotBlockingLightAt(pos, light);
         }
         obj.contributedLight.Clear();
