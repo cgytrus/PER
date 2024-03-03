@@ -63,7 +63,7 @@ public class SimpleLighting<TLevel, TChunk, TObject>(Level<TLevel, TChunk, TObje
 
         chunk.litBy.Add(light);
         obj.contributedLight!.Add(pos, lighting);
-        if(chunk.TryMarkBlockingLightAt(pos, light))
+        if(chunk.TryMarkBlockingLightAt(pos, light, out _))
             return;
 
         Vector2Int offset = pos - obj.position;
