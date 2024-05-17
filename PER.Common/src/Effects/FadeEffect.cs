@@ -80,6 +80,7 @@ public class FadeEffect : IModifierEffect, IUpdatable {
                 break;
             case State.In:
                 _state = State.None;
+                _lastT = 1f;
                 break;
         }
     }
