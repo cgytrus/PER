@@ -42,10 +42,14 @@ public abstract class DialogBoxScreenResource(Vector2Int size) : LayoutResource,
             return;
 
         Vector2Int offset = new((renderer.width - size.x) / 2, (renderer.height - size.y) / 2);
-        for(int y = 0; y < size.y; y++)
-            for(int x = 0; x < size.x; x++)
+        for(int y = 0; y < size.y; y++) {
+            for(int x = 0; x < size.x; x++) {
+                char c = _palette.Get(x, y, size);
+                Color fg = renderer.font.characters.ContainsKey(c) ? foregroundColor : backgroundColor;
                 renderer.DrawCharacter(new Vector2Int(offset.x + x, offset.y + y),
-                    new RenderCharacter(_palette.Get(x, y, size), backgroundColor, foregroundColor), frameEffect);
+                    new RenderCharacter(c, backgroundColor, fg), frameEffect);
+            }
+        }
 
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < elementList.Count; i++)
