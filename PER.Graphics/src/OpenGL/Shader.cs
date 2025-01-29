@@ -1,8 +1,7 @@
 ﻿using System;
-
 using OpenTK.Graphics.OpenGL;
 
-namespace PRR.OpenGL;
+namespace PER.Graphics.OpenGL;
 
 public class Shader : IDisposable {
     private int _handle;

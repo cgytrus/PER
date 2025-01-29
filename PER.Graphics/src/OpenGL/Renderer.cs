@@ -3,19 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
-
 using PER.Abstractions.Rendering;
 using PER.Util;
-
 using Color = PER.Util.Color;
 
-namespace PRR.OpenGL;
+namespace PER.Graphics.OpenGL;
 
 public class Renderer(string title, Vector2Int size) : BasicRenderer(size), IDisposable {
     public override bool open => window is not null && !_shouldClose;

@@ -1,8 +1,6 @@
 ﻿using System;
-
+using PER.Graphics.OpenGL;
 using PER.Util;
-
-using PRR.OpenGL;
 
 namespace PER.Demo;
 

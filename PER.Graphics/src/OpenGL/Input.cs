@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Numerics;
-
+using CommunityToolkit.HighPerformance;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-
 using PER.Abstractions.Input;
 using PER.Util;
-
 using MouseButton = PER.Abstractions.Input.MouseButton;
 
-namespace PRR.OpenGL;
+namespace PER.Graphics.OpenGL;
 
 public class Input(Renderer renderer) : IInput {
     public bool block { get; set; }
@@ -21,6 +19,8 @@ public class Input(Renderer renderer) : IInput {
     public Vector2Int previousMousePosition => block ? new Vector2Int(-1, -1) : _previousMousePosition;
     public Vector2 previousAccurateMousePosition => block ? new Vector2(-1f, -1f) : _previousAccurateMousePosition;
     public Vector2 previousNormalizedMousePosition => block ? new Vector2(-1f, -1f) : _previousNormalizedMousePosition;
+
+    public ReadOnlyMemory2D<TimeSpan> mouseHeatmap => _mouseHeatmap;
 
     public bool keyRepeat { get; set; }
 
@@ -43,10 +43,12 @@ public class Input(Renderer renderer) : IInput {
     private Vector2Int _previousMousePosition = new(-1, -1);
     private Vector2 _previousAccurateMousePosition = new(-1f, -1f);
     private Vector2 _previousNormalizedMousePosition = new(-1f, -1f);
+    private TimeSpan[,] _mouseHeatmap = new TimeSpan[0, 0];
 
     public void Setup() {
         if(renderer.window is null)
             return;
+        _mouseHeatmap = new TimeSpan[renderer.height, renderer.width];
         renderer.window.KeyDown += OnKeyDown;
         renderer.window.TextInput += OnTextInput;
         renderer.window.MouseMove += OnMouseMove;
@@ -76,6 +78,9 @@ public class Input(Renderer renderer) : IInput {
         _previousMousePosition = _mousePosition;
         _previousAccurateMousePosition = _accurateMousePosition;
         _previousNormalizedMousePosition = _normalizedMousePosition;
+        if (_mousePosition.y >= 0 && _mousePosition.y < renderer.height &&
+            _mousePosition.x >= 0 && _mousePosition.x < renderer.width)
+            _mouseHeatmap[_mousePosition.y, _mousePosition.x] = time;
     }
 
     public bool KeyPressed(KeyCode key) {

@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-
 using PER.Abstractions.Input;
 using PER.Util;
-
 using Color = PER.Util.Color;
 using Image = PER.Abstractions.Rendering.Image;
 using MouseButton = PER.Abstractions.Input.MouseButton;
 
-namespace PRR.OpenGL;
+namespace PER.Graphics.OpenGL;
 
 public static class Converters {
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

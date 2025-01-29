@@ -1,6 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 
-namespace PRR.OpenGL;
+namespace PER.Graphics.OpenGL;
 
 public readonly record struct BlendMode(
     BlendingFactorSrc colorSrcFactor, BlendingFactorDest colorDstFactor, BlendEquationMode colorEquation,
