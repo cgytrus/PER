@@ -14,7 +14,7 @@ using Color = PER.Util.Color;
 
 namespace PER.Graphics.OpenGL;
 
-public class Renderer(string title, Vector2Int size) : BasicRenderer(size), IDisposable {
+public class Renderer(string title, Vector2Int size) : BaseRenderer(size), IDisposable {
     public override bool open => window is not null && !_shouldClose;
     public override bool focused => window?.IsFocused ?? false;
     public override event EventHandler? focusChanged;

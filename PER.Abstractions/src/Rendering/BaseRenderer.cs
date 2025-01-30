@@ -9,7 +9,7 @@ using PER.Util;
 namespace PER.Abstractions.Rendering;
 
 [PublicAPI]
-public abstract class BasicRenderer(Vector2Int size) : IRenderer {
+public abstract class BaseRenderer(Vector2Int size) : IRenderer {
     public virtual Vector2Int size { get; } = size;
     public int width => size.x;
     public int height => size.y;

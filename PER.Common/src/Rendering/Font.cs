@@ -8,7 +8,7 @@ using QoiSharp;
 namespace PER.Common.Rendering;
 
 [PublicAPI]
-public class Font : BasicFont {
+public class Font : BaseFont {
     public Font(string imagePath, string mappingsPath) : base(imagePath, mappingsPath) { }
     public Font(Image image, string mappings, Vector2Int size) : base(image, mappings, size) { }
 
