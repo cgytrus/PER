@@ -66,6 +66,8 @@ public class ProgressBar(IRenderer renderer) : Element(renderer) {
 
     public override Element Clone() => Clone(this);
 
+    public override void Input() { }
+
     private void Animate(TimeSpan time, float from, float to, Color lowColor, Color highColor) {
         int fromX = (int)MathF.Floor(size.x * MathF.Min(MathF.Max(from, 0f), 1f));
         int toX = (int)MathF.Floor(size.x * MathF.Min(MathF.Max(to, 0f), 1f));

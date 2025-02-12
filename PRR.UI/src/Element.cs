@@ -29,6 +29,7 @@ public abstract class Element(IRenderer renderer) : IUpdatable {
 
     public abstract Element Clone();
 
+    public abstract void Input();
     public abstract void Update(TimeSpan time);
 
     protected static void PlaySound(IAudio? audio, IPlayable? playable, string defaultId) {

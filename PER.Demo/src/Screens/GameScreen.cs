@@ -146,9 +146,18 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
     public void Close() { }
 
     public void Update(TimeSpan time) {
+        if (_testProgressBar is null)
+            return;
+
+        InputReq<bool> kill = input.Get<Keyboard>().GetKey(KeyCode.F);
+        InputReq<(bool, Mouse.Positions)> barMouse = input.Get<Mouse>().GetButton(MouseButton.Left, _testProgressBar.bounds);
+
+        foreach (Element element in elementList)
+            element.Input();
+
         _level?.Update(time);
 
-        if(input.KeyPressed(KeyCode.F))
+        if (kill)
             return;
 
         renderer.DrawText(new Vector2Int(0, 0),
@@ -182,7 +191,7 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
             "per-text effects test", _ => new Formatting(Color.white, Color.transparent,
                 RenderStyle.None, renderer.formattingEffects["glitch"]));
 
-        for(int i = 0; i < _styleFormatters.Count; i++)
+        for (int i = 0; i < _styleFormatters.Count; i++)
             renderer.DrawText(new Vector2Int(0, 5 + i), "styles test", _styleFormatters[i]);
 
         renderer.DrawText(new Vector2Int(39, 5),
@@ -198,14 +207,12 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
         renderer.DrawText(new Vector2Int(39, 10),
             "-right test odd", _ => new Formatting(Color.white, Color.transparent), HorizontalAlignment.Right);
 
-        if(_testProgressBar is not null &&
-            input.mousePosition.InBounds(_testProgressBar.bounds) &&
-            input.MouseButtonPressed(MouseButton.Left))
-            _testProgressBar.value = input.normalizedMousePosition.X;
+        (bool barClick, Mouse.Positions barPos) = barMouse.Read();
+        if (barClick)
+            _testProgressBar.value = barPos.accurate.X / renderer.width;
 
-        // ReSharper disable once ForCanBeConvertedToForeach
-        for(int i = 0; i < elementList.Count; i++)
-            elementList[i].Update(time);
+        foreach (Element element in elementList)
+            element.Update(time);
     }
 
     public void Tick(TimeSpan time) => _level?.Tick(time);

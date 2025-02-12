@@ -36,6 +36,8 @@ public class Text : Element {
 
     public override Element Clone() => Clone(this);
 
+    public override void Input() { }
+
     public override void Update(TimeSpan time) {
         if(!enabled || text is null)
             return;

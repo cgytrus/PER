@@ -33,6 +33,8 @@ public class FilledPanel(IRenderer renderer) : Element(renderer) {
 
     public override Element Clone() => Clone(this);
 
+    public override void Input() { }
+
     public override void Update(TimeSpan time) {
         if(!enabled)
             return;

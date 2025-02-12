@@ -27,12 +27,13 @@ public class Button : ClickableElement {
         set => toggledSelf = value;
     }
 
-    protected override bool hotkeyPressed => hotkey.HasValue && input.KeyPressed(hotkey.Value);
+    protected override InputReq<bool>? hotkeyPressed =>
+        hotkey.HasValue ? input.Get<Keyboard>().GetKey(hotkey.Value) : null;
 
     private Func<char, Formatting> _formatter;
 
-    public Button(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) => _formatter =
-        _ => new Formatting(Color.white, Color.transparent, style, effect);
+    public Button(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) =>
+        _formatter = _ => new Formatting(Color.white, Color.transparent, style, effect);
 
     public static Button Clone(Button template) => new(template.renderer, template.input, template.audio) {
         enabled = template.enabled,

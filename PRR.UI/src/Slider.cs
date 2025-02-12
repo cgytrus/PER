@@ -44,7 +44,7 @@ public class Slider(IRenderer renderer, IInput input, IAudio? audio = null) : Cl
     public IPlayable? valueChangedSound { get; set; }
     public event EventHandler? onValueChanged;
 
-    protected override bool hotkeyPressed => false;
+    protected override InputReq<bool>? hotkeyPressed => null;
 
     private int _relativeValue;
     private float _value = float.NaN; // make first value set always work
@@ -53,14 +53,15 @@ public class Slider(IRenderer renderer, IInput input, IAudio? audio = null) : Cl
 
     protected override void UpdateState(TimeSpan time) {
         base.UpdateState(time);
-        if(currentState == State.Clicked)
+        if (currentState == State.Clicked)
             UpdateValue();
     }
 
     private void UpdateValue() {
         int prevRelativeValue = _relativeValue;
-        _relativeValue = Math.Clamp(input.mousePosition.x - position.x, 0, width - 1);
-        if(prevRelativeValue == _relativeValue) return;
+        _relativeValue = Math.Clamp(mousePosition.snapped.x - position.x, 0, width - 1);
+        if (prevRelativeValue == _relativeValue)
+            return;
         float tempValue = (float)_relativeValue / (width - 1);
         tempValue = minValue + tempValue * (maxValue - minValue);
         value = Math.Clamp(tempValue, minValue, maxValue);

@@ -39,6 +39,7 @@ public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio?
     public event EventHandler? onRelease;
 
     public State currentState { get; private set; } = State.None;
+    public Mouse.Positions mousePosition { get; private set; }
 
     protected bool toggledSelf {
         get => _toggled;
@@ -50,13 +51,16 @@ public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio?
         }
     }
 
-    protected abstract bool hotkeyPressed { get; }
+    private InputReq<bool>? _hotkeyPressed;
+    protected abstract InputReq<bool>? hotkeyPressed { get; }
 
     protected const float MinSpeed = 3f;
     protected const float MaxSpeed = 5f;
 
     private bool _clickLocked;
-    private Vector2Int _clickPosition;
+    private InputReq<(bool, Mouse.Positions)> _mouseClicked;
+    private InputReq<(bool, Mouse.Positions)> _mouseOver;
+    private InputReq<(TimeSpan?, Mouse.Positions)> _mouseWasOver;
 
     private float[,] _animSpeeds = new float[0, 0];
     private TimeSpan _animStartTime;
@@ -68,27 +72,32 @@ public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio?
     private bool _toggledChanged;
     private TimeSpan _lastTime;
 
+    public override void Input() {
+        _hotkeyPressed = hotkeyPressed;
+        Mouse mouse = input.Get<Mouse>();
+        _mouseClicked = _clickLocked ? mouse.GetButton(MouseButton.Left) : mouse.GetButton(MouseButton.Left, bounds);
+        _mouseOver = mouse.GetIsWithin(bounds);
+        _mouseWasOver = mouse.GetWasWithin(bounds);
+    }
+
     protected virtual void UpdateState(TimeSpan time) {
         State prevState = currentState;
 
-        bool mouseClicked = input.MouseButtonPressed(MouseButton.Left);
+        (_clickLocked, mousePosition) = _mouseClicked.Read();
 
-        if(mouseClicked && !_clickLocked)
-            _clickPosition = input.mousePosition;
-        _clickLocked = mouseClicked;
-
-        bool mouseOver = (_clickLocked ? _clickPosition : input.mousePosition).InBounds(bounds);
-        bool mouseWasOver = bounds.IntersectsLine(input.previousMousePosition, input.mousePosition) ||
-            _clickLocked && mouseOver;
+        bool mouseOver = _mouseOver.Read().Item1 || _clickLocked;
+        TimeSpan? mouseWasOver = _mouseWasOver.Read().Item1 ??
+            (_clickLocked && mouseOver ? time : null);
 
         State clickedState = mouseOver ? State.Clicked : State.FakeClicked;
         State hoveredState = mouseOver ? State.Hovered : State.FakeHovered;
-        State overState = mouseClicked ? clickedState : hoveredState;
+        State overState = _clickLocked ? clickedState : hoveredState;
 
-        currentState = active ? hotkeyPressed ? State.Hotkey : mouseWasOver ? overState : State.Idle : State.Inactive;
+        currentState = active ? _hotkeyPressed ?? false ? State.Hotkey :
+            mouseWasOver is not null ? overState : State.Idle : State.Inactive;
 
-        if(currentState != prevState || _toggledChanged)
-            StateChanged(time, prevState, currentState);
+        if (currentState != prevState || _toggledChanged)
+            StateChanged(currentState == overState ? mouseWasOver!.Value : time, prevState, currentState);
 
         _toggledChanged = false;
         _lastTime = time;

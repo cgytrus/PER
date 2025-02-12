@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 
 using PER.Abstractions;
 using PER.Abstractions.Environment;
@@ -27,13 +26,13 @@ public class PlayerObject : LevelObject, IUpdatable, ITickable, ILight {
         _moveX = 0;
         _moveY = 0;
 
-        if(input.KeyPressed(KeyCode.D))
+        if (input.Get<Keyboard>().GetKey(KeyCode.D))
             _moveX++;
-        if(input.KeyPressed(KeyCode.A))
+        if (input.Get<Keyboard>().GetKey(KeyCode.A))
             _moveX--;
-        if(input.KeyPressed(KeyCode.S))
+        if (input.Get<Keyboard>().GetKey(KeyCode.S))
             _moveY++;
-        if(input.KeyPressed(KeyCode.W))
+        if (input.Get<Keyboard>().GetKey(KeyCode.W))
             _moveY--;
     }
 

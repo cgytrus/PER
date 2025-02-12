@@ -25,7 +25,7 @@ public class InputField : ClickableElement {
         get => base.enabled;
         set {
             base.enabled = value;
-            if(typing)
+            if (typing)
                 StartTypingInternal();
             else
                 StopTypingInternal(false);
@@ -36,7 +36,7 @@ public class InputField : ClickableElement {
         get => base.active;
         set {
             base.active = value;
-            if(typing)
+            if (typing)
                 StartTypingInternal();
             else
                 StopTypingInternal(false);
@@ -96,7 +96,7 @@ public class InputField : ClickableElement {
     public event EventHandler? onSubmit;
     public event EventHandler? onCancel;
 
-    protected override bool hotkeyPressed => false;
+    protected override InputReq<bool>? hotkeyPressed => null;
 
     private bool usePlaceholder => string.IsNullOrEmpty(value) && !typing;
 
@@ -119,52 +119,94 @@ public class InputField : ClickableElement {
 
     private Func<char, Formatting> _formatter;
 
+    private bool _typingInput;
+
+    private InputReq<bool> _submit;
+    private InputReq<bool> _cancelKey;
+    private InputReq<(bool, Mouse.Positions)> _cancelButton;
+
+    private InputReq<int> _eraseRight;
+    private InputReq<int> _eraseLeft;
+
+    private InputReq<int> _left;
+    private InputReq<int> _right;
+    private InputReq<int> _up;
+    private InputReq<int> _down;
+
+    private InputReq<int> _copy;
+    private InputReq<int> _paste;
+    private InputReq<int> _cut;
+
+    private InputReq<IEnumerable<string>> _type;
+
     public InputField(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) =>
         _formatter = _ => new Formatting(Color.white, Color.transparent, style, effect);
 
     public override Element Clone() => throw new NotImplementedException();
 
-    protected override void UpdateState(TimeSpan time) {
-        base.UpdateState(time);
-        if(!typing)
+    public override void Input() {
+        Keyboard keyboard = input.Get<Keyboard>();
+        Mouse mouse = input.Get<Mouse>();
+        _typingInput = typing;
+
+        if (_typingInput)
+            _cancelButton = mouse.GetButton(MouseButton.Left);
+
+        base.Input();
+
+        if (!_typingInput)
             return;
 
-        if(!input.KeyPressed(KeyCode.Enter) && !input.KeyPressed(KeyCode.Escape) &&
-            (currentState == State.Clicked || !input.MouseButtonPressed(MouseButton.Left)))
+        _submit = keyboard.GetKey(KeyCode.Enter);
+        _cancelKey = keyboard.GetKey(KeyCode.Escape);
+
+        _eraseRight = keyboard.GetKeyDown(KeyCode.Delete, true);
+        _eraseLeft = keyboard.GetKeyDown(KeyCode.Backspace, true);
+
+        _left = keyboard.GetKeyDown(KeyCode.Left, true);
+        _right = keyboard.GetKeyDown(KeyCode.Right, true);
+        _up = keyboard.GetKeyDown(KeyCode.Up, true);
+        _down = keyboard.GetKeyDown(KeyCode.Down, true);
+
+        _copy = keyboard.GetKeyDown(ModifierKey.Ctrl, KeyCode.C, false);
+        _paste = keyboard.GetKeyDown(ModifierKey.Ctrl, KeyCode.V, true);
+        _cut = keyboard.GetKeyDown(ModifierKey.Ctrl, KeyCode.X, false);
+
+        _type = keyboard.GetText();
+    }
+
+    protected override void UpdateState(TimeSpan time) {
+        base.UpdateState(time);
+        if (!_typingInput)
             return;
-        StopTypingInternal(input.KeyPressed(KeyCode.Enter));
+
+        bool submit = _submit;
+        if (submit || _cancelKey || _cancelButton.Read().Item1)
+            StopTypingInternal(submit);
     }
 
     public void StartTyping() {
-        if(!enabled || !active)
+        if (!enabled || !active)
             return;
         Click();
     }
 
     public void StopTyping(bool submit) {
-        if(!enabled || !active)
+        if (!enabled || !active)
             return;
         StopTypingInternal(submit);
     }
 
     private void StartTypingInternal() {
         toggledSelf = true;
-        input.keyDown -= KeyDown;
-        input.keyDown += KeyDown;
-        input.textEntered -= Type;
-        input.textEntered += Type;
-        input.keyRepeat = true;
         cursor = value?.Length ?? 0;
         onStartTyping?.Invoke(this, EventArgs.Empty);
     }
 
     private void StopTypingInternal(bool submit) {
         toggledSelf = false;
-        input.keyDown -= KeyDown;
-        input.textEntered -= Type;
-        input.keyRepeat = false;
         _textOffset = 0;
-        if(submit)
+        if (submit)
             onSubmit?.Invoke(this, EventArgs.Empty);
         else
             onCancel?.Invoke(this, EventArgs.Empty);
@@ -173,9 +215,47 @@ public class InputField : ClickableElement {
 
     protected override void CustomUpdate(TimeSpan time) {
         _lastTime = time;
+
+        if (_typingInput) {
+            if (_eraseRight > 0)
+                EraseRight();
+            if (_eraseLeft > 0)
+                EraseLeft();
+
+            if (_left > 0) {
+                cursor = Math.Clamp(cursor - 1, 0, value?.Length ?? 0);
+                Animate();
+            }
+            if (_right > 0) {
+                cursor = Math.Clamp(cursor + 1, 0, value?.Length ?? 0);
+                Animate();
+            }
+            if (_up > 0) {
+                cursor = wrap ? Math.Clamp(cursor - size.x, 0, value?.Length ?? 0) : 0;
+                Animate();
+            }
+            if (_down > 0) {
+                cursor = wrap ? Math.Clamp(cursor + size.x, 0, value?.Length ?? 0) : value?.Length ?? 0;
+                Animate();
+            }
+
+            if (_copy > 0)
+                Copy();
+            if (_paste > 0)
+                Paste();
+            if (_cut > 0)
+                Cut();
+
+            foreach (char character in _type.Read().SelectMany(x => x)) {
+                PlaySound(audio, typeSound, TypeSoundId);
+                TypeDrawable(character);
+            }
+        }
+
         string? drawText = usePlaceholder ? placeholder : value;
-        if(drawText is null)
+        if (drawText is null)
             return;
+
         ReadOnlySpan<char> drawTextSpan = drawText.AsSpan();
         int textMin = Math.Clamp(_textOffset, 0, drawText.Length);
         int textMax = Math.Clamp(_textOffset + size.x * (wrap ? size.y : 1), 0, drawText.Length);
@@ -192,7 +272,7 @@ public class InputField : ClickableElement {
             (_lastTime - _lastTypeTime).TotalSeconds * blinkRate % 1d <= 0.5d;
 
         RenderStyle style = this.style;
-        if(isCursor)
+        if (isCursor)
             style |= RenderStyle.Underline;
 
         float speed = _animSpeeds[y, x];
@@ -208,66 +288,14 @@ public class InputField : ClickableElement {
         StartTypingInternal();
     }
 
-    private void KeyDown(IInput.KeyDownArgs args) {
-        switch(args.key) {
-            case KeyCode.Delete:
-                EraseRight();
-                _lastTypeTime = _lastTime;
-                break;
-            case KeyCode.Backspace:
-                EraseLeft();
-                _lastTypeTime = _lastTime;
-                break;
-            case KeyCode.Left:
-                cursor = Math.Clamp(cursor - 1, 0, value?.Length ?? 0);
-                _lastTypeTime = _lastTime;
-                Animate();
-                break;
-            case KeyCode.Right:
-                cursor = Math.Clamp(cursor + 1, 0, value?.Length ?? 0);
-                _lastTypeTime = _lastTime;
-                Animate();
-                break;
-            case KeyCode.Up:
-                cursor = wrap ? Math.Clamp(cursor - size.x, 0, value?.Length ?? 0) : 0;
-                _lastTypeTime = _lastTime;
-                Animate();
-                break;
-            case KeyCode.Down:
-                cursor = wrap ? Math.Clamp(cursor + size.x, 0, value?.Length ?? 0) : value?.Length ?? 0;
-                _lastTypeTime = _lastTime;
-                Animate();
-                break;
-            case KeyCode.C when args.control:
-                Copy();
-                _lastTypeTime = _lastTime;
-                break;
-            case KeyCode.V when args.control:
-                Paste();
-                _lastTypeTime = _lastTime;
-                break;
-            case KeyCode.X when args.control:
-                Cut();
-                _lastTypeTime = _lastTime;
-                break;
-        }
-    }
-
-    private void Type(IInput.TextEnteredArgs args) {
-        foreach(char character in args.text) {
-            PlaySound(audio, typeSound, TypeSoundId);
-            TypeDrawable(character);
-        }
-        _lastTypeTime = _lastTime;
-    }
-
     private void Copy() {
-        input.clipboard = value ?? string.Empty;
+        input.Get<Keyboard>().clipboard = value ?? string.Empty;
+        _lastTypeTime = _lastTime;
     }
 
     private void Paste() {
         PlaySound(audio, typeSound, TypeSoundId);
-        foreach(char character in input.clipboard)
+        foreach(char character in input.Get<Keyboard>().clipboard)
             TypeDrawable(character);
     }
 
@@ -330,6 +358,7 @@ public class InputField : ClickableElement {
             return;
         _animSpeeds[position.y, position.x] = Random.Shared.NextSingle(MinSpeed, MaxSpeed);
         _animStartTimes[position.y, position.x] = time;
+        _lastTypeTime = time;
     }
 
     private record LayoutResourceInputField(bool? enabled, Vector2Int position, Vector2Int size, string? value,
