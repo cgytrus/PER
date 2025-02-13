@@ -9,7 +9,7 @@ using PRR.UI;
 namespace PER.Demo.Resources;
 
 public class AudioResources : AudioResourcesLoader {
-    protected override IAudio audio => Core.engine.audio;
+    protected override IAudio audio => Core.audio;
 
     protected override IReadOnlyDictionary<MixerDefinition, AudioResource[]> sounds { get; } =
         new Dictionary<MixerDefinition, AudioResource[]> {

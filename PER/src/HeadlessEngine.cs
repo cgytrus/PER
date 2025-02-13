@@ -23,9 +23,6 @@ public class HeadlessEngine(IResources resources, IGame game) {
 
     public TimeSpan tickInterval { get; set; }
 
-    public IResources resources { get; } = resources;
-    public IGame game { get; } = game;
-
     private readonly Stopwatch _clock = new();
     private TimeSpan _lastUpdateTime;
     private TimeSpan _lastTickTime;

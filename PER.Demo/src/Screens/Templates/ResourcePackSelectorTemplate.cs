@@ -18,9 +18,9 @@ public class ResourcePackSelectorTemplate(
     : ListBoxTemplateResource<ResourcePackData> {
     public const string GlobalId = "layouts/templates/resourcePackItem";
 
-    protected override IRenderer renderer => Core.engine.renderer;
-    protected override IInput input => Core.engine.input;
-    protected override IAudio audio => Core.engine.audio;
+    protected override IRenderer renderer => Core.renderer;
+    protected override IInput input => Core.input;
+    protected override IAudio audio => Core.audio;
 
     private readonly GameScreen _screen = screen;
     private readonly IList<ResourcePackData> _availablePacks = availablePacks;
@@ -46,7 +46,7 @@ public class ResourcePackSelectorTemplate(
             Button toggleButton = GetElement<Button>("toggle");
             toggleButton.onClick += (_, _) => {
                 bool canUnload = _resource._loadedPacks.Count > 1 &&
-                    _item.name != Core.engine.resources.defaultPackName;
+                    _item.name != Core.resources.defaultPackName;
                 if(!canUnload && _loaded)
                     return;
 
@@ -79,9 +79,9 @@ public class ResourcePackSelectorTemplate(
 
             _loaded = _resource._loadedPacks.Contains(item);
 
-            bool canMoveUp = y > 0 && item.name != Core.engine.resources.defaultPackName;
+            bool canMoveUp = y > 0 && item.name != Core.resources.defaultPackName;
             bool canMoveDown = y < maxY &&
-                _resource._availablePacks[index - 1].name != Core.engine.resources.defaultPackName;
+                _resource._availablePacks[index - 1].name != Core.resources.defaultPackName;
 
             Button toggleButton = GetElement<Button>("toggle");
             toggleButton.text =

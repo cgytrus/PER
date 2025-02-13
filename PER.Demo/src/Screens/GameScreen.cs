@@ -21,9 +21,9 @@ namespace PER.Demo.Screens;
 public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
     public const string GlobalId = "layouts/game";
 
-    protected override IRenderer renderer => Core.engine.renderer;
-    protected override IInput input => Core.engine.input;
-    protected override IAudio audio => Core.engine.audio;
+    protected override IRenderer renderer => Core.renderer;
+    protected override IInput input => Core.input;
+    protected override IAudio audio => Core.audio;
 
     private readonly Settings _settings;
 
@@ -127,8 +127,8 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
 
         GetElement<Button>("reloadButton").onClick += (_, _) => {
             Core.engine.Reload();
-            if(Core.engine.resources.TryGetResource(GlobalId, out GameScreen? screen))
-                Core.engine.screens.SwitchScreen(screen);
+            if(Core.resources.TryGetResource(GlobalId, out GameScreen? screen))
+                Core.screens.SwitchScreen(screen);
         };
 
         Text testSliderText = GetElement<Text>("testSliderText");
@@ -221,11 +221,11 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
         _loadedPacks.Clear();
         _availablePacks.Clear();
 
-        foreach(ResourcePackData data in Core.engine.resources.loadedPacks)
+        foreach(ResourcePackData data in Core.resources.loadedPacks)
             _loadedPacks.Add(data);
 
         _availablePacks.AddRange(_loadedPacks);
-        _availablePacks.AddRange(Core.engine.resources.GetUnloadedAvailablePacks().Reverse());
+        _availablePacks.AddRange(Core.resources.GetUnloadedAvailablePacks().Reverse());
 
         GeneratePacksList();
     }

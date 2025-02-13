@@ -16,7 +16,7 @@ public class Game : IGame, ISetupable, IUpdatable {
     private const string SettingsPath = "config.json";
     private Settings _settings = new();
 
-    private static IRenderer renderer => Core.engine.renderer;
+    private static IRenderer renderer => Core.renderer;
 
     private static TimeSpan fpsGood => (Core.engine.updateInterval > TimeSpan.Zero ? Core.engine.updateInterval :
         TimeSpan.FromSeconds(1d / 60d)) + TimeSpan.FromSeconds(0.001d);
@@ -32,7 +32,7 @@ public class Game : IGame, ISetupable, IUpdatable {
     public void Unload() => _settings.Save(SettingsPath);
 
     public void Load() {
-        IResources resources = Core.engine.resources;
+        IResources resources = Core.resources;
 
         _settings = Settings.Load(SettingsPath);
 
@@ -50,11 +50,11 @@ public class Game : IGame, ISetupable, IUpdatable {
     }
 
     public void Loaded() {
-        if(!Core.engine.resources.TryGetResource(FontResource.GlobalId, out FontResource? font) || font.font is null)
+        if(!Core.resources.TryGetResource(FontResource.GlobalId, out FontResource? font) || font.font is null)
             throw new InvalidOperationException("Missing font.");
-        Core.engine.resources.TryGetResource(IconResource.GlobalId, out IconResource? icon);
+        Core.resources.TryGetResource(IconResource.GlobalId, out IconResource? icon);
 
-        if(!Core.engine.resources.TryGetResource(ColorsResource.GlobalId, out ColorsResource? colors) ||
+        if(!Core.resources.TryGetResource(ColorsResource.GlobalId, out ColorsResource? colors) ||
             !colors.colors.TryGetValue("background", out Color backgroundColor))
             throw new InvalidOperationException("Missing colors or background color.");
         renderer.background = backgroundColor;
@@ -77,9 +77,9 @@ public class Game : IGame, ISetupable, IUpdatable {
 
     public void Setup() {
         _frameTimeDisplay = new FrameTimeDisplay(Core.engine.frameTime, renderer, FrameTimeFormatter);
-        if(!Core.engine.resources.TryGetResource(GameScreen.GlobalId, out GameScreen? screen))
+        if(!Core.resources.TryGetResource(GameScreen.GlobalId, out GameScreen? screen))
             return;
-        Core.engine.screens.SwitchScreen(screen);
+        Core.screens.SwitchScreen(screen);
     }
 
     public void Update(TimeSpan time) {

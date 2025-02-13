@@ -21,7 +21,8 @@ public class Engine(
     IGame game,
     IRenderer renderer,
     IInput input,
-    IAudio audio) {
+    IAudio audio
+) {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     public static readonly string version = Helper.GetVersion();
@@ -33,13 +34,6 @@ public class Engine(
 
     public TimeSpan updateInterval { get; set; }
     public TimeSpan tickInterval { get; set; }
-
-    public IResources resources { get; } = resources;
-    public IScreens screens { get; } = screens;
-    public IGame game { get; } = game;
-    public IRenderer renderer { get; } = renderer;
-    public IInput input { get; } = input;
-    public IAudio audio { get; } = audio;
 
     // TODO: not sure what's the best way to force Game.Loaded() to set rendererSettings here
     public RendererSettings rendererSettings { get; set; }

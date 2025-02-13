@@ -25,9 +25,9 @@ public class Settings {
     }
 
     public void Apply() {
-        if(!Core.engine.audio.TryGetMixer("master", out IAudioMixer? mixer))
+        if(!Core.audio.TryGetMixer("master", out IAudioMixer? mixer))
             return;
         mixer.volume = volume;
-        Core.engine.audio.UpdateVolumes();
+        Core.audio.UpdateVolumes();
     }
 }
