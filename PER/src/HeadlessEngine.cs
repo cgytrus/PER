@@ -31,44 +31,43 @@ public class HeadlessEngine(IResources resources, IGame game) {
     private TimeSpan _lastTickTime;
 
     public void Run() {
-        try {
-            logger.Info($"PER v{version}");
-            logger.Info("RUNNING IN HEADLESS MODE");
-            logger.Info("Loading");
+        AppDomain.CurrentDomain.UnhandledException += (_, args) => {
+            logger.Fatal(args.ExceptionObject as Exception,
+                "Uncaught exception! Please, report this file to the developer of the game.");
+        };
 
-            game.Load();
-            resources.Load();
-            game.Loaded();
+        logger.Info($"PER v{version}");
+        logger.Info("RUNNING IN HEADLESS MODE");
+        logger.Info("Loading");
 
-            logger.Info("Setting up");
-            if(game is ISetupable setupableGame)
-                setupableGame.Setup();
+        game.Load();
+        resources.Load();
+        game.Loaded();
 
-            logger.Info("Starting");
-            running = true;
-            _clock.Reset();
-            while(running) {
-                TryTick(_clock.time);
-                if(tickInterval <= TimeSpan.Zero)
-                    continue;
-                TimeSpan time = _clock.time;
-                if(tickInterval > TimeSpan.Zero && time - _lastUpdateTime < tickInterval)
-                    System.Threading.Thread.Sleep(tickInterval - (time - _lastUpdateTime));
-                _lastUpdateTime = _clock.time;
-            }
+        logger.Info("Setting up");
+        if(game is ISetupable setupableGame)
+            setupableGame.Setup();
 
-            logger.Info("Unloading");
-            resources.Unload();
-            game.Unload();
-
-            game.Finish();
-            logger.Info("nooooooo *dies*");
-            LogManager.Shutdown();
+        logger.Info("Starting");
+        running = true;
+        _clock.Reset();
+        while(running) {
+            TryTick(_clock.time);
+            if(tickInterval <= TimeSpan.Zero)
+                continue;
+            TimeSpan time = _clock.time;
+            if(tickInterval > TimeSpan.Zero && time - _lastUpdateTime < tickInterval)
+                System.Threading.Thread.Sleep(tickInterval - (time - _lastUpdateTime));
+            _lastUpdateTime = _clock.time;
         }
-        catch(Exception exception) {
-            logger.Fatal(exception, "Uncaught exception! Please, report this file to the developer of the game.");
-            throw;
-        }
+
+        logger.Info("Unloading");
+        resources.Unload();
+        game.Unload();
+
+        game.Finish();
+        logger.Info("nooooooo *dies*");
+        LogManager.Shutdown();
     }
 
     public void SoftReload() {

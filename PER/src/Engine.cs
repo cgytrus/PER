@@ -49,46 +49,45 @@ public class Engine(
     private TimeSpan _lastTickTime;
 
     public void Run() {
-        try {
-            logger.Info($"PER v{version}");
+        AppDomain.CurrentDomain.UnhandledException += (_, args) => {
+            logger.Fatal(args.ExceptionObject as Exception,
+                "Uncaught exception! Please, report this file to the developer of the game.");
+        };
 
-            renderer.closed += (_, _) => running = false;
-            running = true;
-            while(running) {
-                logger.Info("Loading");
-                game.Load();
-                resources.Load();
-                game.Loaded();
+        logger.Info($"PER v{version}");
 
-                logger.Info("Setting up");
-                renderer.Setup(rendererSettings);
-                input.Setup();
-                if(screens is ISetupable setupableScreens)
-                    setupableScreens.Setup();
-                if(game is ISetupable setupableGame)
-                    setupableGame.Setup();
+        renderer.closed += (_, _) => running = false;
+        running = true;
+        while(running) {
+            logger.Info("Loading");
+            game.Load();
+            resources.Load();
+            game.Loaded();
 
-                logger.Info("Starting");
-                _clock.Reset();
-                while(renderer.open)
-                    Update();
+            logger.Info("Setting up");
+            renderer.Setup(rendererSettings);
+            input.Setup();
+            if(screens is ISetupable setupableScreens)
+                setupableScreens.Setup();
+            if(game is ISetupable setupableGame)
+                setupableGame.Setup();
 
-                resources.Unload();
-                game.Unload();
+            logger.Info("Starting");
+            _clock.Reset();
+            while(renderer.open)
+                Update();
 
-                input.Finish();
-                renderer.Finish();
-                game.Finish();
-            }
+            resources.Unload();
+            game.Unload();
 
-            audio.Finish();
-            logger.Info("nooooooo *dies*");
-            LogManager.Shutdown();
+            input.Finish();
+            renderer.Finish();
+            game.Finish();
         }
-        catch(Exception exception) {
-            logger.Fatal(exception, "Uncaught exception! Please, report this file to the developer of the game.");
-            throw;
-        }
+
+        audio.Finish();
+        logger.Info("nooooooo *dies*");
+        LogManager.Shutdown();
     }
 
     public void Reload() {
