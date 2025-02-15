@@ -2,21 +2,11 @@
 using System.Collections.Generic;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using PER.Abstractions;
 using PER.Abstractions.Input;
 
 namespace PER.Graphics.OpenGL;
 
-public class Keyboard(Renderer renderer) : PER.Abstractions.Input.Keyboard, ISetupable, IUpdatable {
-    public override string clipboard {
-        get => renderer.window?.ClipboardString ?? "";
-        set {
-            if(renderer.window is null)
-                return;
-            renderer.window.ClipboardString = value;
-        }
-    }
-
+public class Keyboard(Renderer renderer) : Keyboard<Keyboard> {
     private readonly Dictionary<(KeyCode, ModifierKey, bool), int> _downKeys = [];
     private readonly List<string> _textInputs = [];
 
@@ -33,7 +23,7 @@ public class Keyboard(Renderer renderer) : PER.Abstractions.Input.Keyboard, ISet
 
     protected override IEnumerable<string> ProcText() => _textInputs;
 
-    public void Setup() {
+    public override void Setup() {
         if (renderer.window is null)
             return;
         renderer.window.KeyDown += OnKeyDown;

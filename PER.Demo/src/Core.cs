@@ -18,7 +18,8 @@ public static class Core {
     public static IResources resources { get; } = new Common.Resources.Resources();
     public static IRenderer renderer => rend;
     public static IScreens screens { get; } = new Common.Screens.Screens(renderer);
-    public static IInput input { get; } = new Input<Keyboard, Mouse>(new KeyboardProvider(rend), new MouseProvider(rend));
+    public static IInput input { get; } =
+        new Input<Keyboard, Mouse, Clipboard>(new Keyboard(rend), new Mouse(rend), new Clipboard(rend));
     public static IAudio audio { get; } = new Audio.Raylib.Audio();
     public static IGame game { get; } = new Game();
 

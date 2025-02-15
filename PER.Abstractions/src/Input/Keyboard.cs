@@ -3,9 +3,13 @@ using System.Collections.Generic;
 
 namespace PER.Abstractions.Input;
 
-public abstract class Keyboard : Device {
-    public abstract string clipboard { get; set; }
-
+public interface IKeyboard : IDevice {
+    public InputReq<bool> GetKey(KeyCode key);
+    public InputReq<int> GetKeyDown(ModifierKey modifier, KeyCode key, bool repeat);
+    public InputReq<int> GetKeyDown(KeyCode key, bool repeat);
+    public InputReq<IEnumerable<string>> GetText();
+}
+public abstract class Keyboard<TSelf> : Device<TSelf>, IKeyboard where TSelf : Keyboard<TSelf> {
     protected Keyboard() {
         _keys = new InputRequests<KeyCode, bool>(ProcKey, false);
         _keyDowns = new InputRequests<(KeyCode key, ModifierKey modifier, bool repeat), int>(ProcKeyDown, 0);

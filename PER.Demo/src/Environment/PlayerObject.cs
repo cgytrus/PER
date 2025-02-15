@@ -26,13 +26,13 @@ public class PlayerObject : LevelObject, IUpdatable, ITickable, ILight {
         _moveX = 0;
         _moveY = 0;
 
-        if (input.Get<Keyboard>().GetKey(KeyCode.D))
+        if (input.Get<IKeyboard>().GetKey(KeyCode.D))
             _moveX++;
-        if (input.Get<Keyboard>().GetKey(KeyCode.A))
+        if (input.Get<IKeyboard>().GetKey(KeyCode.A))
             _moveX--;
-        if (input.Get<Keyboard>().GetKey(KeyCode.S))
+        if (input.Get<IKeyboard>().GetKey(KeyCode.S))
             _moveY++;
-        if (input.Get<Keyboard>().GetKey(KeyCode.W))
+        if (input.Get<IKeyboard>().GetKey(KeyCode.W))
             _moveY--;
     }
 

@@ -29,7 +29,7 @@ public class ScrollablePanel(IRenderer renderer, IInput input) : Element(rendere
 
     private int _scroll;
 
-    private InputReq<(float, Mouse.Positions)> _scrollReq;
+    private InputReq<(float, IMouse.Positions)> _scrollReq;
 
     public override Element Clone() => throw new NotImplementedException();
 
@@ -43,7 +43,7 @@ public class ScrollablePanel(IRenderer renderer, IInput input) : Element(rendere
                 continue;
             elements[i].Input();
         }
-        _scrollReq = input.Get<Mouse>().GetScroll(bounds);
+        _scrollReq = input.Get<IMouse>().GetScroll(bounds);
     }
 
     public override void Update(TimeSpan time) {

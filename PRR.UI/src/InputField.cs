@@ -123,7 +123,7 @@ public class InputField : ClickableElement {
 
     private InputReq<bool> _submit;
     private InputReq<bool> _cancelKey;
-    private InputReq<(bool, Mouse.Positions)> _cancelButton;
+    private InputReq<(bool, IMouse.Positions)> _cancelButton;
 
     private InputReq<int> _eraseRight;
     private InputReq<int> _eraseLeft;
@@ -145,8 +145,8 @@ public class InputField : ClickableElement {
     public override Element Clone() => throw new NotImplementedException();
 
     public override void Input() {
-        Keyboard keyboard = input.Get<Keyboard>();
-        Mouse mouse = input.Get<Mouse>();
+        IKeyboard keyboard = input.Get<IKeyboard>();
+        IMouse mouse = input.Get<IMouse>();
         _typingInput = typing;
 
         if (_typingInput)
@@ -289,13 +289,13 @@ public class InputField : ClickableElement {
     }
 
     private void Copy() {
-        input.Get<Keyboard>().clipboard = value ?? string.Empty;
+        input.Get<IClipboard>().value = value ?? string.Empty;
         _lastTypeTime = _lastTime;
     }
 
     private void Paste() {
         PlaySound(audio, typeSound, TypeSoundId);
-        foreach(char character in input.Get<Keyboard>().clipboard)
+        foreach(char character in input.Get<IClipboard>().value)
             TypeDrawable(character);
     }
 

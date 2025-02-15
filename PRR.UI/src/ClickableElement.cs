@@ -39,7 +39,7 @@ public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio?
     public event EventHandler? onRelease;
 
     public State currentState { get; private set; } = State.None;
-    public Mouse.Positions mousePosition { get; private set; }
+    public IMouse.Positions mousePosition { get; private set; }
 
     protected bool toggledSelf {
         get => _toggled;
@@ -58,9 +58,9 @@ public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio?
     protected const float MaxSpeed = 5f;
 
     private bool _clickLocked;
-    private InputReq<(bool, Mouse.Positions)> _mouseClicked;
-    private InputReq<(bool, Mouse.Positions)> _mouseOver;
-    private InputReq<(TimeSpan?, Mouse.Positions)> _mouseWasOver;
+    private InputReq<(bool, IMouse.Positions)> _mouseClicked;
+    private InputReq<(bool, IMouse.Positions)> _mouseOver;
+    private InputReq<(TimeSpan?, IMouse.Positions)> _mouseWasOver;
 
     private float[,] _animSpeeds = new float[0, 0];
     private TimeSpan _animStartTime;
@@ -74,7 +74,7 @@ public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio?
 
     public override void Input() {
         _hotkeyPressed = hotkeyPressed;
-        Mouse mouse = input.Get<Mouse>();
+        IMouse mouse = input.Get<IMouse>();
         _mouseClicked = _clickLocked ? mouse.GetButton(MouseButton.Left) : mouse.GetButton(MouseButton.Left, bounds);
         _mouseOver = mouse.GetIsWithin(bounds);
         _mouseWasOver = mouse.GetWasWithin(bounds);

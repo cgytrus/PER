@@ -4,10 +4,10 @@ using System.Linq;
 
 namespace PER.Abstractions.Input;
 
-public abstract class DeviceProvider<TDev> : ISetupable, IUpdatable where TDev : Device {
+public abstract class DeviceProvider<TDev> : IDeviceProvider<TDev> where TDev : Device<TDev> {
     protected List<TDev> devices { get; } = [];
 
-    public int Count<TDevice>() => devices.OfType<TDevice>().Count();
+    public int count => devices.Count;
     public TDev this[int index] => devices[index];
 
     public virtual void Setup() {
@@ -17,7 +17,7 @@ public abstract class DeviceProvider<TDev> : ISetupable, IUpdatable where TDev :
 
     public virtual void Update(TimeSpan time) {
         foreach (TDev device in devices)
-            (device as IUpdatable)?.Update(time);
+            device.Update(time);
     }
 
     public virtual void Finish() {

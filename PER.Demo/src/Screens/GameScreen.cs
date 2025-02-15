@@ -149,8 +149,8 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
         if (_testProgressBar is null)
             return;
 
-        InputReq<bool> kill = input.Get<Keyboard>().GetKey(KeyCode.F);
-        InputReq<(bool, Mouse.Positions)> barMouse = input.Get<Mouse>().GetButton(MouseButton.Left, _testProgressBar.bounds);
+        InputReq<bool> kill = input.Get<IKeyboard>().GetKey(KeyCode.F);
+        InputReq<(bool, IMouse.Positions)> barMouse = input.Get<IMouse>().GetButton(MouseButton.Left, _testProgressBar.bounds);
 
         foreach (Element element in elementList)
             element.Input();
@@ -207,7 +207,7 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
         renderer.DrawText(new Vector2Int(39, 10),
             "-right test odd", _ => new Formatting(Color.white, Color.transparent), HorizontalAlignment.Right);
 
-        (bool barClick, Mouse.Positions barPos) = barMouse.Read();
+        (bool barClick, IMouse.Positions barPos) = barMouse.Read();
         if (barClick)
             _testProgressBar.value = barPos.accurate.X / renderer.width;
 

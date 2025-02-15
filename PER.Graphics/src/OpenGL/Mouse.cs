@@ -11,7 +11,7 @@ using MouseButton = PER.Abstractions.Input.MouseButton;
 
 namespace PER.Graphics.OpenGL;
 
-public class Mouse(Renderer renderer) : PER.Abstractions.Input.Mouse, ISetupable {
+public class Mouse(Renderer renderer) : Mouse<Mouse> {
     private Vector2Int _mousePosition = new(-1, -1);
     private Vector2 _accurateMousePosition = new(-1f, -1f);
     private Vector2Int _previousMousePosition = new(-1, -1);
@@ -19,15 +19,15 @@ public class Mouse(Renderer renderer) : PER.Abstractions.Input.Mouse, ISetupable
 
     private float _scroll;
 
-    protected override Position position => new(_mousePosition, _accurateMousePosition);
-    protected override Position prevPosition => new(_previousMousePosition, _previousAccurateMousePosition);
+    protected override IMouse.Position position => new(_mousePosition, _accurateMousePosition);
+    protected override IMouse.Position prevPosition => new(_previousMousePosition, _previousAccurateMousePosition);
 
     protected override bool ProcButton(MouseButton button) => renderer.window is not null &&
         renderer.window.IsMouseButtonDown(Converters.ToOtkMouseButton(button));
 
     protected override float ProcScroll() => _scroll;
 
-    public void Setup() {
+    public override void Setup() {
         if (renderer.window is null)
             return;
         renderer.window.MouseMove += OnMouseMove;

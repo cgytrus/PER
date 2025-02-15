@@ -6,6 +6,6 @@ namespace PER.Abstractions.Input;
 public interface IInput : IUpdatable, ISetupable {
     public void Finish();
 
-    public int Count<TDevice>() where TDevice : Device;
-    public TDevice Get<TDevice>(int index = 0) where TDevice : Device;
+    public int Count<TDevice>() where TDevice : class, IDevice;
+    public TDevice Get<TDevice>(int index = 0) where TDevice : class, IDevice;
 }

@@ -28,7 +28,7 @@ public class Button : ClickableElement {
     }
 
     protected override InputReq<bool>? hotkeyPressed =>
-        hotkey.HasValue ? input.Get<Keyboard>().GetKey(hotkey.Value) : null;
+        hotkey.HasValue ? input.Get<IKeyboard>().GetKey(hotkey.Value) : null;
 
     private Func<char, Formatting> _formatter;
 
