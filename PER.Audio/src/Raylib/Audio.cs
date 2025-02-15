@@ -16,11 +16,7 @@ public class Audio : IAudio {
 
     private object _playablesLock = new();
     private bool _shouldStop;
-
-    public Audio() {
-        Raylib_cs.Raylib.InitAudioDevice();
-        new Thread(AudioThread).Start();
-    }
+    private Thread? _thread;
 
     public IAudioMixer CreateMixer(IAudioMixer? parent = null) => new AudioMixer(parent);
     public bool TryStoreMixer(string id, IAudioMixer mixer) => _storedMixers.TryAdd(id, mixer);
@@ -62,10 +58,17 @@ public class Audio : IAudio {
         _storedMixers.Clear();
     }
 
+    public void Setup() {
+        Raylib_cs.Raylib.InitAudioDevice();
+        _thread = new Thread(AudioThread);
+        _thread.Start();
+    }
+
     public void Finish() {
         _shouldStop = true;
         Clear();
         Raylib_cs.Raylib.CloseAudioDevice();
+        _thread!.Join();
     }
 
     private void AudioThread() {

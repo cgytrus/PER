@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace PER.Abstractions.Audio;
 
 [PublicAPI]
-public interface IAudio {
+public interface IAudio : ISetupable {
     public IAudioMixer CreateMixer(IAudioMixer? parent = null);
 
     public bool TryStoreMixer(string id, IAudioMixer mixer);

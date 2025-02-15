@@ -55,6 +55,7 @@ public class Engine(
         while(running) {
             logger.Info("Loading");
             game.Load();
+            audio.Setup();
             resources.Load();
             game.Loaded();
 
@@ -76,10 +77,10 @@ public class Engine(
 
             input.Finish();
             renderer.Finish();
+            audio.Finish();
             game.Finish();
         }
 
-        audio.Finish();
         logger.Info("nooooooo *dies*");
         LogManager.Shutdown();
     }
