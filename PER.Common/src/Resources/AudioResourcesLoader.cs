@@ -3,6 +3,7 @@
 using NLog;
 
 using PER.Abstractions.Audio;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Resources;
 
 namespace PER.Common.Resources;
@@ -16,7 +17,6 @@ public abstract class AudioResourcesLoader : Resource {
     protected record struct AudioResource(string id, string? extension = null, string directory = "",
         AudioType type = AudioType.Auto);
 
-    protected abstract IAudio audio { get; }
     protected abstract IReadOnlyDictionary<MixerDefinition, AudioResource[]> sounds { get; }
 
     private static string GetAudioPath(MixerDefinition mixer, AudioResource audio) =>
@@ -27,7 +27,9 @@ public abstract class AudioResourcesLoader : Resource {
                 AddPath(audioResource.id, GetAudioPath(mixerDefinition, audioResource));
     }
 
+    [RequiresHead]
     public override void Load(string id) {
+        RequireHead();
         IAudioMixer master = audio.CreateMixer();
 
         foreach((MixerDefinition mixerDefinition, AudioResource[] audioResources) in sounds) {
@@ -49,9 +51,12 @@ public abstract class AudioResourcesLoader : Resource {
         audio.TryStoreMixer(nameof(master), master);
     }
 
-    public override void Unload(string id) => audio.Clear();
+    [RequiresHead]
+    public override void Unload(string id) => audio!.Clear();
 
+    [RequiresHead]
     protected void AddSound(string id, IAudioMixer mixer) {
+        RequireHead();
         if(TryGetPath(id, out string? path)) {
             logger.Info("Loading sound {Id}", id);
             audio.TryStorePlayable(id, audio.CreateSound(path, mixer));
@@ -60,7 +65,9 @@ public abstract class AudioResourcesLoader : Resource {
             logger.Info("Could not find sound {Id}", id);
     }
 
+    [RequiresHead]
     protected void AddMusic(string id, IAudioMixer mixer) {
+        RequireHead();
         if(TryGetPath(id, out string? path)) {
             logger.Info("Loading music {Id}", id);
             audio.TryStorePlayable(id, audio.CreateMusic(path, mixer));

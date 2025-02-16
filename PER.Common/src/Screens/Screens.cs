@@ -6,13 +6,11 @@ using PER.Common.Effects;
 
 namespace PER.Common.Screens;
 
-public class Screens(IRenderer renderer) : IScreens, ISetupable, IUpdatable, ITickable {
+public class Screens : IScreens, ISetupable, IUpdatable, ITickable {
     private const float StartupWaitTime = 0.5f;
     private const float StartupFadeTime = 2f;
     private const float ShutdownFadeTime = 2f;
     private const float FadeTime = 0.3f;
-
-    private IRenderer renderer { get; } = renderer;
 
     public IScreen? currentScreen { get; private set; }
     private readonly FadeEffect _screenFade = new();
@@ -27,7 +25,11 @@ public class Screens(IRenderer renderer) : IScreens, ISetupable, IUpdatable, ITi
     }
 
     public void SwitchScreen(IScreen? screen, float fadeOutTime, float fadeInTime, Func<bool>? middleCallback = null) =>
-        FadeScreen(fadeOutTime, fadeInTime, () => {
+        FadeScreen(fadeOutTime, fadeInTime, [RequiresHead] () => {
+            // TODO: whart
+#pragma warning disable PER0001
+            RequireHead();
+#pragma warning restore PER0001
             if(middleCallback is not null && !middleCallback.Invoke())
                 return;
             currentScreen?.Close();
@@ -43,10 +45,12 @@ public class Screens(IRenderer renderer) : IScreens, ISetupable, IUpdatable, ITi
     public void FadeScreen(float fadeOutTime, float fadeInTime, Action middleCallback) =>
         _screenFade.Start(fadeOutTime, fadeInTime, middleCallback);
 
-    public void Setup() => renderer.closed += (_, _) => SwitchScreen(null);
+    [RequiresHead]
+    public void Setup() => renderer!.closed += (_, _) => SwitchScreen(null);
 
     [RequiresHead]
     public void Update(TimeSpan time) {
+        RequireHead();
         _screenFade.Update(time);
         if(_screenFade.fading)
             renderer.AddEffect(_screenFade);

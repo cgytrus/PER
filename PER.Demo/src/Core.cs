@@ -12,7 +12,7 @@ public static class Core {
     private static void Main() {
         resources = new Common.Resources.Resources();
         renderer = new Renderer("PER Demo Pog", new Vector2Int(80, 60));
-        screens = new Common.Screens.Screens(renderer);
+        screens = new Common.Screens.Screens();
         input = new Input<Keyboard, Mouse, Clipboard>(new Keyboard(), new Mouse(), new Clipboard());
         audio = new Audio.Raylib.Audio();
         game = new Game();
