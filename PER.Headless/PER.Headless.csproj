@@ -4,16 +4,19 @@
     <TargetFramework>net8.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Version>0.1.0</Version>
+    <Title>Press Engine Revolution</Title>
     <Authors>ConfiG</Authors>
     <RepositoryUrl>https://github.com/cgytrus/PER</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <NoAbstractions>true</NoAbstractions>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+    <ProjectReference Include="..\PER.Abstractions\PER.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NLog" Version="5.3.4" />
   </ItemGroup>
 
 </Project>

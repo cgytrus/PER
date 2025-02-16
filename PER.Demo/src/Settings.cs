@@ -2,6 +2,7 @@
 using System.Text.Json;
 
 using PER.Abstractions.Audio;
+using PER.Abstractions.Meta;
 
 namespace PER.Demo;
 
@@ -24,10 +25,12 @@ public class Settings {
         file.Close();
     }
 
+    [RequiresHead]
     public void Apply() {
-        if(!Core.audio.TryGetMixer("master", out IAudioMixer? mixer))
+        RequireHead();
+        if (!audio.TryGetMixer("master", out IAudioMixer? mixer))
             return;
         mixer.volume = volume;
-        Core.audio.UpdateVolumes();
+        audio.UpdateVolumes();
     }
 }

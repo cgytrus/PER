@@ -493,8 +493,7 @@ void main() {
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public override void DrawCharacter(Vector2Int position, RenderCharacter character, IEffect? effect = null) {
         Vector2Int offset = new(0, 0);
-        if(effect is IModifierEffect modifierEffect)
-            modifierEffect.ApplyModifiers(position, ref offset, ref character);
+        (effect as IModifierEffect)?.ApplyModifiers(position, ref offset, ref character);
         foreach(IModifierEffect modEffect in modEffects)
             modEffect.ApplyModifiers(position, ref offset, ref character);
 
@@ -512,8 +511,7 @@ void main() {
             offset = Converters.ToOtkVector2Int(offset)
         });
 
-        if(effect is IDrawableEffect drawableEffect)
-            drawableEffect.Draw(position);
+        (effect as IDrawableEffect)?.Draw(position);
     }
 
     public void Dispose() {

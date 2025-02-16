@@ -3,12 +3,16 @@
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
     <File Path="LICENSE.md" />
+    <File Path="Directory.Build.props" />
   </Folder>
   <Project Path="PER.Abstractions\PER.Abstractions.csproj" Type="Classic C#" />
-  <Project Path="PER.Audio\PER.Audio.csproj" Type="Classic C#" />
+  <Project Path="PER.Analyzers\PER.Analyzers.csproj" Type="Classic C#" />
+  <Project Path="PER.Audio.Raylib\PER.Audio.Raylib.csproj" Type="Classic C#" />
   <Project Path="PER.Common\PER.Common.csproj" Type="Classic C#" />
   <Project Path="PER.Demo\PER.Demo.csproj" Type="Classic C#" />
-  <Project Path="PER.Graphics\PER.Graphics.csproj" Type="Classic C#" />
+  <Project Path="PER.Graphics.OpenGL\PER.Graphics.OpenGL.csproj" Type="Classic C#" />
+  <Project Path="PER.Headless\PER.Headless.csproj" Type="Classic C#" />
+  <Project Path="PER.Input.Glfw\PER.Input.Glfw.csproj" Type="Classic C#" />
   <Project Path="PER.Util\PER.Util.csproj" Type="Classic C#" />
   <Project Path="PER\PER.csproj" Type="Classic C#" />
   <Project Path="PRR.UI\PRR.UI.csproj" Type="Classic C#" />

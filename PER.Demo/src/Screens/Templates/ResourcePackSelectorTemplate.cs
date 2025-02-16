@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
-
-using PER.Abstractions.Audio;
-using PER.Abstractions.Input;
-using PER.Abstractions.Rendering;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Resources;
 using PER.Util;
 
@@ -17,10 +14,6 @@ public class ResourcePackSelectorTemplate(
     ISet<ResourcePackData> loadedPacks)
     : ListBoxTemplateResource<ResourcePackData> {
     public const string GlobalId = "layouts/templates/resourcePackItem";
-
-    protected override IRenderer renderer => Core.renderer;
-    protected override IInput input => Core.input;
-    protected override IAudio audio => Core.audio;
 
     private readonly GameScreen _screen = screen;
     private readonly IList<ResourcePackData> _availablePacks = availablePacks;
@@ -41,12 +34,13 @@ public class ResourcePackSelectorTemplate(
         private bool _loaded;
 
         public Template(ResourcePackSelectorTemplate resource) : base(resource) {
+            RequireBody();
             _resource = resource;
 
             Button toggleButton = GetElement<Button>("toggle");
             toggleButton.onClick += (_, _) => {
                 bool canUnload = _resource._loadedPacks.Count > 1 &&
-                    _item.name != Core.resources.defaultPackName;
+                    _item.name != resources.defaultPackName;
                 if(!canUnload && _loaded)
                     return;
 
@@ -70,7 +64,9 @@ public class ResourcePackSelectorTemplate(
             };
         }
 
+        [RequiresBody]
         public override void UpdateWithItem(int index, ResourcePackData item, int width) {
+            RequireBody();
             _index = index;
             _item = item;
 
@@ -79,9 +75,9 @@ public class ResourcePackSelectorTemplate(
 
             _loaded = _resource._loadedPacks.Contains(item);
 
-            bool canMoveUp = y > 0 && item.name != Core.resources.defaultPackName;
+            bool canMoveUp = y > 0 && item.name != resources.defaultPackName;
             bool canMoveDown = y < maxY &&
-                _resource._availablePacks[index - 1].name != Core.resources.defaultPackName;
+                _resource._availablePacks[index - 1].name != resources.defaultPackName;
 
             Button toggleButton = GetElement<Button>("toggle");
             toggleButton.text =

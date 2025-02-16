@@ -2,20 +2,18 @@
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
 namespace PRR.UI;
 
 [PublicAPI]
-public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio? audio = null) : Element(renderer) {
+public abstract class ClickableElement : Element {
     public enum State { None, Inactive, Idle, FakeHovered, Hovered, FakeClicked, Clicked, Hotkey }
     public const string ClickSoundId = "buttonClick";
 
     protected abstract string type { get; }
-
-    public IInput input { get; set; } = input;
-    public IAudio? audio { get; set; } = audio;
 
     public override Vector2Int size {
         get => base.size;
@@ -52,7 +50,7 @@ public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio?
     }
 
     private InputReq<bool>? _hotkeyPressed;
-    protected abstract InputReq<bool>? hotkeyPressed { get; }
+    protected abstract InputReq<bool>? hotkeyPressed { [RequiresHead] get; }
 
     protected const float MinSpeed = 3f;
     protected const float MaxSpeed = 5f;
@@ -72,7 +70,9 @@ public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio?
     private bool _toggledChanged;
     private TimeSpan _lastTime;
 
+    [RequiresHead]
     public override void Input() {
+        RequireHead();
         _hotkeyPressed = hotkeyPressed;
         IMouse mouse = input.Get<IMouse>();
         _mouseClicked = _clickLocked ? mouse.GetButton(MouseButton.Left) : mouse.GetButton(MouseButton.Left, bounds);
@@ -162,8 +162,10 @@ public abstract class ClickableElement(IRenderer renderer, IInput input, IAudio?
         _animForegroundColorEnd = foreground;
     }
 
+    [RequiresHead]
     public override void Update(TimeSpan time) {
-        if(!enabled) {
+        RequireHead();
+        if (!enabled) {
             currentState = State.None;
             return;
         }

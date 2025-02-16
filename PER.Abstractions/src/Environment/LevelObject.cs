@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
 using PER.Util;
@@ -22,11 +23,6 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
 
     protected bool inLevel => _level is not null;
     internal bool inLevelInt => inLevel;
-
-    protected IRenderer? renderer => level.renderer;
-    protected IInput? input => level.input;
-    protected IAudio? audio => level.audio;
-    protected IResources resources => level.resources;
 
     public abstract int layer { get; }
     public abstract RenderCharacter character { get; }
@@ -111,10 +107,9 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
         _lightDirty = false;
     }
 
-    // roslyn is stupid.
-#pragma warning disable CS8774 // Member must have a non-null value when exiting.
-    [MemberNotNull(nameof(renderer), nameof(input), nameof(audio))]
+    [RequiresHead]
     public void RequireClient([CallerMemberName] string caller = "unknown?") => level.RequireClient(caller);
+
+    [RequiresBody]
     public void RequireServer([CallerMemberName] string caller = "unknown?") => level.RequireServer(caller);
-#pragma warning restore CS8774 // Member must have a non-null value when exiting.
 }

@@ -10,12 +10,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PER.Abstractions\PER.Abstractions.csproj" />
-    <ProjectReference Include="..\PER.Audio\PER.Audio.csproj" />
+    <ProjectReference Include="..\PER.Audio.Raylib\PER.Audio.Raylib.csproj" />
     <ProjectReference Include="..\PER.Common\PER.Common.csproj" />
+    <ProjectReference Include="..\PER.Input.Glfw\PER.Input.Glfw.csproj" />
     <ProjectReference Include="..\PER.Util\PER.Util.csproj" />
     <ProjectReference Include="..\PER\PER.csproj" />
     <ProjectReference Include="..\PRR.UI\PRR.UI.csproj" />
-    <ProjectReference Include="..\PER.Graphics\PER.Graphics.csproj" />
+    <ProjectReference Include="..\PER.Graphics.OpenGL\PER.Graphics.OpenGL.csproj" />
   </ItemGroup>
 
   <ItemGroup>

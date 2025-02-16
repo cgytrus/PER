@@ -1,4 +1,5 @@
 ﻿using PER.Abstractions;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Screens;
 using PER.Common.Effects;
@@ -44,16 +45,15 @@ public class Screens(IRenderer renderer) : IScreens, ISetupable, IUpdatable, ITi
 
     public void Setup() => renderer.closed += (_, _) => SwitchScreen(null);
 
+    [RequiresHead]
     public void Update(TimeSpan time) {
         _screenFade.Update(time);
         if(_screenFade.fading)
             renderer.AddEffect(_screenFade);
-        if(currentScreen is IUpdatable updatable)
-            updatable.Update(time);
+        (currentScreen as IUpdatable)?.Update(time);
     }
 
     public void Tick(TimeSpan time) {
-        if(currentScreen is ITickable tickable)
-            tickable.Tick(time);
+        (currentScreen as ITickable)?.Tick(time);
     }
 }

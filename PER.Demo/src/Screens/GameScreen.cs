@@ -6,6 +6,7 @@ using System.Linq;
 using PER.Abstractions;
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
 using PER.Abstractions.Screens;
@@ -21,10 +22,6 @@ namespace PER.Demo.Screens;
 public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
     public const string GlobalId = "layouts/game";
 
-    protected override IRenderer renderer => Core.renderer;
-    protected override IInput input => Core.input;
-    protected override IAudio audio => Core.audio;
-
     private readonly Settings _settings;
 
     private readonly List<Func<char, Formatting>> _styleFormatters = new();
@@ -34,12 +31,11 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
 
     private ProgressBar? _testProgressBar;
 
-    private readonly IResources _resources;
     private Level? _level;
 
-    public GameScreen(Settings settings, IResources resources) {
+    public GameScreen(Settings settings) {
+        RequireBody();
         _settings = settings;
-        _resources = resources;
         resources.TryAddResource(ResourcePackSelectorTemplate.GlobalId,
             new ResourcePackSelectorTemplate(this, _availablePacks, _loadedPacks));
     }
@@ -68,10 +64,13 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
         AddElement<InputField>("testInputField");
     }
 
+    [RequiresBody, RequiresHead]
     public override void Load(string id) {
+        RequireBody();
+        RequireHead();
         base.Load(id);
 
-        _level = new Level(renderer, input, audio, _resources, new Vector2Int(16, 16));
+        _level = new Level(new Vector2Int(16, 16));
 
         for(int y = -20; y <= 20; y++) {
             for(int x = -20; x <= 20; x++) {
@@ -126,9 +125,9 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
         };
 
         GetElement<Button>("reloadButton").onClick += (_, _) => {
-            Core.engine.Reload();
-            if(Core.resources.TryGetResource(GlobalId, out GameScreen? screen))
-                Core.screens.SwitchScreen(screen);
+            Engine.Reload();
+            if(resources.TryGetResource(GlobalId, out GameScreen? screen))
+                screens.SwitchScreen(screen);
         };
 
         Text testSliderText = GetElement<Text>("testSliderText");
@@ -145,7 +144,9 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
     public void Open() { }
     public void Close() { }
 
+    [RequiresHead]
     public void Update(TimeSpan time) {
+        RequireHead();
         if (_testProgressBar is null)
             return;
 
@@ -217,15 +218,17 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
 
     public void Tick(TimeSpan time) => _level?.Tick(time);
 
+    [RequiresBody]
     private void OpenPacks() {
+        RequireBody();
         _loadedPacks.Clear();
         _availablePacks.Clear();
 
-        foreach(ResourcePackData data in Core.resources.loadedPacks)
+        foreach(ResourcePackData data in resources.loadedPacks)
             _loadedPacks.Add(data);
 
         _availablePacks.AddRange(_loadedPacks);
-        _availablePacks.AddRange(Core.resources.GetUnloadedAvailablePacks().Reverse());
+        _availablePacks.AddRange(resources.GetUnloadedAvailablePacks().Reverse());
 
         GeneratePacksList();
     }

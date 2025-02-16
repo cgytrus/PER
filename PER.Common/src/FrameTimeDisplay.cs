@@ -3,6 +3,7 @@
 using JetBrains.Annotations;
 
 using PER.Abstractions;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -11,18 +12,17 @@ namespace PER.Common;
 [PublicAPI]
 public class FrameTimeDisplay : IUpdatable {
     protected FrameTime frameTime { get; }
-    protected IRenderer renderer { get; }
 
     private Func<char, Formatting> _frameTimeFormatter;
 
-    public FrameTimeDisplay(FrameTime frameTime, IRenderer renderer,
-        Func<FrameTime, char, Formatting> frameTimeFormatter) {
+    public FrameTimeDisplay(FrameTime frameTime, Func<FrameTime, char, Formatting> frameTimeFormatter) {
         this.frameTime = frameTime;
-        this.renderer = renderer;
         _frameTimeFormatter = flag => frameTimeFormatter(this.frameTime, flag);
     }
 
+    [RequiresHead]
     public void Update(TimeSpan time) {
+        RequireHead();
         CultureInfo c = CultureInfo.InvariantCulture;
         const int maxFrameTimeLength = 6;
         const int maxFpsLength = 8;

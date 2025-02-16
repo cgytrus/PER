@@ -9,8 +9,7 @@ using PER.Util;
 
 namespace PER.Demo.Environment;
 
-public class Level(IRenderer renderer, IInput input, IAudio audio, IResources resources, Vector2Int chunkSize)
-    : Level<Level, Chunk, LevelObject>(new LevelClientData(renderer, input, audio), resources, chunkSize) {
-    protected override TimeSpan maxGenerationTime => Core.engine.tickInterval;
+public class Level(Vector2Int chunkSize) : Level<Level, Chunk, LevelObject>(true, chunkSize) {
+    protected override TimeSpan maxGenerationTime => Engine.tickInterval;
     protected override void GenerateChunk(Vector2Int start) { }
 }

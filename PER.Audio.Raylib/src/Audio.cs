@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 
 using PER.Abstractions;
 using PER.Abstractions.Audio;
+using PER.Abstractions.Meta;
 
 namespace PER.Audio.Raylib;
 
@@ -50,8 +51,7 @@ public class Audio : IAudio {
     public void Clear() {
         lock(_playablesLock) {
             foreach(IPlayable? playable in _allPlayables)
-                if(playable is IDisposable disposable)
-                    disposable.Dispose();
+                (playable as IDisposable)?.Dispose();
             _allPlayables.Clear();
             _storedPlayables.Clear();
         }
@@ -71,12 +71,12 @@ public class Audio : IAudio {
         _thread!.Join();
     }
 
+    [RequiresHead]
     private void AudioThread() {
         while(!_shouldStop) {
             lock(_playablesLock)
                 foreach(IPlayable playable in _allPlayables)
-                    if(playable is IUpdatable updatable)
-                        updatable.Update(TimeSpan.Zero);
+                    (playable as IUpdatable)?.Update(TimeSpan.Zero);
             Thread.Sleep(1000);
         }
     }

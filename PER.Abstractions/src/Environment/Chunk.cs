@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 using JetBrains.Annotations;
-
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -76,6 +76,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
         _shouldProcessRemoved = true;
     }
 
+    [RequiresHead]
     public void Update(TimeSpan time) {
         if(!shouldUpdate)
             return;
@@ -89,10 +90,12 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
         ProcessRemoved();
     }
 
+    [RequiresHead]
     public void Draw(Vector2Int start) {
-        if(!shouldUpdate || level.doLighting && totalVisibility == 0f)
-            return;
         level.RequireClient();
+        RequireHead();
+        if (!shouldUpdate || level.doLighting && totalVisibility == 0f)
+            return;
         // ReSharper disable once ForCanBeConvertedToForeach
         for(int i = 0; i < _objects.Count; i++) {
             TObject? obj = _objects[i];
@@ -102,7 +105,7 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
             Vector2Int localPos = screenPos - start;
             if(level.doLighting && lighting[localPos.y, localPos.x].a == 0f)
                 continue;
-            level.renderer.DrawCharacter(screenPos, ApplyLight(obj.character, localPos), obj.effect);
+            renderer.DrawCharacter(screenPos, ApplyLight(obj.character, localPos), obj.effect);
         }
     }
 

@@ -1,20 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using PER.Abstractions.Input;
+using PER.Graphics.OpenGL;
 
-namespace PER.Graphics.OpenGL;
+namespace PER.Input.Glfw;
 
-public class Keyboard(Renderer renderer) : Keyboard<Keyboard> {
+public class Keyboard : Keyboard<Keyboard> {
+    private static NativeWindow? window => (renderer as Renderer)?.window;
+
     private readonly Dictionary<(KeyCode, ModifierKey, bool), int> _downKeys = [];
     private readonly List<string> _textInputs = [];
 
     protected override bool ProcKey(KeyCode key) {
-        if (renderer.window is null)
+        if (window is null)
             return false;
         Keys otkKey = Converters.ToOtkKey(key);
-        return otkKey != Keys.Unknown && renderer.window.IsKeyDown(otkKey);
+        return otkKey != Keys.Unknown && window.IsKeyDown(otkKey);
     }
 
     protected override int ProcKeyDown((KeyCode, ModifierKey, bool) data) =>
@@ -24,17 +28,17 @@ public class Keyboard(Renderer renderer) : Keyboard<Keyboard> {
     protected override IEnumerable<string> ProcText() => _textInputs;
 
     public override void Setup() {
-        if (renderer.window is null)
+        if (window is null)
             return;
-        renderer.window.KeyDown += OnKeyDown;
-        renderer.window.TextInput += OnTextInput;
+        window.KeyDown += OnKeyDown;
+        window.TextInput += OnTextInput;
     }
 
     public override void Finish() {
-        if (renderer.window is null)
+        if (window is null)
             return;
-        renderer.window.KeyDown -= OnKeyDown;
-        renderer.window.TextInput -= OnTextInput;
+        window.KeyDown -= OnKeyDown;
+        window.TextInput -= OnTextInput;
     }
 
     private readonly List<KeyboardKeyEventArgs> _keyDownEvents = [];

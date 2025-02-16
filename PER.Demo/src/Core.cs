@@ -1,32 +1,23 @@
 ﻿using System;
-using PER.Abstractions;
-using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
-using PER.Abstractions.Rendering;
-using PER.Abstractions.Resources;
-using PER.Abstractions.Screens;
+using PER.Abstractions.Meta;
 using PER.Graphics.OpenGL;
+using PER.Input.Glfw;
 using PER.Util;
-using Keyboard = PER.Graphics.OpenGL.Keyboard;
-using Mouse = PER.Graphics.OpenGL.Mouse;
 
 namespace PER.Demo;
 
 public static class Core {
-    private static readonly Renderer rend = new("PER Demo Pog", new Vector2Int(80, 60));
-
-    public static IResources resources { get; } = new Common.Resources.Resources();
-    public static IRenderer renderer => rend;
-    public static IScreens screens { get; } = new Common.Screens.Screens(renderer);
-    public static IInput input { get; } =
-        new Input<Keyboard, Mouse, Clipboard>(new Keyboard(rend), new Mouse(rend), new Clipboard(rend));
-    public static IAudio audio { get; } = new Audio.Raylib.Audio();
-    public static IGame game { get; } = new Game();
-
-    public static Engine engine { get; } = new(resources, screens, game, renderer, input, audio) {
-        updateInterval = TimeSpan.FromSeconds(0d), // no limit
-        tickInterval = TimeSpan.FromSeconds(0.08d)
-    };
-
-    private static void Main() => engine.Run();
+    [RequiresBody, RequiresHead]
+    private static void Main() {
+        resources = new Common.Resources.Resources();
+        renderer = new Renderer("PER Demo Pog", new Vector2Int(80, 60));
+        screens = new Common.Screens.Screens(renderer);
+        input = new Input<Keyboard, Mouse, Clipboard>(new Keyboard(), new Mouse(), new Clipboard());
+        audio = new Audio.Raylib.Audio();
+        game = new Game();
+        Engine.updateInterval = TimeSpan.FromSeconds(0d); // no limit
+        Engine.tickInterval = TimeSpan.FromSeconds(0.08d);
+        Engine.Run();
+    }
 }

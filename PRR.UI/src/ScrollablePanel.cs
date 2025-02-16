@@ -2,6 +2,7 @@
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -10,10 +11,8 @@ using PRR.UI.Resources;
 namespace PRR.UI;
 
 [PublicAPI]
-public class ScrollablePanel(IRenderer renderer, IInput input) : Element(renderer) {
+public class ScrollablePanel : Element {
     public static readonly Type serializedType = typeof(LayoutResourceScrollablePanel);
-
-    public IInput input { get; set; } = input;
 
     public List<Element> elements { get; } = [];
 
@@ -33,7 +32,9 @@ public class ScrollablePanel(IRenderer renderer, IInput input) : Element(rendere
 
     public override Element Clone() => throw new NotImplementedException();
 
+    [RequiresHead]
     public override void Input() {
+        RequireHead();
         if (!enabled || elements.Count == 0)
             return;
         // ReSharper disable once ForCanBeConvertedToForeach
@@ -85,9 +86,9 @@ public class ScrollablePanel(IRenderer renderer, IInput input) : Element(rendere
 
     protected record LayoutResourceScrollablePanel(bool? enabled, Vector2Int position, Vector2Int size) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
-        public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
-            ScrollablePanel element = new(renderer, input) {
+        public override Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
+            List<string> layoutNames, string id) {
+            ScrollablePanel element = new() {
                 position = position,
                 size = size
             };

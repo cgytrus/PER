@@ -1,33 +1,33 @@
 ﻿using System;
-
 using JetBrains.Annotations;
-
 using NLog;
-
 using PER.Abstractions;
-using PER.Abstractions.Resources;
+using PER.Abstractions.Meta;
 using PER.Util;
 
-namespace PER;
+namespace PER.Headless;
 
 [PublicAPI]
-public class HeadlessEngine(IResources resources, IGame game) {
+public static class Engine {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     public static readonly string version = Helper.GetVersion();
     public static readonly string abstractionsVersion = Helper.GetVersion(typeof(IGame));
 
-    public bool running { get; set; }
+    public static bool running { get; set; }
 
-    public FrameTime frameTime { get; } = new();
+    public static FrameTime frameTime { get; } = new();
 
-    public TimeSpan tickInterval { get; set; }
+    public static TimeSpan tickInterval { get; set; }
 
-    private readonly Stopwatch _clock = new();
-    private TimeSpan _lastUpdateTime;
-    private TimeSpan _lastTickTime;
+    private static readonly Stopwatch clock = new();
+    private static TimeSpan _lastUpdateTime;
+    private static TimeSpan _lastTickTime;
 
-    public void Run() {
+    [RequiresBody]
+    public static void Run() {
+        RequireBody();
+
         AppDomain.CurrentDomain.UnhandledException += (_, args) => {
             logger.Fatal(args.ExceptionObject as Exception,
                 "Uncaught exception! Please, report this file to the developer of the game.");
@@ -42,20 +42,19 @@ public class HeadlessEngine(IResources resources, IGame game) {
         game.Loaded();
 
         logger.Info("Setting up");
-        if(game is ISetupable setupableGame)
-            setupableGame.Setup();
+        (game as ISetupable)?.Setup();
 
         logger.Info("Starting");
         running = true;
-        _clock.Reset();
-        while(running) {
-            TryTick(_clock.time);
-            if(tickInterval <= TimeSpan.Zero)
+        clock.Reset();
+        while (running) {
+            TryTick(clock.time);
+            if (tickInterval <= TimeSpan.Zero)
                 continue;
-            TimeSpan time = _clock.time;
-            if(tickInterval > TimeSpan.Zero && time - _lastUpdateTime < tickInterval)
+            TimeSpan time = clock.time;
+            if (tickInterval > TimeSpan.Zero && time - _lastUpdateTime < tickInterval)
                 System.Threading.Thread.Sleep(tickInterval - (time - _lastUpdateTime));
-            _lastUpdateTime = _clock.time;
+            _lastUpdateTime = clock.time;
         }
 
         logger.Info("Unloading");
@@ -67,23 +66,27 @@ public class HeadlessEngine(IResources resources, IGame game) {
         LogManager.Shutdown();
     }
 
-    public void SoftReload() {
+    [RequiresBody]
+    public static void SoftReload() {
+        RequireBody();
         logger.Info("Starting soft reload");
         resources.SoftReload();
         game.Loaded();
     }
 
-    private void TryTick(TimeSpan time) {
-        if(tickInterval < TimeSpan.Zero) {
+    [RequiresBody]
+    private static void TryTick(TimeSpan time) {
+        RequireBody();
+
+        if (tickInterval < TimeSpan.Zero) {
             _lastTickTime = time;
             return;
         }
 
-        while(time - _lastTickTime >= tickInterval) {
+        while (time - _lastTickTime >= tickInterval) {
             _lastTickTime += tickInterval;
             // ReSharper disable once SuspiciousTypeConversion.Global
-            if(game is ITickable tickableGame)
-                tickableGame.Tick(_lastTickTime);
+            (game as ITickable)?.Tick(_lastTickTime);
         }
     }
 }

@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -22,9 +23,9 @@ public class Text : Element {
 
     private readonly Func<char, Formatting> _formatter;
 
-    public Text(IRenderer renderer) : base(renderer) => _formatter = flag => formatting[flag];
+    public Text() => _formatter = flag => formatting[flag];
 
-    public static Text Clone(Text template) => new(template.renderer) {
+    public static Text Clone(Text template) => new() {
         enabled = template.enabled,
         position = template.position,
         size = template.size,
@@ -38,10 +39,12 @@ public class Text : Element {
 
     public override void Input() { }
 
+    [RequiresHead]
     public override void Update(TimeSpan time) {
-        if(!enabled || text is null)
+        if (!enabled || text is null)
             return;
-        if(formatting.Count == 0)
+        RequireHead();
+        if (formatting.Count == 0)
             formatting.Add('\0',
                 new Formatting(Color.white, Color.transparent, RenderStyle.None, effect));
         renderer.DrawText(position, text, _formatter, align, wrap ? size.x : 0);
@@ -64,9 +67,11 @@ public class Text : Element {
         Dictionary<char, LayoutResourceTextFormatting>? formatting,
         [property: JsonConverter(typeof(JsonStringEnumConverter))] HorizontalAlignment? align, bool? wrap) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
-        public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
-            Dictionary<string, Color> colors, List<string> layoutNames, string id) {
-            Text element = new(renderer) {
+        [RequiresHead]
+        public override Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
+            List<string> layoutNames, string id) {
+            RequireHead();
+            Text element = new() {
                 position = position,
                 size = size,
                 text = text

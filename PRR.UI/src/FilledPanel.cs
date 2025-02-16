@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -12,7 +13,7 @@ using PRR.UI.Resources;
 namespace PRR.UI;
 
 [PublicAPI]
-public class FilledPanel(IRenderer renderer) : Element(renderer) {
+public class FilledPanel : Element {
     public static readonly Type serializedType = typeof(LayoutResourceFilledPanel);
 
     public char character { get; set; } = '\0';
@@ -20,7 +21,7 @@ public class FilledPanel(IRenderer renderer) : Element(renderer) {
     public Color backgroundColor { get; set; } = Color.transparent;
     public RenderStyle style { get; set; } = RenderStyle.None;
 
-    public static FilledPanel Clone(FilledPanel template) => new(template.renderer) {
+    public static FilledPanel Clone(FilledPanel template) => new() {
         enabled = template.enabled,
         position = template.position,
         size = template.size,
@@ -35,9 +36,11 @@ public class FilledPanel(IRenderer renderer) : Element(renderer) {
 
     public override void Input() { }
 
+    [RequiresHead]
     public override void Update(TimeSpan time) {
         if(!enabled)
             return;
+        RequireHead();
         RenderCharacter rc = new(character, backgroundColor, foregroundColor, style);
         for(int y = bounds.min.y; y <= bounds.max.y; y++)
             for(int x = bounds.min.x; x <= bounds.max.x; x++)
@@ -55,9 +58,9 @@ public class FilledPanel(IRenderer renderer) : Element(renderer) {
     private record LayoutResourceFilledPanel(bool? enabled, Vector2Int position, Vector2Int size, char? character,
         [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
-        public override Element GetElement(LayoutResource resource, IRenderer renderer, IInput input, IAudio audio,
-            Dictionary<string, Color> colors, List<string> layoutNames, string id) {
-            FilledPanel element = new(renderer) {
+        public override Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
+            List<string> layoutNames, string id) {
+            FilledPanel element = new() {
                 position = position,
                 size = size
             };

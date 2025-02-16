@@ -16,8 +16,8 @@ namespace PRR.UI.Resources;
 public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutResource.LayoutResourceElement>> {
     [PublicAPI]
     public abstract record LayoutResourceElement(bool? enabled, Vector2Int position, Vector2Int size) {
-        public abstract Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id);
+        public abstract Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
+            List<string> layoutNames, string id);
 
         protected static bool TryGetPath(LayoutResource resource, string id,
             [NotNullWhen(true)] out string? fullPath) => resource.TryGetPath(id, out fullPath);
@@ -25,10 +25,6 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         protected static T GetDependency<T>(LayoutResource resource, string id) where T : Resource =>
             resource.GetDependency<T>(id);
     }
-
-    protected abstract IRenderer renderer { get; }
-    protected abstract IInput input { get; }
-    protected abstract IAudio audio { get; }
 
     protected virtual string layoutsPath => "layouts";
 
@@ -65,7 +61,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         _elementList.Clear();
         foreach((string elementId, LayoutResourceElement layoutElement) in layoutElements) {
             Element element =
-                layoutElement.GetElement(this, renderer, input, audio, colors.colors, _layoutNames, elementId);
+                layoutElement.GetElement(this, colors.colors, _layoutNames, elementId);
             _elements.Add(elementId, element);
             _elementList.Add(element);
         }

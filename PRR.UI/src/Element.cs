@@ -8,8 +8,7 @@ using PER.Util;
 namespace PRR.UI;
 
 [PublicAPI]
-public abstract class Element(IRenderer renderer) : IUpdatable {
-    public IRenderer renderer { get; set; } = renderer;
+public abstract class Element : IUpdatable {
     public virtual bool enabled { get; set; } = true;
     public virtual Vector2Int position { get; set; }
     public virtual Vector2Int size { get; set; }

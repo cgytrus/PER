@@ -1,15 +1,17 @@
 ﻿using JetBrains.Annotations;
-
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
 namespace PER.Common.Effects;
 
 [PublicAPI]
-public class GlitchEffect(IRenderer renderer) : IModifierEffect, IDrawableEffect {
+public class GlitchEffect : IModifierEffect, IDrawableEffect {
     private bool _draw = true;
 
+    [RequiresHead]
     public void ApplyModifiers(Vector2Int at, ref Vector2Int offset, ref RenderCharacter character) {
+        RequireHead();
         offset += new Vector2Int(RandomInt(), 0);
         string mappings = renderer.font.mappings;
         character = new RenderCharacter(
@@ -19,7 +21,9 @@ public class GlitchEffect(IRenderer renderer) : IModifierEffect, IDrawableEffect
                 (RenderStyle)Random.Shared.Next((int)RenderStyle.None, (int)RenderStyle.All));
     }
 
+    [RequiresHead]
     public void Draw(Vector2Int position) {
+        RequireHead();
         if(position.x % Random.Shared.Next(3, 10) == 0 || position.y % Random.Shared.Next(3, 10) == 0)
             _draw = RandomNonNegativeFloat() > 0.95f;
         if(!_draw)

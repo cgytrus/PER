@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -139,12 +140,13 @@ public class InputField : ClickableElement {
 
     private InputReq<IEnumerable<string>> _type;
 
-    public InputField(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) =>
-        _formatter = _ => new Formatting(Color.white, Color.transparent, style, effect);
+    public InputField() => _formatter = _ => new Formatting(Color.white, Color.transparent, style, effect);
 
     public override Element Clone() => throw new NotImplementedException();
 
+    [RequiresHead]
     public override void Input() {
+        RequireHead();
         IKeyboard keyboard = input.Get<IKeyboard>();
         IMouse mouse = input.Get<IMouse>();
         _typingInput = typing;
@@ -213,7 +215,9 @@ public class InputField : ClickableElement {
         PlaySound(audio, submitSound, SubmitSoundId);
     }
 
+    [RequiresHead]
     protected override void CustomUpdate(TimeSpan time) {
+        RequireHead();
         _lastTime = time;
 
         if (_typingInput) {
@@ -263,7 +267,9 @@ public class InputField : ClickableElement {
             wrap ? size.x : 0);
     }
 
+    [RequiresHead]
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
+        RequireHead();
         Vector2Int position = new(this.position.x + x, this.position.y + y);
 
         Vector2Int cursor = cursorPos;
@@ -288,23 +294,30 @@ public class InputField : ClickableElement {
         StartTypingInternal();
     }
 
+    [RequiresHead]
     private void Copy() {
+        RequireHead();
         input.Get<IClipboard>().value = value ?? string.Empty;
         _lastTypeTime = _lastTime;
     }
 
+    [RequiresHead]
     private void Paste() {
+        RequireHead();
         PlaySound(audio, typeSound, TypeSoundId);
         foreach(char character in input.Get<IClipboard>().value)
             TypeDrawable(character);
     }
 
+    [RequiresHead]
     private void Cut() {
         Copy();
         EraseAll();
     }
 
+    [RequiresHead]
     private void TypeDrawable(char character) {
+        RequireHead();
         if(renderer.font.IsCharacterDrawable(character) || character == ' ')
             Type(character);
     }
@@ -365,9 +378,9 @@ public class InputField : ClickableElement {
         string? placeholder, bool? wrap, int? cursor, float? blinkRate,
         [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style, bool? active) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
-        public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
-            InputField element = new(renderer, input, audio) {
+        public override Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
+            List<string> layoutNames, string id) {
+            InputField element = new() {
                 position = position,
                 size = size,
                 value = value,

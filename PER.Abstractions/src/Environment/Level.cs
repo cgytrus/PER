@@ -5,29 +5,17 @@ using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
-using PER.Abstractions.Audio;
-using PER.Abstractions.Input;
-using PER.Abstractions.Rendering;
-using PER.Abstractions.Resources;
+using PER.Abstractions.Meta;
 using PER.Util;
 
 namespace PER.Abstractions.Environment;
-
-[PublicAPI]
-public readonly record struct LevelClientData(IRenderer renderer, IInput input, IAudio audio);
 
 [PublicAPI]
 public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     where TLevel : Level<TLevel, TChunk, TObject>
     where TChunk : Chunk<TLevel, TChunk, TObject>, new()
     where TObject : LevelObject<TLevel, TChunk, TObject> {
-    [MemberNotNullWhen(true, nameof(client), nameof(renderer), nameof(input), nameof(audio))]
-    public bool isClient => client is not null;
-    public LevelClientData? client { get; }
-    public IRenderer? renderer => client?.renderer;
-    public IInput? input => client?.input;
-    public IAudio? audio => client?.audio;
-    public IResources resources { get; }
+    public bool isClient { get; }
     public Vector2Int chunkSize { get; }
 
     public Color ambientLight { get; set; } = new(0.1f, 0.1f, 0.1f, 0.4f);
@@ -71,10 +59,8 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     private readonly Stopwatch _generationTimer = new();
 
-    protected Level(LevelClientData? client, IResources resources, Vector2Int chunkSize,
-        Lighting<TLevel, TChunk, TObject>? lighting = null) {
-        this.client = client;
-        this.resources = resources;
+    protected Level(bool isClient, Vector2Int chunkSize, Lighting<TLevel, TChunk, TObject>? lighting = null) {
+        this.isClient = isClient;
         this.chunkSize = chunkSize;
         _light = lighting ?? new SimpleLighting<TLevel, TChunk, TObject>();
         _light.SetLevel(this);
@@ -92,8 +78,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         if(obj.blocksLight)
             _light.QueueLitBy(chunk);
         _light.QueuePropagate(obj);
-        if(obj is IAddable addable)
-            addable.Added();
+        (obj as IAddable)?.Added();
         objectAdded?.Invoke(obj);
     }
 
@@ -107,14 +92,14 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         GetChunkAt(LevelToChunkPosition(obj.position)).Remove(obj);
         _light.QueueBlockedBy(obj);
         _objects.Remove(objId);
-        if(obj is IRemovable removable)
-            removable.Removed();
+        (obj as IRemovable)?.Removed();
         obj.SetLevel(null);
         objectRemoved?.Invoke(obj);
     }
 
+    [RequiresHead]
     public virtual void Update(TimeSpan time) {
-        RequireClient();
+        RequireHead();
         shouldGenerateChunks = true;
         updateState = LevelUpdateState.Update;
         foreach(TObject obj in dirtyObjects)
@@ -191,8 +176,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
             _light.QueueReset(obj);
             _light.QueuePropagate(obj);
             // ReSharper disable once SuspiciousTypeConversion.Global
-            if(obj is IMovable movable)
-                movable.Moved(obj.internalPrevPosition);
+            (obj as IMovable)?.Moved(obj.internalPrevPosition);
         }
         else if(obj.lightDirty) {
             _light.QueueReset(obj);
@@ -249,7 +233,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int LevelToCameraPosition(Vector2Int levelPosition) => levelPosition - cameraPosition;
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [RequiresHead, MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int LevelToScreenPosition(Vector2Int levelPosition) =>
         CameraToScreenPosition(LevelToCameraPosition(levelPosition));
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -261,22 +245,22 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToLevelPosition(Vector2Int cameraPosition) => cameraPosition + this.cameraPosition;
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [RequiresHead, MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToScreenPosition(Vector2Int cameraPosition) =>
-        isClient ? cameraPosition + renderer.size / 2 :
+        isClient ? cameraPosition + renderer!.size / 2 :
             throw new InvalidOperationException("Screen accessed from server");
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToChunkPosition(Vector2Int cameraPosition) =>
         LevelToChunkPosition(CameraToLevelPosition(cameraPosition));
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [RequiresHead, MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ScreenToLevelPosition(Vector2Int screenPosition) =>
         ScreenToCameraPosition(CameraToLevelPosition(screenPosition));
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [RequiresHead, MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ScreenToCameraPosition(Vector2Int screenPosition) =>
-        isClient ? screenPosition - renderer.size / 2 :
+        isClient ? screenPosition - renderer!.size / 2 :
             throw new InvalidOperationException("Screen accessed from server");
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [RequiresHead, MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ScreenToChunkPosition(Vector2Int screenPosition) =>
         LevelToChunkPosition(ScreenToLevelPosition(screenPosition));
 
@@ -286,7 +270,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ChunkToCameraPosition(Vector2Int chunkPosition) =>
         LevelToCameraPosition(ChunkToLevelPosition(chunkPosition));
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [RequiresHead, MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ChunkToScreenPosition(Vector2Int chunkPosition) =>
         LevelToScreenPosition(ChunkToLevelPosition(chunkPosition));
 
@@ -308,14 +292,15 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         return new Bounds(new Vector2Int(minX, minY), new Vector2Int(maxX, maxY));
     }
 
-    [MemberNotNull(nameof(client), nameof(renderer), nameof(input), nameof(audio))]
+    [RequiresHead]
     public void RequireClient([CallerMemberName] string caller = "unknown?") {
-        if(!isClient)
+        if (!isClient)
             throw new InvalidOperationException($"{caller} can only be called from client");
     }
 
+    [RequiresBody]
     public void RequireServer([CallerMemberName] string caller = "unknown?") {
-        if(isClient)
+        if (isClient)
             throw new InvalidOperationException($"{caller} can only be called from server");
     }
 }

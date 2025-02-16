@@ -2,6 +2,7 @@
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -10,7 +11,7 @@ using PRR.UI.Resources;
 namespace PRR.UI;
 
 [PublicAPI]
-public class Slider(IRenderer renderer, IInput input, IAudio? audio = null) : ClickableElement(renderer, input, audio) {
+public class Slider : ClickableElement {
     public static readonly Type serializedType = typeof(LayoutResourceSlider);
 
     protected override string type => "slider";
@@ -69,7 +70,9 @@ public class Slider(IRenderer renderer, IInput input, IAudio? audio = null) : Cl
         PlaySound(audio, valueChangedSound, ValueChangedSoundId);
     }
 
+    [RequiresHead]
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
+        RequireHead();
         Vector2Int position = new(this.position.x + x, this.position.y + y);
         char character = x < _relativeValue ? '─' : x == _relativeValue ? '█' : '-';
         renderer.DrawCharacter(position, new RenderCharacter(character, backgroundColor, foregroundColor), effect);
@@ -80,9 +83,9 @@ public class Slider(IRenderer renderer, IInput input, IAudio? audio = null) : Cl
     private record LayoutResourceSlider(bool? enabled, Vector2Int position, Vector2Int size, int? width, float? value,
         float? minValue, float? maxValue, bool? active) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
-        public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
-            Slider element = new(renderer, input, audio) {
+        public override Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
+            List<string> layoutNames, string id) {
+            Slider element = new() {
                 position = position,
                 size = size
             };

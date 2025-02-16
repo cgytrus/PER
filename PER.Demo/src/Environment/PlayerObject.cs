@@ -3,6 +3,7 @@
 using PER.Abstractions;
 using PER.Abstractions.Environment;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -20,7 +21,9 @@ public class PlayerObject : LevelObject, IUpdatable, ITickable, ILight {
     private int _moveX;
     private int _moveY;
 
+    [RequiresHead]
     public void Update(TimeSpan time) {
+        RequireHead();
         RequireClient();
 
         _moveX = 0;

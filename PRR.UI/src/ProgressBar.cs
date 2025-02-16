@@ -1,7 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-using PER.Abstractions.Audio;
-using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -10,7 +9,7 @@ using PRR.UI.Resources;
 namespace PRR.UI;
 
 [PublicAPI]
-public class ProgressBar(IRenderer renderer) : Element(renderer) {
+public class ProgressBar : Element {
     public static readonly Type serializedType = typeof(LayoutResourceProgressBar);
 
     private struct AnimatedCharacter {
@@ -54,7 +53,7 @@ public class ProgressBar(IRenderer renderer) : Element(renderer) {
     private AnimatedCharacter[,] _anim = new AnimatedCharacter[0, 0];
     private float _prevValue;
 
-    public static ProgressBar Clone(ProgressBar template) => new(template.renderer) {
+    public static ProgressBar Clone(ProgressBar template) => new() {
         enabled = template.enabled,
         position = template.position,
         size = template.size,
@@ -80,11 +79,15 @@ public class ProgressBar(IRenderer renderer) : Element(renderer) {
                 _anim[x, y].Start(time, color);
     }
 
+    [RequiresHead]
     public override void Update(TimeSpan time) {
-        if(!enabled) return;
+        if(!enabled)
+            return;
+        RequireHead();
 
-        if(value != _prevValue) Animate(time, _prevValue, value, lowColor, highColor);
-        else if(_resized) {
+        if (value != _prevValue)
+            Animate(time, _prevValue, value, lowColor, highColor);
+        else if (_resized) {
             Animate(time, value, value, lowColor, highColor);
             _resized = false;
         }
@@ -107,9 +110,9 @@ public class ProgressBar(IRenderer renderer) : Element(renderer) {
 
     private record LayoutResourceProgressBar(bool? enabled, Vector2Int position, Vector2Int size, float? value) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
-        public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
-            ProgressBar element = new(renderer) {
+        public override Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
+            List<string> layoutNames, string id) {
+            ProgressBar element = new() {
                 position = position,
                 size = size
             };

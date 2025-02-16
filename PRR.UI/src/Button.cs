@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -27,15 +28,16 @@ public class Button : ClickableElement {
         set => toggledSelf = value;
     }
 
-    protected override InputReq<bool>? hotkeyPressed =>
-        hotkey.HasValue ? input.Get<IKeyboard>().GetKey(hotkey.Value) : null;
+    protected override InputReq<bool>? hotkeyPressed {
+        [RequiresHead]
+        get => hotkey.HasValue ? input!.Get<IKeyboard>().GetKey(hotkey.Value) : null;
+    }
 
     private Func<char, Formatting> _formatter;
 
-    public Button(IRenderer renderer, IInput input, IAudio? audio = null) : base(renderer, input, audio) =>
-        _formatter = _ => new Formatting(Color.white, Color.transparent, style, effect);
+    public Button() => _formatter = _ => new Formatting(Color.white, Color.transparent, style, effect);
 
-    public static Button Clone(Button template) => new(template.renderer, template.input, template.audio) {
+    public static Button Clone(Button template) => new() {
         enabled = template.enabled,
         position = template.position,
         size = template.size,
@@ -54,13 +56,17 @@ public class Button : ClickableElement {
 
     public override Element Clone() => Clone(this);
 
+    [RequiresHead]
     protected override void CustomUpdate(TimeSpan time) {
-        if(text is null)
+        if (text is null)
             return;
+        RequireHead();
         renderer.DrawText(center, text, _formatter, HorizontalAlignment.Middle);
     }
 
+    [RequiresHead]
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
+        RequireHead();
         Vector2Int position = new(this.position.x + x, this.position.y + y);
         renderer.DrawCharacter(position, new RenderCharacter('\0', backgroundColor, foregroundColor), effect);
     }
@@ -68,9 +74,9 @@ public class Button : ClickableElement {
     private record LayoutResourceButton(bool? enabled, Vector2Int position, Vector2Int size, string? text,
         [property: JsonConverter(typeof(JsonStringEnumConverter))] RenderStyle? style, bool? active, bool? toggled) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
-        public override Element GetElement(LayoutResource resource, IRenderer renderer,
-            IInput input, IAudio audio, Dictionary<string, Color> colors, List<string> layoutNames, string id) {
-            Button element = new(renderer, input, audio) {
+        public override Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
+            List<string> layoutNames, string id) {
+            Button element = new() {
                 position = position,
                 size = size,
                 text = text
