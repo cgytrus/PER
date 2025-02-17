@@ -76,15 +76,16 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
         _shouldProcessRemoved = true;
     }
 
-    [RequiresHead]
+    //[RequiresBody]
     public void Update(TimeSpan time) {
-        if(!shouldUpdate)
+        if (!shouldUpdate)
             return;
+        //resources.Load();
         level.RequireClient();
         // ReSharper disable once ForCanBeConvertedToForeach
-        for(int i = 0; i < _updatables.Count; i++) {
+        for (int i = 0; i < _updatables.Count; i++) {
             IUpdatable? updatable = _updatables[i];
-            if(updatable is TObject { inLevelInt: true })
+            if (updatable is TObject { inLevelInt: true })
                 updatable.Update(time);
         }
         ProcessRemoved();
@@ -93,7 +94,6 @@ public abstract class Chunk<TLevel, TChunk, TObject> : IUpdatable, ITickable
     [RequiresHead]
     public void Draw(Vector2Int start) {
         level.RequireClient();
-        RequireHead();
         if (!shouldUpdate || level.doLighting && totalVisibility == 0f)
             return;
         // ReSharper disable once ForCanBeConvertedToForeach
