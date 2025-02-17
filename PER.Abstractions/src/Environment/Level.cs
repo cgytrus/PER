@@ -97,9 +97,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         objectRemoved?.Invoke(obj);
     }
 
-    [RequiresHead]
     public virtual void Update(TimeSpan time) {
-        RequireHead();
         shouldGenerateChunks = true;
         updateState = LevelUpdateState.Update;
         foreach(TObject obj in dirtyObjects)
@@ -247,7 +245,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
     public Vector2Int CameraToLevelPosition(Vector2Int cameraPosition) => cameraPosition + this.cameraPosition;
     [RequiresHead, MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToScreenPosition(Vector2Int cameraPosition) =>
-        isClient ? cameraPosition + renderer!.size / 2 :
+        isClient ? cameraPosition + renderer.size / 2 :
             throw new InvalidOperationException("Screen accessed from server");
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int CameraToChunkPosition(Vector2Int cameraPosition) =>
@@ -258,7 +256,7 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
         ScreenToCameraPosition(CameraToLevelPosition(screenPosition));
     [RequiresHead, MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ScreenToCameraPosition(Vector2Int screenPosition) =>
-        isClient ? screenPosition - renderer!.size / 2 :
+        isClient ? screenPosition - renderer.size / 2 :
             throw new InvalidOperationException("Screen accessed from server");
     [RequiresHead, MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public Vector2Int ScreenToChunkPosition(Vector2Int screenPosition) =>
@@ -290,17 +288,5 @@ public abstract class Level<TLevel, TChunk, TObject> : IUpdatable, ITickable
                 maxY = obj.position.y;
         }
         return new Bounds(new Vector2Int(minX, minY), new Vector2Int(maxX, maxY));
-    }
-
-    [RequiresHead]
-    public void RequireClient([CallerMemberName] string caller = "unknown?") {
-        if (!isClient)
-            throw new InvalidOperationException($"{caller} can only be called from client");
-    }
-
-    [RequiresBody]
-    public void RequireServer([CallerMemberName] string caller = "unknown?") {
-        if (isClient)
-            throw new InvalidOperationException($"{caller} can only be called from server");
     }
 }

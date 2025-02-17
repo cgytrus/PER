@@ -49,9 +49,7 @@ public class Mouse : Mouse<Mouse> {
     private void OnMouseMove(MouseMoveEventArgs e) => _mouseMoveEvents.Add(e);
     private void OnMouseWheel(MouseWheelEventArgs e) => _mouseWheelEvents.Add(e);
 
-    [RequiresHead]
     public override void Update(TimeSpan time) {
-        RequireHead();
         base.Update(time);
 
         _previousMousePosition = _mousePosition;

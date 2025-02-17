@@ -3,147 +3,117 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 
 namespace PER.Analyzers;
 
 public static class Util {
+    private static bool IsRequiresBody(AttributeData x) =>
+        x.AttributeClass?.ToDisplayString() == "PER.Abstractions.Meta.RequiresBodyAttribute";
+
+    private static bool IsRequiresHead(AttributeData x) =>
+        x.AttributeClass?.ToDisplayString() == "PER.Abstractions.Meta.RequiresHeadAttribute";
+
     public static IEnumerable<(IOperation, ISymbol)> FindInvocations(IOperation operation) => operation.ChildOperations
         .Flatten(x => x is IMethodBodyOperation ? Array.Empty<IOperation>() : x.ChildOperations)
-        .Where(x => x is IInvocationOperation or IPropertyReferenceOperation)
+        .Where(x => x is IInvocationOperation or IPropertyReferenceOperation or IEventReferenceOperation)
         .Select<IOperation, (IOperation, ISymbol)>(x => (x, x switch {
             IInvocationOperation invocation => invocation.TargetMethod,
             IPropertyReferenceOperation property => property.Property,
+            IEventReferenceOperation e => e.Event,
             _ => throw new ArgumentOutOfRangeException(nameof(x))
         }));
 
-    public static (bool body, bool head) GetRequires(ISymbol symbol) {
-        while (symbol is IMethodSymbol { OverriddenMethod: not null } overrideMethod)
-            symbol = overrideMethod.OverriddenMethod;
-        while (symbol is IMethodSymbol { ExplicitInterfaceImplementations.Length: > 0 } method)
-            symbol = method.ExplicitInterfaceImplementations[0];
-        (bool containingBody, bool containingHead) = symbol.ContainingSymbol is null ? (false, false) :
-            GetRequires(symbol.ContainingSymbol);
-        if (containingBody && containingHead)
-            return (true, true);
-        ImmutableArray<AttributeData> attributes = symbol.GetAttributes();
-        return (
-            containingBody || attributes.Any(x => x.AttributeClass?.ToDisplayString() == "PER.Abstractions.Meta.RequiresBodyAttribute"),
-            containingHead || attributes.Any(x => x.AttributeClass?.ToDisplayString() == "PER.Abstractions.Meta.RequiresHeadAttribute")
-        );
-    }
-
-    private static ((bool used, bool invalid) body, (bool used, bool invalid) head) VerifyRequires(ISymbol? symbol) {
-        if (symbol is null)
-            return ((false, false), (false, false));
-        ImmutableArray<AttributeData> attributes = symbol.GetAttributes();
-        ((bool used, bool invalid) body, (bool used, bool invalid) head) current = (
-            (
-                attributes.Any(x =>
-                    x.AttributeClass?.ToDisplayString() == "PER.Abstractions.Meta.RequiresBodyAttribute"),
-                false
-            ),
-            (
-                attributes.Any(x =>
-                    x.AttributeClass?.ToDisplayString() == "PER.Abstractions.Meta.RequiresHeadAttribute"),
-                false
-            )
-        );
-        if (symbol.ContainingSymbol is not null && !current.body.used && !current.head.used) {
-            (bool containingBody, bool containingHead) = GetRequires(symbol.ContainingSymbol);
-            current.body.used = current.body.used || containingBody;
-            current.head.used = current.head.used || containingHead;
-        }
-
-        if (symbol is not IMethodSymbol method)
-            return current;
-        if (method.OverriddenMethod is not null && MergeOverridden(GetRequires(method.OverriddenMethod)))
-            return current;
-        if (method.ExplicitInterfaceImplementations.Any(x => MergeOverridden(GetRequires(x))))
-            return current;
-        _ = method.ContainingSymbol switch {
-            ITypeSymbol type => type.AllInterfaces
-                .SelectMany(x => x.GetMembers(method.Name)
-                    .OfType<IMethodSymbol>()
-                    .Where(y => y.Parameters
-                        .Zip(method.Parameters, (a, b) => SymbolEqualityComparer.Default.Equals(a, b))
-                        .All(z => z)))
-                .Any(x => MergeOverridden(GetRequires(x))),
-            IPropertySymbol property => (property.ContainingSymbol as ITypeSymbol)?.AllInterfaces
-                .SelectMany(x => x.GetMembers(property.Name)
-                    .OfType<IPropertySymbol>()
-                    .Select(y => SymbolEqualityComparer.Default.Equals(property.GetMethod, method) ?
-                        y.GetMethod : y.SetMethod)
-                    .OfType<IMethodSymbol>())
-                .Any(x => MergeOverridden(GetRequires(x))) ?? false,
-            IEventSymbol e => (e.ContainingSymbol as ITypeSymbol)?.AllInterfaces
-                .SelectMany(x => x.GetMembers(e.Name)
-                    .OfType<IEventSymbol>()
-                    .Select(y => SymbolEqualityComparer.Default.Equals(e.AddMethod, method) ? y.AddMethod :
-                        SymbolEqualityComparer.Default.Equals(e.RemoveMethod, method) ? y.RemoveMethod :
-                        y.RaiseMethod)
-                    .OfType<IMethodSymbol>())
-                .Any(x => MergeOverridden(GetRequires(x))) ?? false,
-            _ => false
-        };
-
-        return current;
-
-        bool MergeOverridden((bool body, bool head) overridden) {
-            if (overridden.body)
-                current.body.used = true;
-            else if (current.body.used)
-                current.body.invalid = true;
-            if (overridden.head)
-                current.head.used = true;
-            else if (current.head.used)
-                current.head.invalid = true;
-            return current is { head: { used: true, invalid: true }, body: { used: true, invalid: true } };
-        }
-    }
-
-    public static ((bool used, bool invalid) body, (bool used, bool invalid) head) VerifyRequires(SemanticModel semanticModel, ISymbol? symbol) {
-        ((bool used, bool invalid) body, (bool used, bool invalid) head) current = ((false, false), (false, false));
-
+    private static IEnumerable<ISymbol> AllInterfaceDeclarations(ISymbol symbol) {
         switch (symbol) {
             case IMethodSymbol method:
-                _ = method.DeclaringSyntaxReferences
-                    .Select(x => x.GetSyntax())
-                    .OfType<MethodDeclarationSyntax>()
-                    .Select(x => x.Body as SyntaxNode ?? x.ExpressionBody)
-                    .Any(body => body is not null && semanticModel.GetOperation(body) is { } operation &&
-                        FindInvocations(operation).Any(x => MergeRecursion(VerifyRequires(x.Item2))));
+                if (method.ExplicitInterfaceImplementations.Length > 0)
+                    return method.ExplicitInterfaceImplementations;
                 break;
             case IPropertySymbol property:
-                if (MergeRecursion(VerifyRequires(semanticModel, property.GetMethod)))
-                    break;
-                MergeRecursion(VerifyRequires(semanticModel, property.SetMethod));
+                if (property.ExplicitInterfaceImplementations.Length > 0)
+                    return property.ExplicitInterfaceImplementations;
                 break;
             case IEventSymbol e:
-                if (MergeRecursion(VerifyRequires(semanticModel, e.AddMethod)))
-                    break;
-                if (MergeRecursion(VerifyRequires(semanticModel, e.RemoveMethod)))
-                    break;
-                MergeRecursion(VerifyRequires(semanticModel, e.RaiseMethod));
+                if (e.ExplicitInterfaceImplementations.Length > 0)
+                    return e.ExplicitInterfaceImplementations;
                 break;
-            case ITypeSymbol type:
-                type.GetMembers().Any(x => MergeRecursion(VerifyRequires(semanticModel, x)));
+            default:
+                return Array.Empty<ISymbol>();
+        }
+        if (symbol is not { DeclaredAccessibility: Accessibility.Public,
+            ContainingType.TypeKind: TypeKind.Class or TypeKind.Struct })
+            return Array.Empty<ISymbol>();
+        return symbol.ContainingType.AllInterfaces
+            .Where(x => {
+                string? nameToLookFor = symbol is IMethodSymbol {
+                    MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet or
+                    MethodKind.EventAdd or MethodKind.EventRemove or MethodKind.EventRaise
+                } method ? method.AssociatedSymbol?.Name : symbol.Name;
+                return nameToLookFor is not null && x.MemberNames.Contains(nameToLookFor);
+            })
+            .SelectMany(x => x.GetMembers(symbol.Name)
+                .Where(y => SymbolEqualityComparer.Default.Equals(
+                    symbol.ContainingType.FindImplementationForInterfaceMember(y), symbol))
+            )
+            .Distinct(SymbolEqualityComparer.Default);
+    }
+
+    public static ((ISymbol, Location?)? body, (ISymbol, Location?)? head) GetRequiresSelf(ISymbol symbol) {
+        ImmutableArray<AttributeData> attributes = symbol.GetAttributes();
+        AttributeData? body = attributes.FirstOrDefault(IsRequiresBody);
+        AttributeData? head = attributes.FirstOrDefault(IsRequiresHead);
+        return (
+            body is null ? null : (symbol, body.ApplicationSyntaxReference?.GetSyntax().GetLocation()),
+            head is null ? null : (symbol, head.ApplicationSyntaxReference?.GetSyntax().GetLocation())
+        );
+    }
+
+    public static ((ISymbol, Location?)? body, (ISymbol, Location?)? head) GetRequires(ISymbol symbol) {
+        // go up overrides
+        while (symbol is IMethodSymbol { OverriddenMethod: not null } overrideMethod)
+            symbol = overrideMethod.OverriddenMethod;
+        while (symbol is IPropertySymbol { OverriddenProperty: not null } overrideProperty)
+            symbol = overrideProperty.OverriddenProperty;
+        while (symbol is IEventSymbol { OverriddenEvent: not null } overrideEvent)
+            symbol = overrideEvent.OverriddenEvent;
+
+        // then up interface to the interface declaration
+        while (symbol is IMethodSymbol or IPropertySymbol or IEventSymbol) {
+            ISymbol? impl = AllInterfaceDeclarations(symbol).FirstOrDefault();
+            if (impl is null)
                 break;
+            symbol = impl;
         }
 
-        return current;
+        ((ISymbol, Location?)? containingBody, (ISymbol, Location?)? containingHead) = symbol.ContainingSymbol is null ?
+            (null, null) : GetRequires(symbol.ContainingSymbol);
+        if (containingBody is not null && containingHead is not null)
+            return (containingBody, containingHead);
 
-        bool MergeRecursion(((bool used, bool invalid) body, (bool used, bool invalid) head) child) {
-            if (child.body.used)
-                current.body.used = true;
-            if (child.body.invalid)
-                current.body.invalid = true;
-            if (child.head.used)
-                current.head.used = true;
-            if (child.head.invalid)
-                current.head.invalid = true;
-            return current is { head: { used: true, invalid: true }, body: { used: true, invalid: true } };
+        ((ISymbol, Location?)? body, (ISymbol, Location?)? head) = GetRequiresSelf(symbol);
+        return (containingBody ?? body, containingHead ?? head);
+    }
+
+    public static IEnumerable<IMethodSymbol> GetMethods(ISymbol? symbol) {
+        switch (symbol) {
+            case IMethodSymbol method:
+                yield return method;
+                break;
+            case IPropertySymbol property:
+                if (property.GetMethod is not null)
+                    yield return property.GetMethod;
+                if (property.SetMethod is not null)
+                    yield return property.SetMethod;
+                break;
+            case IEventSymbol e:
+                if (e.AddMethod is not null)
+                    yield return e.AddMethod;
+                if (e.RemoveMethod is not null)
+                    yield return e.RemoveMethod;
+                if (e.RaiseMethod is not null)
+                    yield return e.RaiseMethod;
+                break;
         }
     }
 }

@@ -33,9 +33,6 @@ public static class Engine {
 
     [RequiresBody, RequiresHead]
     public static void Run() {
-        RequireBody();
-        RequireHead();
-
         AppDomain.CurrentDomain.UnhandledException += (_, args) => {
             logger.Fatal(args.ExceptionObject as Exception,
                 "Uncaught exception! Please, report this file to the developer of the game.");
@@ -76,10 +73,8 @@ public static class Engine {
         LogManager.Shutdown();
     }
 
-    [RequiresBody, RequiresHead]
+    [RequiresHead]
     public static void Reload() {
-        RequireBody();
-        RequireHead();
         logger.Info("Starting full reload");
         renderer.Close();
         running = true;
@@ -87,8 +82,6 @@ public static class Engine {
 
     [RequiresBody, RequiresHead]
     public static void SoftReload() {
-        RequireBody();
-        RequireHead();
         logger.Info("Starting soft reload");
         renderer.Finish();
         input.Finish();
@@ -100,9 +93,6 @@ public static class Engine {
 
     [RequiresBody, RequiresHead]
     private static void Update() {
-        RequireBody();
-        RequireHead();
-
         // 1. vsync handles limiting for us
         // 2. updateInterval <= 0 means no limit
         if (!renderer.verticalSync && updateInterval > TimeSpan.Zero) {

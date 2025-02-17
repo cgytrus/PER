@@ -26,8 +26,6 @@ public static class Engine {
 
     [RequiresBody]
     public static void Run() {
-        RequireBody();
-
         AppDomain.CurrentDomain.UnhandledException += (_, args) => {
             logger.Fatal(args.ExceptionObject as Exception,
                 "Uncaught exception! Please, report this file to the developer of the game.");
@@ -68,7 +66,6 @@ public static class Engine {
 
     [RequiresBody]
     public static void SoftReload() {
-        RequireBody();
         logger.Info("Starting soft reload");
         resources.SoftReload();
         game.Loaded();
@@ -76,8 +73,6 @@ public static class Engine {
 
     [RequiresBody]
     private static void TryTick(TimeSpan time) {
-        RequireBody();
-
         if (tickInterval < TimeSpan.Zero) {
             _lastTickTime = time;
             return;

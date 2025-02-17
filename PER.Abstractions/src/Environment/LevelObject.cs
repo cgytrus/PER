@@ -106,10 +106,4 @@ public abstract class LevelObject<TLevel, TChunk, TObject>
         positionDirty = false;
         _lightDirty = false;
     }
-
-    [RequiresHead]
-    public void RequireClient([CallerMemberName] string caller = "unknown?") => level.RequireClient(caller);
-
-    [RequiresBody]
-    public void RequireServer([CallerMemberName] string caller = "unknown?") => level.RequireServer(caller);
 }

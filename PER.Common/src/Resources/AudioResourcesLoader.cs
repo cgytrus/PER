@@ -29,7 +29,6 @@ public abstract class AudioResourcesLoader : Resource {
 
     [RequiresHead]
     public override void Load(string id) {
-        RequireHead();
         IAudioMixer master = audio.CreateMixer();
 
         foreach((MixerDefinition mixerDefinition, AudioResource[] audioResources) in sounds) {
@@ -52,11 +51,10 @@ public abstract class AudioResourcesLoader : Resource {
     }
 
     [RequiresHead]
-    public override void Unload(string id) => audio!.Clear();
+    public override void Unload(string id) => audio.Clear();
 
     [RequiresHead]
     protected void AddSound(string id, IAudioMixer mixer) {
-        RequireHead();
         if(TryGetPath(id, out string? path)) {
             logger.Info("Loading sound {Id}", id);
             audio.TryStorePlayable(id, audio.CreateSound(path, mixer));
@@ -67,7 +65,6 @@ public abstract class AudioResourcesLoader : Resource {
 
     [RequiresHead]
     protected void AddMusic(string id, IAudioMixer mixer) {
-        RequireHead();
         if(TryGetPath(id, out string? path)) {
             logger.Info("Loading music {Id}", id);
             audio.TryStorePlayable(id, audio.CreateMusic(path, mixer));

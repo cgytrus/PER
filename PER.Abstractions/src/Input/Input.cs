@@ -5,7 +5,6 @@ namespace PER.Abstractions.Input;
 
 public class Input<T1>(IDeviceProvider<T1> devices) : IInput where T1 : IDevice {
     public virtual void Setup() => devices.Setup();
-    [RequiresHead]
     public virtual void Update(TimeSpan time) => devices.Update(time);
     public virtual void Finish() => devices.Finish();
     public virtual int Count<TDevice>() where TDevice : class, IDevice => (devices as IDeviceProvider<TDevice>)?.count ?? 0;
@@ -20,7 +19,6 @@ public class Input<T1, T2>(
     where T1 : IDevice
     where T2 : IDevice {
     public override void Setup() { base.Setup(); devices.Setup(); }
-    [RequiresHead]
     public override void Update(TimeSpan time) { base.Update(time); devices.Update(time); }
     public override void Finish() { base.Finish(); devices.Finish(); }
     public override int Count<TDevice>() => (devices as IDeviceProvider<TDevice>)?.count ?? base.Count<TDevice>();
@@ -36,7 +34,6 @@ public class Input<T1, T2, T3>(
     where T2 : IDevice
     where T3 : IDevice {
     public override void Setup() { base.Setup(); devices.Setup(); }
-    [RequiresHead]
     public override void Update(TimeSpan time) { base.Update(time); devices.Update(time); }
     public override void Finish() { base.Finish(); devices.Finish(); }
     public override int Count<TDevice>() => (devices as IDeviceProvider<TDevice>)?.count ?? base.Count<TDevice>();
@@ -54,7 +51,6 @@ public class Input<T1, T2, T3, T4>(
     where T3 : IDevice
     where T4 : IDevice {
     public override void Setup() { base.Setup(); devices.Setup(); }
-    [RequiresHead]
     public override void Update(TimeSpan time) { base.Update(time); devices.Update(time); }
     public override void Finish() { base.Finish(); devices.Finish(); }
     public override int Count<TDevice>() => (devices as IDeviceProvider<TDevice>)?.count ?? base.Count<TDevice>();
@@ -74,7 +70,6 @@ public class Input<T1, T2, T3, T4, T5>(
     where T4 : IDevice
     where T5 : IDevice {
     public override void Setup() { base.Setup(); devices.Setup(); }
-    [RequiresHead]
     public override void Update(TimeSpan time) { base.Update(time); devices.Update(time); }
     public override void Finish() { base.Finish(); devices.Finish(); }
     public override int Count<TDevice>() => (devices as IDeviceProvider<TDevice>)?.count ?? base.Count<TDevice>();

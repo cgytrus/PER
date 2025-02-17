@@ -20,9 +20,7 @@ public class FrameTimeDisplay : IUpdatable {
         _frameTimeFormatter = flag => frameTimeFormatter(this.frameTime, flag);
     }
 
-    [RequiresHead]
     public void Update(TimeSpan time) {
-        RequireHead();
         CultureInfo c = CultureInfo.InvariantCulture;
         const int maxFrameTimeLength = 6;
         const int maxFpsLength = 8;

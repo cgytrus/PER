@@ -1,17 +1,16 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
 
 namespace PER.Analyzers;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class RequiresBodyHeadAnalyzer : DiagnosticAnalyzer {
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(per0001, per0003, per0002);
+        ImmutableArray.Create(per0001, per0002, per0003);
 
     private static readonly DiagnosticDescriptor per0001 = new("PER0001",
         "Method requires body or head",
@@ -43,62 +42,79 @@ public class RequiresBodyHeadAnalyzer : DiagnosticAnalyzer {
     public override void Initialize(AnalysisContext context) {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(FindMissingRequires, OperationKind.MethodBody, OperationKind.ConstructorBody);
         context.RegisterSemanticModelAction(VerifyRequires);
     }
 
-    private static void FindMissingRequires(OperationAnalysisContext context) {
-        if (context.Operation.SemanticModel is null)
-            return;
-
-        (bool requiresBody, bool requiresHead) = Util.GetRequires(context.ContainingSymbol);
-        foreach ((IOperation operation, ISymbol symbol) in Util.FindInvocations(context.Operation)) {
-            (bool body, bool head) = Util.GetRequires(symbol);
-            Location location = operation.Syntax.GetLocation();
-            string name = symbol.ToMinimalDisplayString(context.Operation.SemanticModel, location.SourceSpan.Start);
-            if (!requiresBody && body)
-                context.ReportDiagnostic(Diagnostic.Create(per0001, location, name, "body"));
-            if (!requiresHead && head)
-                context.ReportDiagnostic(Diagnostic.Create(per0001, location, name, "head"));
-        }
-    }
-
     private static void VerifyRequires(SemanticModelAnalysisContext context) {
-        VerifyRequires(context, context.SemanticModel.Compilation.Assembly.GlobalNamespace);
-    }
+        (Dictionary<ISymbol, Location?> bodies, Dictionary<ISymbol, Location?> heads) visited = ([], []);
+        (HashSet<ISymbol> bodies, HashSet<ISymbol> heads) used = ([], []);
 
-    private static void VerifyRequires(SemanticModelAnalysisContext context, ISymbol symbol) {
-        ImmutableArray<AttributeData> attributes = symbol.GetAttributes();
-        AttributeData? bodyAttr = attributes.FirstOrDefault(x =>
-            x.AttributeClass?.ToDisplayString() == "PER.Abstractions.Meta.RequiresBodyAttribute");
-        AttributeData? headAttr = attributes.FirstOrDefault(x =>
-            x.AttributeClass?.ToDisplayString() == "PER.Abstractions.Meta.RequiresHeadAttribute");
-        if (bodyAttr is not null || headAttr is not null) {
-            ((bool used, bool invalid) body, (bool used, bool invalid) head) = Util.VerifyRequires(context.SemanticModel, symbol);
-            if (bodyAttr is not null) {
-                if (!body.used) {
-                    context.ReportDiagnostic(Diagnostic.Create(per0002,
-                        bodyAttr.ApplicationSyntaxReference?.GetSyntax().GetLocation(), symbol.Name, "body"));
-                }
-                if (body.invalid) {
-                    context.ReportDiagnostic(Diagnostic.Create(per0003,
-                        bodyAttr.ApplicationSyntaxReference?.GetSyntax().GetLocation(), symbol.Name, "body"));
-                }
-            }
-            if (headAttr is not null) {
-                if (!head.used) {
-                    context.ReportDiagnostic(Diagnostic.Create(per0002,
-                        headAttr.ApplicationSyntaxReference?.GetSyntax().GetLocation(), symbol.Name, "head"));
-                }
-                if (head.invalid) {
-                    context.ReportDiagnostic(Diagnostic.Create(per0003,
-                        headAttr.ApplicationSyntaxReference?.GetSyntax().GetLocation(), symbol.Name, "head"));
-                }
-            }
+        foreach (ISymbol symbol in context.SemanticModel.SyntaxTree.GetRoot().DescendantNodes()
+            .Where(x => x is ClassDeclarationSyntax or StructDeclarationSyntax or InterfaceDeclarationSyntax)
+            .Select(x => context.SemanticModel.GetDeclaredSymbol(x))
+            .OfType<ISymbol>()) {
+            VisitSymbol(symbol);
         }
-        if (symbol is not INamespaceOrTypeSymbol type)
-            return;
-        foreach (ISymbol member in type.GetMembers())
-            VerifyRequires(context, member);
+
+        foreach (KeyValuePair<ISymbol, Location?> pair in visited.bodies
+            .Where(pair => !used.bodies.Contains(pair.Key))) {
+            context.ReportDiagnostic(Diagnostic.Create(per0002, pair.Value,
+                pair.Key.ToMinimalDisplayString(context.SemanticModel, pair.Value?.SourceSpan.Start ?? 0), "body"));
+        }
+        foreach (KeyValuePair<ISymbol, Location?> pair in visited.heads
+            .Where(pair => !used.heads.Contains(pair.Key))) {
+            context.ReportDiagnostic(Diagnostic.Create(per0002, pair.Value,
+                pair.Key.ToMinimalDisplayString(context.SemanticModel, pair.Value?.SourceSpan.Start ?? 0), "head"));
+        }
+
+        return;
+
+        void MarkVisited(ISymbol symbol) {
+            ((ISymbol, Location?)? body, (ISymbol, Location?)? head) = Util.GetRequiresSelf(symbol);
+            if (body is not null)
+                visited.bodies[body.Value.Item1] = body.Value.Item2;
+            if (head is not null)
+                visited.heads[head.Value.Item1] = head.Value.Item2;
+        }
+        void VisitSymbol(ISymbol symbol) {
+            MarkVisited(symbol);
+            foreach (IMethodSymbol method in Util.GetMethods(symbol)) {
+                MarkVisited(method);
+                ((ISymbol, Location?)? body, (ISymbol, Location?)? head) requires = Util.GetRequires(method);
+                foreach (IOperation operation in method.DeclaringSyntaxReferences
+                    .Select(x => x.GetSyntax()).OfType<MethodDeclarationSyntax>()
+                    .Select(x => x.Body as SyntaxNode ?? x.ExpressionBody).OfType<SyntaxNode>()
+                    .Select(x => context.SemanticModel.GetOperation(x)).OfType<IOperation>()) {
+                    foreach ((IOperation invocation, ISymbol invokedSym) in Util.FindInvocations(operation)) {
+                        ((ISymbol, Location?)? body, (ISymbol, Location?)? head) invoked = Util.GetRequires(invokedSym);
+                        Location location = invocation.Syntax.GetLocation();
+                        string name = invokedSym.ToMinimalDisplayString(context.SemanticModel, location.SourceSpan.Start);
+                        if (invoked.body is not null) {
+                            if (requires.body is null) {
+                                context.ReportDiagnostic(Diagnostic.Create(per0001, location,
+                                    invoked.body.Value.Item1.Locations, name, "body"));
+                            }
+                            else {
+                                used.bodies.Add(requires.body.Value.Item1);
+                            }
+                        }
+                        if (invoked.head is not null) {
+                            if (requires.head is null) {
+                                context.ReportDiagnostic(Diagnostic.Create(per0001, location,
+                                    invoked.head.Value.Item1.Locations, name, "head"));
+                            }
+                            else {
+                                used.heads.Add(requires.head.Value.Item1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (symbol is not INamespaceOrTypeSymbol type)
+                return;
+            foreach (ISymbol member in type.GetMembers())
+                VisitSymbol(member);
+        }
     }
 }

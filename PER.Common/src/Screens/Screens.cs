@@ -24,18 +24,15 @@ public class Screens : IScreens, ISetupable, IUpdatable, ITickable {
             SwitchScreen(screen, FadeTime, FadeTime, middleCallback);
     }
 
+    [RequiresHead]
     public void SwitchScreen(IScreen? screen, float fadeOutTime, float fadeInTime, Func<bool>? middleCallback = null) =>
-        FadeScreen(fadeOutTime, fadeInTime, [RequiresHead] () => {
-            // TODO: whart
-#pragma warning disable PER0001
-            RequireHead();
-#pragma warning restore PER0001
-            if(middleCallback is not null && !middleCallback.Invoke())
+        FadeScreen(fadeOutTime, fadeInTime, () => {
+            if (middleCallback is not null && !middleCallback.Invoke())
                 return;
             currentScreen?.Close();
             currentScreen = screen;
             currentScreen?.Open();
-            if(currentScreen is null)
+            if (currentScreen is null)
                 renderer.Close();
         });
 
@@ -45,12 +42,9 @@ public class Screens : IScreens, ISetupable, IUpdatable, ITickable {
     public void FadeScreen(float fadeOutTime, float fadeInTime, Action middleCallback) =>
         _screenFade.Start(fadeOutTime, fadeInTime, middleCallback);
 
-    [RequiresHead]
-    public void Setup() => renderer!.closed += (_, _) => SwitchScreen(null);
+    public void Setup() => renderer.closed += (_, _) => SwitchScreen(null);
 
-    [RequiresHead]
     public void Update(TimeSpan time) {
-        RequireHead();
         _screenFade.Update(time);
         if(_screenFade.fading)
             renderer.AddEffect(_screenFade);

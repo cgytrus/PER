@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using PER.Abstractions.Audio;
+﻿using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
 using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
@@ -9,6 +7,8 @@ using PER.Abstractions.Screens;
 
 namespace PER.Abstractions;
 
+// this is our root!
+#pragma warning disable PER0002
 public static class Globals {
     [RequiresBody]
     public static IResources resources { get; set; } = null!;

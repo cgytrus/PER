@@ -11,7 +11,6 @@ public class GlitchEffect : IModifierEffect, IDrawableEffect {
 
     [RequiresHead]
     public void ApplyModifiers(Vector2Int at, ref Vector2Int offset, ref RenderCharacter character) {
-        RequireHead();
         offset += new Vector2Int(RandomInt(), 0);
         string mappings = renderer.font.mappings;
         character = new RenderCharacter(
@@ -23,10 +22,9 @@ public class GlitchEffect : IModifierEffect, IDrawableEffect {
 
     [RequiresHead]
     public void Draw(Vector2Int position) {
-        RequireHead();
-        if(position.x % Random.Shared.Next(3, 10) == 0 || position.y % Random.Shared.Next(3, 10) == 0)
+        if (position.x % Random.Shared.Next(3, 10) == 0 || position.y % Random.Shared.Next(3, 10) == 0)
             _draw = RandomNonNegativeFloat() > 0.95f;
-        if(!_draw)
+        if (!_draw)
             return;
         string mappings = renderer.font.mappings;
         renderer.DrawCharacter(position, new RenderCharacter(
