@@ -146,7 +146,6 @@ public class InputField : ClickableElement {
 
     [RequiresHead]
     public override void Input() {
-        RequireHead();
         IKeyboard keyboard = input.Get<IKeyboard>();
         IMouse mouse = input.Get<IMouse>();
         _typingInput = typing;
@@ -217,7 +216,6 @@ public class InputField : ClickableElement {
 
     [RequiresHead]
     protected override void CustomUpdate(TimeSpan time) {
-        RequireHead();
         _lastTime = time;
 
         if (_typingInput) {
@@ -269,7 +267,6 @@ public class InputField : ClickableElement {
 
     [RequiresHead]
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
-        RequireHead();
         Vector2Int position = new(this.position.x + x, this.position.y + y);
 
         Vector2Int cursor = cursorPos;
@@ -296,14 +293,12 @@ public class InputField : ClickableElement {
 
     [RequiresHead]
     private void Copy() {
-        RequireHead();
         input.Get<IClipboard>().value = value ?? string.Empty;
         _lastTypeTime = _lastTime;
     }
 
     [RequiresHead]
     private void Paste() {
-        RequireHead();
         PlaySound(audio, typeSound, TypeSoundId);
         foreach(char character in input.Get<IClipboard>().value)
             TypeDrawable(character);
@@ -317,7 +312,6 @@ public class InputField : ClickableElement {
 
     [RequiresHead]
     private void TypeDrawable(char character) {
-        RequireHead();
         if(renderer.font.IsCharacterDrawable(character) || character == ' ')
             Type(character);
     }

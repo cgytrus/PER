@@ -83,7 +83,6 @@ public class ProgressBar : Element {
     public override void Update(TimeSpan time) {
         if(!enabled)
             return;
-        RequireHead();
 
         if (value != _prevValue)
             Animate(time, _prevValue, value, lowColor, highColor);

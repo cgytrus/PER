@@ -34,7 +34,6 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
     private Level? _level;
 
     public GameScreen(Settings settings) {
-        RequireBody();
         _settings = settings;
         resources.TryAddResource(ResourcePackSelectorTemplate.GlobalId,
             new ResourcePackSelectorTemplate(this, _availablePacks, _loadedPacks));
@@ -66,8 +65,6 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
 
     [RequiresBody, RequiresHead]
     public override void Load(string id) {
-        RequireBody();
-        RequireHead();
         base.Load(id);
 
         _level = new Level(new Vector2Int(16, 16));
@@ -146,7 +143,6 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
 
     [RequiresHead]
     public void Update(TimeSpan time) {
-        RequireHead();
         if (_testProgressBar is null)
             return;
 
@@ -220,7 +216,6 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
 
     [RequiresBody]
     private void OpenPacks() {
-        RequireBody();
         _loadedPacks.Clear();
         _availablePacks.Clear();
 

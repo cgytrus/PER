@@ -43,7 +43,6 @@ public class Text : Element {
     public override void Update(TimeSpan time) {
         if (!enabled || text is null)
             return;
-        RequireHead();
         if (formatting.Count == 0)
             formatting.Add('\0',
                 new Formatting(Color.white, Color.transparent, RenderStyle.None, effect));
@@ -70,7 +69,6 @@ public class Text : Element {
         [RequiresHead]
         public override Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
             List<string> layoutNames, string id) {
-            RequireHead();
             Text element = new() {
                 position = position,
                 size = size,

@@ -1,12 +1,12 @@
 ﻿using JetBrains.Annotations;
-
+using PER.Abstractions.Meta;
 using PER.Abstractions.Resources;
 using PER.Common.Rendering;
 
 namespace PER.Common.Resources;
 
-[PublicAPI]
-public class FontResource : Resource {
+[PublicAPI, RequiresHead]
+public class FontResource : HeadResource {
     public const string GlobalId = "graphics/font";
 
     public Font? font { get; private set; }

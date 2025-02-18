@@ -60,13 +60,11 @@ public class Button : ClickableElement {
     protected override void CustomUpdate(TimeSpan time) {
         if (text is null)
             return;
-        RequireHead();
         renderer.DrawText(center, text, _formatter, HorizontalAlignment.Middle);
     }
 
     [RequiresHead]
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
-        RequireHead();
         Vector2Int position = new(this.position.x + x, this.position.y + y);
         renderer.DrawCharacter(position, new RenderCharacter('\0', backgroundColor, foregroundColor), effect);
     }

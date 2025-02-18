@@ -27,7 +27,6 @@ public class Settings {
 
     [RequiresHead]
     public void Apply() {
-        RequireHead();
         if (!audio.TryGetMixer("master", out IAudioMixer? mixer))
             return;
         mixer.volume = volume;

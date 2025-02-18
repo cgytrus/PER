@@ -30,11 +30,8 @@ public class Game : IGame, ISetupable, IUpdatable {
 
     public void Unload() => _settings.Save(SettingsPath);
 
-    [RequiresBody, RequiresHead]
+    [RequiresBody]
     public void Load() {
-        RequireBody();
-        RequireHead();
-
         _settings = Settings.Load(SettingsPath);
 
         resources.TryAddPacksByNames(_settings.packs);
@@ -52,9 +49,6 @@ public class Game : IGame, ISetupable, IUpdatable {
 
     [RequiresBody, RequiresHead]
     public void Loaded() {
-        RequireBody();
-        RequireHead();
-
         if (!resources.TryGetResource(FontResource.GlobalId, out FontResource? font) || font.font is null)
             throw new InvalidOperationException("Missing font.");
         resources.TryGetResource(IconResource.GlobalId, out IconResource? icon);
@@ -82,8 +76,6 @@ public class Game : IGame, ISetupable, IUpdatable {
 
     [RequiresBody, RequiresHead]
     public void Setup() {
-        RequireBody();
-        RequireHead();
         _frameTimeDisplay = new FrameTimeDisplay(Engine.frameTime, FrameTimeFormatter);
         if(!resources.TryGetResource(GameScreen.GlobalId, out GameScreen? screen))
             return;

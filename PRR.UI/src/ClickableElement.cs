@@ -50,7 +50,8 @@ public abstract class ClickableElement : Element {
     }
 
     private InputReq<bool>? _hotkeyPressed;
-    protected abstract InputReq<bool>? hotkeyPressed { [RequiresHead] get; }
+    [RequiresHead]
+    protected abstract InputReq<bool>? hotkeyPressed { get; }
 
     protected const float MinSpeed = 3f;
     protected const float MaxSpeed = 5f;
@@ -72,7 +73,6 @@ public abstract class ClickableElement : Element {
 
     [RequiresHead]
     public override void Input() {
-        RequireHead();
         _hotkeyPressed = hotkeyPressed;
         IMouse mouse = input.Get<IMouse>();
         _mouseClicked = _clickLocked ? mouse.GetButton(MouseButton.Left) : mouse.GetButton(MouseButton.Left, bounds);
@@ -164,7 +164,6 @@ public abstract class ClickableElement : Element {
 
     [RequiresHead]
     public override void Update(TimeSpan time) {
-        RequireHead();
         if (!enabled) {
             currentState = State.None;
             return;

@@ -9,7 +9,7 @@ using PER.Abstractions.Resources;
 namespace PER.Common.Resources;
 
 [PublicAPI]
-public abstract class AudioResourcesLoader : Resource {
+public abstract class AudioResourcesLoader : HeadResource {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     protected enum AudioType { Auto, Sfx, Music }
@@ -27,7 +27,6 @@ public abstract class AudioResourcesLoader : Resource {
                 AddPath(audioResource.id, GetAudioPath(mixerDefinition, audioResource));
     }
 
-    [RequiresHead]
     public override void Load(string id) {
         IAudioMixer master = audio.CreateMixer();
 
@@ -50,10 +49,8 @@ public abstract class AudioResourcesLoader : Resource {
         audio.TryStoreMixer(nameof(master), master);
     }
 
-    [RequiresHead]
     public override void Unload(string id) => audio.Clear();
 
-    [RequiresHead]
     protected void AddSound(string id, IAudioMixer mixer) {
         if(TryGetPath(id, out string? path)) {
             logger.Info("Loading sound {Id}", id);
@@ -63,7 +60,6 @@ public abstract class AudioResourcesLoader : Resource {
             logger.Info("Could not find sound {Id}", id);
     }
 
-    [RequiresHead]
     protected void AddMusic(string id, IAudioMixer mixer) {
         if(TryGetPath(id, out string? path)) {
             logger.Info("Loading music {Id}", id);

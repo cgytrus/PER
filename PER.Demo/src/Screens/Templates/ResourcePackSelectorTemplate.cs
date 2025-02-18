@@ -34,7 +34,6 @@ public class ResourcePackSelectorTemplate(
         private bool _loaded;
 
         public Template(ResourcePackSelectorTemplate resource) : base(resource) {
-            RequireBody();
             _resource = resource;
 
             Button toggleButton = GetElement<Button>("toggle");
@@ -66,7 +65,6 @@ public class ResourcePackSelectorTemplate(
 
         [RequiresBody]
         public override void UpdateWithItem(int index, ResourcePackData item, int width) {
-            RequireBody();
             _index = index;
             _item = item;
 

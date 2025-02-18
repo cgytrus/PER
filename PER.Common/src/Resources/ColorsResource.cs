@@ -8,18 +8,19 @@ using PER.Util;
 namespace PER.Common.Resources;
 
 [PublicAPI]
-public class ColorsResource : JsonResource<IDictionary<string, (string?, Color)>> {
+public class ColorsResource : HeadResource {
     public const string GlobalId = "graphics/colors";
 
     public Dictionary<string, Color> colors { get; } = new();
 
     public override void Preload() {
-        AddPath( "colors", "graphics/colors.json");
+        AddPath("colors", "graphics/colors.json");
     }
 
     public override void Load(string id) {
         Dictionary<string, (string?, Color)> tempValues = new();
-        DeserializeAllJson("colors", tempValues);
+        foreach (string path in GetPaths("colors"))
+            DeserializeJson(path, tempValues);
 
         foreach((string key, (string? value, Color color)) in tempValues)
             if(value is null)
@@ -30,7 +31,7 @@ public class ColorsResource : JsonResource<IDictionary<string, (string?, Color)>
                 colors.Add(key, color);
     }
 
-    protected override void DeserializeJson(string path, IDictionary<string, (string?, Color)> deserialized) {
+    private void DeserializeJson(string path, IDictionary<string, (string?, Color)> deserialized) {
         FileStream file = File.OpenRead(path);
         Dictionary<string, JsonElement>? elements = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(file);
         file.Close();

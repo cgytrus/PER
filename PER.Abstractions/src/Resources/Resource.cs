@@ -6,12 +6,52 @@ using System.Linq;
 using System.Text;
 
 using JetBrains.Annotations;
+using PER.Abstractions.Meta;
 
 namespace PER.Abstractions.Resources;
 
+public interface IResource {
+    public int GetPathsHash();
+    public void Preload();
+    public void Load(string id);
+    public void Unload(string id);
+    public void PostUnload();
+    public bool HasDependency(string id);
+}
+
+[RequiresBody]
+public abstract class BodyResource : Resource, IResource {
+    [RequiresBody]
+    public abstract void Preload();
+    [RequiresBody]
+    public abstract void Load(string id);
+    [RequiresBody]
+    public abstract void Unload(string id);
+}
+
+[RequiresHead]
+public abstract class HeadResource : Resource, IResource {
+    [RequiresHead]
+    public abstract void Preload();
+    [RequiresHead]
+    public abstract void Load(string id);
+    [RequiresHead]
+    public abstract void Unload(string id);
+}
+
+[RequiresBody, RequiresHead]
+public abstract class UniversalResource : Resource, IResource {
+    [RequiresBody, RequiresHead]
+    public abstract void Preload();
+    [RequiresBody, RequiresHead]
+    public abstract void Load(string id);
+    [RequiresBody, RequiresHead]
+    public abstract void Unload(string id);
+}
+
 [PublicAPI]
 public abstract class Resource {
-    private Dictionary<string, Resource> _dependencies = new();
+    private Dictionary<string, IResource> _dependencies = new();
     private Dictionary<string, IEnumerable<string>> _fullPaths = new();
 
     public int GetPathsHash() {
@@ -21,10 +61,6 @@ public abstract class Resource {
                 builder.Append(path);
         return builder.ToString().GetHashCode();
     }
-
-    public abstract void Preload();
-    public abstract void Load(string id);
-    public abstract void Unload(string id);
 
     public void PostUnload() {
         _dependencies.Clear();
@@ -38,7 +74,7 @@ public abstract class Resource {
             throw new InvalidOperationException("Cannot add dependencies while resources are not loading");
         if(_dependencies.ContainsKey(id))
             throw new InvalidOperationException($"Dependency {id} already registered.");
-        if(!IResources.current.TryGetResource(id, out Resource? dependency))
+        if(!IResources.current.TryGetResource(id, out IResource? dependency))
             throw new InvalidOperationException($"Resource {id} does not exist.");
         if(dependency is not T)
             throw new InvalidOperationException($"Resource {id} is not {typeof(T).Name}.");
@@ -55,14 +91,14 @@ public abstract class Resource {
             _fullPaths.Add(id, newPaths);
     }
 
-    protected Resource GetDependency(string id) {
-        if(!_dependencies.TryGetValue(id, out Resource? dependency))
+    protected IResource GetDependency(string id) {
+        if(!_dependencies.TryGetValue(id, out IResource? dependency))
             throw new InvalidOperationException($"Resource {id} is not registered as a dependency.");
         return dependency;
     }
 
-    protected T GetDependency<T>(string id) where T : Resource {
-        Resource dependency = GetDependency(id);
+    protected T GetDependency<T>(string id) where T : IResource {
+        IResource dependency = GetDependency(id);
         if(dependency is not T typedDependency)
             throw new InvalidOperationException($"Resource {id} is not {nameof(T)}.");
 

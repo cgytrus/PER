@@ -25,7 +25,6 @@ public abstract class DialogBoxScreenResource(Vector2Int size) : LayoutResource,
 
     [RequiresBody]
     public virtual void Open() {
-        RequireBody();
         if (!resources.TryGetResource(ColorsResource.GlobalId, out _colors) ||
             !resources.TryGetResource(DialogBoxPaletteResource.GlobalId, out _palette))
             throw new InvalidOperationException("Missing dependency.");
@@ -38,7 +37,6 @@ public abstract class DialogBoxScreenResource(Vector2Int size) : LayoutResource,
 
     [RequiresHead]
     public virtual void Update(TimeSpan time) {
-        RequireHead();
         if (_colors is null || _palette is null ||
             !_colors.colors.TryGetValue(backgroundColorId, out Color backgroundColor) ||
             !_colors.colors.TryGetValue(foregroundColorId, out Color foregroundColor))

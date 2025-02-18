@@ -34,7 +34,6 @@ public class ScrollablePanel : Element {
 
     [RequiresHead]
     public override void Input() {
-        RequireHead();
         if (!enabled || elements.Count == 0)
             return;
         // ReSharper disable once ForCanBeConvertedToForeach

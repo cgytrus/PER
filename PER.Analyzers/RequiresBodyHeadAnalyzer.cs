@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -40,6 +41,8 @@ public class RequiresBodyHeadAnalyzer : DiagnosticAnalyzer {
     );
 
     public override void Initialize(AnalysisContext context) {
+        //if (!Debugger.IsAttached)
+        //    return;
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics);
         context.EnableConcurrentExecution();
         context.RegisterSemanticModelAction(VerifyRequires);
@@ -70,44 +73,40 @@ public class RequiresBodyHeadAnalyzer : DiagnosticAnalyzer {
         return;
 
         void MarkVisited(ISymbol symbol) {
-            ((ISymbol, Location?)? body, (ISymbol, Location?)? head) = Util.GetRequiresSelf(symbol);
+            (Util.BodyHeadSource? body, Util.BodyHeadSource? head) = Util.GetRequiresSelf(symbol);
             if (body is not null)
-                visited.bodies[body.Value.Item1] = body.Value.Item2;
+                visited.bodies[body.Value.symbol] = body.Value.location;
             if (head is not null)
-                visited.heads[head.Value.Item1] = head.Value.Item2;
+                visited.heads[head.Value.symbol] = head.Value.location;
         }
         void VisitSymbol(ISymbol symbol) {
-            MarkVisited(symbol);
+            if (!symbol.IsAbstract)
+                MarkVisited(symbol);
             foreach (IMethodSymbol method in Util.GetMethods(symbol)) {
-                MarkVisited(method);
-                ((ISymbol, Location?)? body, (ISymbol, Location?)? head) requires = Util.GetRequires(method);
+                if (!method.IsAbstract)
+                    MarkVisited(method);
+                (IEnumerable<Util.BodyHeadSource> bodies, IEnumerable<Util.BodyHeadSource> heads,
+                    (IEnumerable<Util.BodyHeadSource> bodies, IEnumerable<Util.BodyHeadSource> heads) invalid)
+                    requires = Util.GetRequires(method);
                 foreach (IOperation operation in method.DeclaringSyntaxReferences
                     .Select(x => x.GetSyntax()).OfType<MethodDeclarationSyntax>()
                     .Select(x => x.Body as SyntaxNode ?? x.ExpressionBody).OfType<SyntaxNode>()
                     .Select(x => context.SemanticModel.GetOperation(x)).OfType<IOperation>()) {
                     foreach ((IOperation invocation, ISymbol invokedSym) in Util.FindInvocations(operation)) {
-                        ((ISymbol, Location?)? body, (ISymbol, Location?)? head) invoked = Util.GetRequires(invokedSym);
+                        (IEnumerable<Util.BodyHeadSource> bodies, IEnumerable<Util.BodyHeadSource> heads,
+                            (IEnumerable<Util.BodyHeadSource>, IEnumerable<Util.BodyHeadSource>))
+                            invoked = Util.GetRequires(invokedSym);
                         Location location = invocation.Syntax.GetLocation();
                         string name = invokedSym.ToMinimalDisplayString(context.SemanticModel, location.SourceSpan.Start);
-                        if (invoked.body is not null) {
-                            if (requires.body is null) {
-                                context.ReportDiagnostic(Diagnostic.Create(per0001, location,
-                                    invoked.body.Value.Item1.Locations, name, "body"));
-                            }
-                            else {
-                                used.bodies.Add(requires.body.Value.Item1);
-                            }
-                        }
-                        if (invoked.head is not null) {
-                            if (requires.head is null) {
-                                context.ReportDiagnostic(Diagnostic.Create(per0001, location,
-                                    invoked.head.Value.Item1.Locations, name, "head"));
-                            }
-                            else {
-                                used.heads.Add(requires.head.Value.Item1);
-                            }
-                        }
+                        VisitBodiesHeads(context, invoked.bodies, requires.bodies, used.bodies, location, name, "body");
+                        VisitBodiesHeads(context, invoked.heads, requires.heads, used.heads, location, name, "head");
                     }
+                }
+                foreach (Util.BodyHeadSource body in requires.invalid.bodies) {
+                    context.ReportDiagnostic(Diagnostic.Create(per0003, body.location, method.Name, "body"));
+                }
+                foreach (Util.BodyHeadSource head in requires.invalid.heads) {
+                    context.ReportDiagnostic(Diagnostic.Create(per0003, head.location, method.Name, "head"));
                 }
             }
 
@@ -115,6 +114,24 @@ public class RequiresBodyHeadAnalyzer : DiagnosticAnalyzer {
                 return;
             foreach (ISymbol member in type.GetMembers())
                 VisitSymbol(member);
+        }
+    }
+
+    private static void VisitBodiesHeads(SemanticModelAnalysisContext context, IEnumerable<Util.BodyHeadSource> invoked,
+        IEnumerable<Util.BodyHeadSource> requires, HashSet<ISymbol> usedRequires, Location location,
+        params object?[]? messageArgs) {
+        IEnumerable<Util.BodyHeadSource> invokedList = invoked.ToList();
+        if (!invokedList.Any())
+            return;
+        IEnumerable<Util.BodyHeadSource> requiresList = requires.ToList();
+        if (requiresList.Any()) {
+            foreach (Util.BodyHeadSource requiresBody in requiresList)
+                usedRequires.Add(requiresBody.symbol);
+            return;
+        }
+        foreach (Util.BodyHeadSource invokedBody in invokedList) {
+            context.ReportDiagnostic(Diagnostic.Create(per0001, location,
+                invokedBody.symbol.Locations, messageArgs));
         }
     }
 }

@@ -40,7 +40,6 @@ public class FilledPanel : Element {
     public override void Update(TimeSpan time) {
         if(!enabled)
             return;
-        RequireHead();
         RenderCharacter rc = new(character, backgroundColor, foregroundColor, style);
         for(int y = bounds.min.y; y <= bounds.max.y; y++)
             for(int x = bounds.min.x; x <= bounds.max.x; x++)

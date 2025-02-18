@@ -23,9 +23,9 @@ public class Resources : IResources {
     protected virtual string resourcePackMeta => "metadata.json";
     protected virtual string resourcesInPack => "resources";
 
-    private readonly List<ResourcePackData> _loadedPacks = new();
-    private readonly List<ResourcePackData> _futureLoadedPacks = new();
-    private readonly Dictionary<string, Resource> _resources = new();
+    private readonly List<ResourcePackData> _loadedPacks = [];
+    private readonly List<ResourcePackData> _futureLoadedPacks = [];
+    private readonly Dictionary<string, IResource> _resources = new();
     private readonly Dictionary<string, int> _resourcePathHashes = new();
 
     public void Load() {
@@ -40,7 +40,7 @@ public class Resources : IResources {
         _loadedPacks.Clear();
         _loadedPacks.AddRange(_futureLoadedPacks);
 
-        foreach((string id, Resource resource) in _resources) {
+        foreach((string id, IResource resource) in _resources) {
             logger.Info("Loading resource {Id}", id);
             IResources.current = this;
             resource.Preload();
@@ -61,7 +61,7 @@ public class Resources : IResources {
 
         logger.Info("Unloading resources");
 
-        foreach((string id, Resource resource) in _resources) {
+        foreach((string id, IResource resource) in _resources) {
             logger.Info("Unloading resource {Id}", id);
             resource.Unload(id);
             resource.PostUnload();
@@ -91,10 +91,10 @@ public class Resources : IResources {
 
         logger.Info("Searching for changed resources");
 
-        HashSet<(string, Resource, int)> resourcesToNotReloadYet = new();
+        HashSet<(string, IResource, int)> resourcesToNotReloadYet = new();
         Dictionary<string, int> resourcesToReload = new();
 
-        foreach((string id, Resource resource) in _resources) {
+        foreach((string id, IResource resource) in _resources) {
             int newHash = resource.GetPathsHash();
             if(_resourcePathHashes.TryGetValue(id, out int prevHash) && prevHash == newHash) {
                 resourcesToNotReloadYet.Add((id, resource, newHash));
@@ -105,7 +105,7 @@ public class Resources : IResources {
 
         FindIndirectResourcesToReload(resourcesToNotReloadYet, resourcesToReload);
 
-        foreach((string id, Resource resource) in _resources) {
+        foreach((string id, IResource resource) in _resources) {
             if(!resourcesToReload.TryGetValue(id, out int hash))
                 continue;
 
@@ -124,9 +124,9 @@ public class Resources : IResources {
         logger.Info("Resources reloaded");
     }
 
-    private static void FindIndirectResourcesToReload(HashSet<(string, Resource, int)> resourcesToNotReloadYet,
+    private static void FindIndirectResourcesToReload(HashSet<(string, IResource, int)> resourcesToNotReloadYet,
         Dictionary<string, int> resourcesToReload) {
-        foreach((string id, Resource resource, int hash) in resourcesToNotReloadYet) {
+        foreach((string id, IResource resource, int hash) in resourcesToNotReloadYet) {
             bool reload = false;
             foreach((string reloadId, _) in resourcesToReload) {
                 if(!resource.HasDependency(reloadId))
@@ -200,7 +200,7 @@ public class Resources : IResources {
 
     public void RemoveAllPacks() => _futureLoadedPacks.Clear();
 
-    public bool TryAddResource<TResource>(string id, TResource resource) where TResource : Resource =>
+    public bool TryAddResource<TResource>(string id, TResource resource) where TResource : IResource =>
         !loaded && _resources.TryAdd(id, resource);
 
     public IEnumerable<string> GetAllPaths(string relativePath) {
@@ -215,9 +215,9 @@ public class Resources : IResources {
     }
 
     public bool TryGetResource<TResource>(string id, [NotNullWhen(true)] out TResource? resource)
-        where TResource : Resource? {
+        where TResource : class, IResource {
         resource = null;
-        if(!_resources.TryGetValue(id, out Resource? cachedResource) ||
+        if(!_resources.TryGetValue(id, out IResource? cachedResource) ||
            cachedResource is not TResource actualResource)
             return false;
 

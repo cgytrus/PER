@@ -3,7 +3,7 @@
   "profiles": {
     "DebugRoslynAnalyzers": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "../PER/PER.csproj"
+      "targetProject": "../PER.Demo/PER.Demo.csproj"
     }
   }
 }

@@ -23,9 +23,6 @@ public class PlayerObject : LevelObject, IUpdatable, ITickable, ILight {
 
     [RequiresHead]
     public void Update(TimeSpan time) {
-        RequireHead();
-        RequireClient();
-
         _moveX = 0;
         _moveY = 0;
 

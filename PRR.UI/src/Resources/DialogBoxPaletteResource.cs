@@ -6,7 +6,7 @@ using PER.Util;
 namespace PRR.UI.Resources;
 
 [PublicAPI]
-public class DialogBoxPaletteResource : Resource {
+public class DialogBoxPaletteResource : HeadResource {
     public const string GlobalId = "layouts/dialogBoxPalette";
 
     // ReSharper disable once MemberCanBePrivate.Global

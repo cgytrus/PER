@@ -28,9 +28,9 @@ public interface IResources {
     public bool TryRemovePack(ResourcePackData data);
     public void RemoveAllPacks();
 
-    public bool TryAddResource<TResource>(string id, TResource resource) where TResource : Resource;
+    public bool TryAddResource<TResource>(string id, TResource resource) where TResource : IResource;
 
     public IEnumerable<string> GetAllPaths(string relativePath);
     public bool TryGetResource<TResource>(string id, [NotNullWhen(true)] out TResource? resource)
-        where TResource : Resource?;
+        where TResource : class, IResource;
 }

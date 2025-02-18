@@ -9,7 +9,6 @@ namespace PER.Common.Effects;
 public class GlitchEffect : IModifierEffect, IDrawableEffect {
     private bool _draw = true;
 
-    [RequiresHead]
     public void ApplyModifiers(Vector2Int at, ref Vector2Int offset, ref RenderCharacter character) {
         offset += new Vector2Int(RandomInt(), 0);
         string mappings = renderer.font.mappings;
@@ -20,7 +19,6 @@ public class GlitchEffect : IModifierEffect, IDrawableEffect {
                 (RenderStyle)Random.Shared.Next((int)RenderStyle.None, (int)RenderStyle.All));
     }
 
-    [RequiresHead]
     public void Draw(Vector2Int position) {
         if (position.x % Random.Shared.Next(3, 10) == 0 || position.y % Random.Shared.Next(3, 10) == 0)
             _draw = RandomNonNegativeFloat() > 0.95f;

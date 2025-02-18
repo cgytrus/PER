@@ -13,7 +13,7 @@ using PER.Util;
 namespace PRR.UI.Resources;
 
 [PublicAPI]
-public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutResource.LayoutResourceElement>> {
+public abstract class LayoutResource : HeadResource {
     [PublicAPI]
     public abstract record LayoutResourceElement(bool? enabled, Vector2Int position, Vector2Int size) {
         public abstract Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
@@ -22,7 +22,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         protected static bool TryGetPath(LayoutResource resource, string id,
             [NotNullWhen(true)] out string? fullPath) => resource.TryGetPath(id, out fullPath);
 
-        protected static T GetDependency<T>(LayoutResource resource, string id) where T : Resource =>
+        protected static T GetDependency<T>(LayoutResource resource, string id) where T : IResource =>
             resource.GetDependency<T>(id);
     }
 
@@ -47,7 +47,8 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         colors = GetDependency<ColorsResource>(ColorsResource.GlobalId);
 
         Dictionary<string, LayoutResourceElement> layoutElements = new(_elementTypes.Count);
-        DeserializeAllJson("layout", layoutElements);
+        foreach (string path in GetPaths("layout"))
+            DeserializeJson(path, layoutElements);
 
         List<string> missing = new();
         foreach((string elementId, Type _) in _elementTypes)
@@ -68,7 +69,7 @@ public abstract class LayoutResource : JsonResource<IDictionary<string, LayoutRe
         _elementTypes.Clear();
     }
 
-    protected override void DeserializeJson(string path, IDictionary<string, LayoutResourceElement> deserialized) {
+    protected void DeserializeJson(string path, IDictionary<string, LayoutResourceElement> deserialized) {
         FileStream file = File.OpenRead(path);
         Dictionary<string, JsonElement>? layout = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(file);
         file.Close();

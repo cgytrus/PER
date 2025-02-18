@@ -9,7 +9,7 @@ using QoiSharp;
 namespace PER.Common.Resources;
 
 [PublicAPI]
-public class IconResource : Resource {
+public class IconResource : HeadResource {
     public const string GlobalId = "graphics/icon";
 
     public Image? icon { get; private set; }
