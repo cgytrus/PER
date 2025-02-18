@@ -71,7 +71,6 @@ public class Audio : IAudio {
         _thread!.Join();
     }
 
-    [RequiresHead]
     private void AudioThread() {
         while(!_shouldStop) {
             lock(_playablesLock)

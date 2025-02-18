@@ -63,7 +63,6 @@ public class ResourcePackSelectorTemplate(
             };
         }
 
-        [RequiresBody]
         public override void UpdateWithItem(int index, ResourcePackData item, int width) {
             _index = index;
             _item = item;

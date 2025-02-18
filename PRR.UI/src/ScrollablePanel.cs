@@ -32,7 +32,6 @@ public class ScrollablePanel : Element {
 
     public override Element Clone() => throw new NotImplementedException();
 
-    [RequiresHead]
     public override void Input() {
         if (!enabled || elements.Count == 0)
             return;

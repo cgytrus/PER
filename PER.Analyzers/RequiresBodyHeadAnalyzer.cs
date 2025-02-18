@@ -80,14 +80,27 @@ public class RequiresBodyHeadAnalyzer : DiagnosticAnalyzer {
                 visited.heads[head.Value.symbol] = head.Value.location;
         }
         void VisitSymbol(ISymbol symbol) {
-            if (!symbol.IsAbstract)
-                MarkVisited(symbol);
+            MarkVisited(symbol);
+            //if (symbol.IsAbstract) {
+            //    (IEnumerable<Util.BodyHeadSource> bodies, IEnumerable<Util.BodyHeadSource> heads,
+            //        (IEnumerable<Util.BodyHeadSource> bodies, IEnumerable<Util.BodyHeadSource> heads) invalid)
+            //        requires = Util.GetRequires(symbol);
+            //    foreach (Util.BodyHeadSource body in requires.bodies)
+            //        used.bodies.Add(body.symbol);
+            //    foreach (Util.BodyHeadSource head in requires.heads)
+            //        used.heads.Add(head.symbol);
+            //}
             foreach (IMethodSymbol method in Util.GetMethods(symbol)) {
-                if (!method.IsAbstract)
-                    MarkVisited(method);
+                MarkVisited(method);
                 (IEnumerable<Util.BodyHeadSource> bodies, IEnumerable<Util.BodyHeadSource> heads,
                     (IEnumerable<Util.BodyHeadSource> bodies, IEnumerable<Util.BodyHeadSource> heads) invalid)
                     requires = Util.GetRequires(method);
+                if (method.IsAbstract) {
+                    foreach (Util.BodyHeadSource body in requires.bodies)
+                        used.bodies.Add(body.symbol);
+                    foreach (Util.BodyHeadSource head in requires.heads)
+                        used.heads.Add(head.symbol);
+                }
                 foreach (IOperation operation in method.DeclaringSyntaxReferences
                     .Select(x => x.GetSyntax()).OfType<MethodDeclarationSyntax>()
                     .Select(x => x.Body as SyntaxNode ?? x.ExpressionBody).OfType<SyntaxNode>()

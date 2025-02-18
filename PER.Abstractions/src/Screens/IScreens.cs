@@ -1,10 +1,11 @@
 ﻿using System;
 
 using JetBrains.Annotations;
+using PER.Abstractions.Meta;
 
 namespace PER.Abstractions.Screens;
 
-[PublicAPI]
+[PublicAPI, RequiresHead]
 public interface IScreens {
     public IScreen? currentScreen { get; }
     public void SwitchScreen(IScreen? screen, Func<bool>? middleCallback = null);

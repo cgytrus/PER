@@ -20,36 +20,34 @@ public interface IResource {
 }
 
 [RequiresBody]
-public abstract class BodyResource : Resource, IResource {
-    [RequiresBody]
-    public abstract void Preload();
-    [RequiresBody]
-    public abstract void Load(string id);
-    [RequiresBody]
-    public abstract void Unload(string id);
+public interface IBodyResource {
+    public void Preload();
+    public void Load(string id);
+    public void Unload(string id);
 }
 
 [RequiresHead]
-public abstract class HeadResource : Resource, IResource {
-    [RequiresHead]
-    public abstract void Preload();
-    [RequiresHead]
-    public abstract void Load(string id);
-    [RequiresHead]
-    public abstract void Unload(string id);
+public interface IHeadResource {
+    public void Preload();
+    public void Load(string id);
+    public void Unload(string id);
 }
 
 [RequiresBody, RequiresHead]
-public abstract class UniversalResource : Resource, IResource {
-    [RequiresBody, RequiresHead]
+public abstract class HeadResource : Resource, IResource, IBodyResource, IHeadResource {
     public abstract void Preload();
-    [RequiresBody, RequiresHead]
     public abstract void Load(string id);
-    [RequiresBody, RequiresHead]
     public abstract void Unload(string id);
 }
 
-[PublicAPI]
+[RequiresBody]
+public abstract class HeadlessResource : Resource, IResource, IBodyResource {
+    public abstract void Preload();
+    public abstract void Load(string id);
+    public abstract void Unload(string id);
+}
+
+[PublicAPI, RequiresBody]
 public abstract class Resource {
     private Dictionary<string, IResource> _dependencies = new();
     private Dictionary<string, IEnumerable<string>> _fullPaths = new();

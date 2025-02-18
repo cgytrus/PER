@@ -5,7 +5,7 @@ using PER.Common.Rendering;
 
 namespace PER.Common.Resources;
 
-[PublicAPI, RequiresHead]
+[PublicAPI]
 public class FontResource : HeadResource {
     public const string GlobalId = "graphics/font";
 

@@ -79,7 +79,6 @@ public class ProgressBar : Element {
                 _anim[x, y].Start(time, color);
     }
 
-    [RequiresHead]
     public override void Update(TimeSpan time) {
         if(!enabled)
             return;

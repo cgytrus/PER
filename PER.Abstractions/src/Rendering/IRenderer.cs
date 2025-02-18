@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 
 using JetBrains.Annotations;
-
+using PER.Abstractions.Meta;
 using PER.Util;
 
 namespace PER.Abstractions.Rendering;
 
-[PublicAPI]
+[PublicAPI, RequiresHead]
 public interface IRenderer {
     public Vector2Int size { get; }
     public int width => size.x;

@@ -50,7 +50,6 @@ public abstract class ClickableElement : Element {
     }
 
     private InputReq<bool>? _hotkeyPressed;
-    [RequiresHead]
     protected abstract InputReq<bool>? hotkeyPressed { get; }
 
     protected const float MinSpeed = 3f;
@@ -71,7 +70,6 @@ public abstract class ClickableElement : Element {
     private bool _toggledChanged;
     private TimeSpan _lastTime;
 
-    [RequiresHead]
     public override void Input() {
         _hotkeyPressed = hotkeyPressed;
         IMouse mouse = input.Get<IMouse>();
@@ -162,7 +160,6 @@ public abstract class ClickableElement : Element {
         _animForegroundColorEnd = foreground;
     }
 
-    [RequiresHead]
     public override void Update(TimeSpan time) {
         if (!enabled) {
             currentState = State.None;

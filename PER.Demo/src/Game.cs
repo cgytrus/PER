@@ -13,6 +13,7 @@ using PER.Util;
 
 namespace PER.Demo;
 
+[RequiresHead]
 public class Game : IGame, ISetupable, IUpdatable {
     private const string SettingsPath = "config.json";
     private Settings _settings = new();
@@ -30,7 +31,6 @@ public class Game : IGame, ISetupable, IUpdatable {
 
     public void Unload() => _settings.Save(SettingsPath);
 
-    [RequiresBody]
     public void Load() {
         _settings = Settings.Load(SettingsPath);
 
@@ -47,7 +47,6 @@ public class Game : IGame, ISetupable, IUpdatable {
         resources.TryAddResource(GameScreen.GlobalId, new GameScreen(_settings));
     }
 
-    [RequiresBody, RequiresHead]
     public void Loaded() {
         if (!resources.TryGetResource(FontResource.GlobalId, out FontResource? font) || font.font is null)
             throw new InvalidOperationException("Missing font.");
@@ -74,7 +73,6 @@ public class Game : IGame, ISetupable, IUpdatable {
         renderer.verticalSync = false;
     }
 
-    [RequiresBody, RequiresHead]
     public void Setup() {
         _frameTimeDisplay = new FrameTimeDisplay(Engine.frameTime, FrameTimeFormatter);
         if(!resources.TryGetResource(GameScreen.GlobalId, out GameScreen? screen))
@@ -82,7 +80,6 @@ public class Game : IGame, ISetupable, IUpdatable {
         screens.SwitchScreen(screen);
     }
 
-    [RequiresHead]
     public void Update(TimeSpan time) {
         _frameTimeDisplay?.Update(time);
     }

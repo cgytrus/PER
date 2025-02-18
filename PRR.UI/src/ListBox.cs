@@ -1,15 +1,15 @@
 ﻿using JetBrains.Annotations;
 
-using PER.Abstractions.Audio;
-using PER.Abstractions.Input;
-using PER.Abstractions.Rendering;
+using PER.Abstractions.Meta;
 using PER.Util;
 
 using PRR.UI.Resources;
 
 namespace PRR.UI;
 
+[RequiresBody, RequiresHead]
 public interface IListBoxTemplateFactory<TItem> {
+    [RequiresBody, RequiresHead]
     public abstract class Template {
         public abstract IEnumerable<Element> elements { get; }
         public abstract void UpdateWithItem(int index, TItem item, int width);
@@ -21,7 +21,7 @@ public interface IListBoxTemplateFactory<TItem> {
     public Template CreateTemplate();
 }
 
-[PublicAPI]
+[PublicAPI, RequiresBody]
 public class ListBox<TItem>(IListBoxTemplateFactory<TItem> templateFactory) : ScrollablePanel {
     public new static readonly Type serializedType = typeof(LayoutResourceListBox);
 

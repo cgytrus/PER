@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
 using PER.Common.Resources;
@@ -14,7 +15,7 @@ namespace PRR.UI.Resources;
 
 [PublicAPI]
 public abstract class LayoutResource : HeadResource {
-    [PublicAPI]
+    [PublicAPI, RequiresBody, RequiresHead]
     public abstract record LayoutResourceElement(bool? enabled, Vector2Int position, Vector2Int size) {
         public abstract Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
             List<string> layoutNames, string id);

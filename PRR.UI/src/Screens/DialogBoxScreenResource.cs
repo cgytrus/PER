@@ -23,7 +23,6 @@ public abstract class DialogBoxScreenResource(Vector2Int size) : LayoutResource,
     private ColorsResource? _colors;
     private DialogBoxPaletteResource? _palette;
 
-    [RequiresBody]
     public virtual void Open() {
         if (!resources.TryGetResource(ColorsResource.GlobalId, out _colors) ||
             !resources.TryGetResource(DialogBoxPaletteResource.GlobalId, out _palette))
@@ -35,7 +34,6 @@ public abstract class DialogBoxScreenResource(Vector2Int size) : LayoutResource,
         _palette = null;
     }
 
-    [RequiresHead]
     public virtual void Update(TimeSpan time) {
         if (_colors is null || _palette is null ||
             !_colors.colors.TryGetValue(backgroundColorId, out Color backgroundColor) ||

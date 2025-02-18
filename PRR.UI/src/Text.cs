@@ -39,7 +39,6 @@ public class Text : Element {
 
     public override void Input() { }
 
-    [RequiresHead]
     public override void Update(TimeSpan time) {
         if (!enabled || text is null)
             return;
@@ -66,7 +65,6 @@ public class Text : Element {
         Dictionary<char, LayoutResourceTextFormatting>? formatting,
         [property: JsonConverter(typeof(JsonStringEnumConverter))] HorizontalAlignment? align, bool? wrap) :
         LayoutResource.LayoutResourceElement(enabled, position, size) {
-        [RequiresHead]
         public override Element GetElement(LayoutResource resource, Dictionary<string, Color> colors,
             List<string> layoutNames, string id) {
             Text element = new() {

@@ -2,10 +2,11 @@
 using System.Diagnostics.CodeAnalysis;
 
 using JetBrains.Annotations;
+using PER.Abstractions.Meta;
 
 namespace PER.Abstractions.Resources;
 
-[PublicAPI]
+[PublicAPI, RequiresBody]
 public interface IResources {
     public static IResources? current { get; protected set; }
 

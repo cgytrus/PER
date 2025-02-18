@@ -24,7 +24,6 @@ public class Screens : IScreens, ISetupable, IUpdatable, ITickable {
             SwitchScreen(screen, FadeTime, FadeTime, middleCallback);
     }
 
-    [RequiresHead]
     public void SwitchScreen(IScreen? screen, float fadeOutTime, float fadeInTime, Func<bool>? middleCallback = null) =>
         FadeScreen(fadeOutTime, fadeInTime, () => {
             if (middleCallback is not null && !middleCallback.Invoke())

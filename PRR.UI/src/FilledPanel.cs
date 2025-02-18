@@ -36,7 +36,6 @@ public class FilledPanel : Element {
 
     public override void Input() { }
 
-    [RequiresHead]
     public override void Update(TimeSpan time) {
         if(!enabled)
             return;

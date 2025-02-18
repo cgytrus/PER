@@ -1,10 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
 using JetBrains.Annotations;
+using PER.Abstractions.Meta;
 
 namespace PER.Abstractions.Audio;
 
-[PublicAPI]
+[PublicAPI, RequiresHead]
 public interface IAudio : ISetupable {
     public IAudioMixer CreateMixer(IAudioMixer? parent = null);
 

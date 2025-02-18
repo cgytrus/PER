@@ -2,9 +2,7 @@
 
 using JetBrains.Annotations;
 
-using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
-using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -28,10 +26,8 @@ public class Button : ClickableElement {
         set => toggledSelf = value;
     }
 
-    protected override InputReq<bool>? hotkeyPressed {
-        [RequiresHead]
-        get => hotkey.HasValue ? input.Get<IKeyboard>().GetKey(hotkey.Value) : null;
-    }
+    protected override InputReq<bool>? hotkeyPressed =>
+        hotkey.HasValue ? input.Get<IKeyboard>().GetKey(hotkey.Value) : null;
 
     private Func<char, Formatting> _formatter;
 
@@ -56,14 +52,12 @@ public class Button : ClickableElement {
 
     public override Element Clone() => Clone(this);
 
-    [RequiresHead]
     protected override void CustomUpdate(TimeSpan time) {
         if (text is null)
             return;
         renderer.DrawText(center, text, _formatter, HorizontalAlignment.Middle);
     }
 
-    [RequiresHead]
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
         Vector2Int position = new(this.position.x + x, this.position.y + y);
         renderer.DrawCharacter(position, new RenderCharacter('\0', backgroundColor, foregroundColor), effect);

@@ -63,7 +63,6 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
         AddElement<InputField>("testInputField");
     }
 
-    [RequiresBody, RequiresHead]
     public override void Load(string id) {
         base.Load(id);
 
@@ -141,7 +140,6 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
     public void Open() { }
     public void Close() { }
 
-    [RequiresHead]
     public void Update(TimeSpan time) {
         if (_testProgressBar is null)
             return;
@@ -214,7 +212,6 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
 
     public void Tick(TimeSpan time) => _level?.Tick(time);
 
-    [RequiresBody]
     private void OpenPacks() {
         _loadedPacks.Clear();
         _availablePacks.Clear();

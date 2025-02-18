@@ -144,7 +144,6 @@ public class InputField : ClickableElement {
 
     public override Element Clone() => throw new NotImplementedException();
 
-    [RequiresHead]
     public override void Input() {
         IKeyboard keyboard = input.Get<IKeyboard>();
         IMouse mouse = input.Get<IMouse>();
@@ -214,7 +213,6 @@ public class InputField : ClickableElement {
         PlaySound(audio, submitSound, SubmitSoundId);
     }
 
-    [RequiresHead]
     protected override void CustomUpdate(TimeSpan time) {
         _lastTime = time;
 
@@ -265,7 +263,6 @@ public class InputField : ClickableElement {
             wrap ? size.x : 0);
     }
 
-    [RequiresHead]
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
         Vector2Int position = new(this.position.x + x, this.position.y + y);
 
@@ -291,26 +288,22 @@ public class InputField : ClickableElement {
         StartTypingInternal();
     }
 
-    [RequiresHead]
     private void Copy() {
         input.Get<IClipboard>().value = value ?? string.Empty;
         _lastTypeTime = _lastTime;
     }
 
-    [RequiresHead]
     private void Paste() {
         PlaySound(audio, typeSound, TypeSoundId);
         foreach(char character in input.Get<IClipboard>().value)
             TypeDrawable(character);
     }
 
-    [RequiresHead]
     private void Cut() {
         Copy();
         EraseAll();
     }
 
-    [RequiresHead]
     private void TypeDrawable(char character) {
         if(renderer.font.IsCharacterDrawable(character) || character == ' ')
             Type(character);

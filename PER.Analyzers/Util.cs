@@ -126,20 +126,6 @@ public static class Util {
             return (bodies, heads, invalid);
         }
 
-        if (usedInherited) {
-            // types allow overwriting requires state because it wouldn't let you create
-            // an instance of the type without the requires state already being valid in the first place
-            // as opposed to methods where you can create the instance somewhere without the required state
-            // then call the method through casting to a base type that doesnt have the body/head requirement
-            // (with types theres nothing to cast before calling the constructor)
-            // TODO: report PER0003 if body or head is not null
-            if (body is not null)
-                invalid.bodies = invalid.bodies.Append(body.Value);
-            if (head is not null)
-                invalid.heads = invalid.heads.Append(head.Value);
-            return (bodies, heads, invalid);
-        }
-
         (bool bodies, bool heads) usedContaining = (false, false);
         if (symbol.ContainingSymbol is not null) {
             (Reqs bodies, Reqs heads, (Reqs bodies, Reqs heads) invalid) containing =
@@ -152,6 +138,19 @@ public static class Util {
                 usedContaining.bodies = true;
             if (!usedContaining.heads && containing.heads.Any())
                 usedContaining.heads = true;
+        }
+
+        if (usedInherited) {
+            // types allow overwriting requires state because it wouldn't let you create
+            // an instance of the type without the requires state already being valid in the first place
+            // as opposed to methods where you can create the instance somewhere without the required state
+            // then call the method through casting to a base type that doesnt have the body/head requirement
+            // (with types theres nothing to cast before calling the constructor)
+            if (body is not null)
+                invalid.bodies = invalid.bodies.Append(body.Value);
+            if (head is not null)
+                invalid.heads = invalid.heads.Append(head.Value);
+            return (bodies, heads, invalid);
         }
 
         if (!usedContaining.bodies && body is not null)

@@ -1,8 +1,9 @@
 ﻿using JetBrains.Annotations;
+using PER.Abstractions.Meta;
 
 namespace PER.Abstractions.Input;
 
-[PublicAPI]
+[PublicAPI, RequiresHead]
 public interface IInput : IUpdatable, ISetupable {
     public void Finish();
 

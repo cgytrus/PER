@@ -1,8 +1,9 @@
 ﻿using JetBrains.Annotations;
+using PER.Abstractions.Meta;
 
 namespace PER.Abstractions;
 
-[PublicAPI]
+[PublicAPI, RequiresBody]
 public interface IGame {
     public void Unload();
     public void Load();

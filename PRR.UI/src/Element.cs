@@ -2,12 +2,13 @@
 
 using PER.Abstractions;
 using PER.Abstractions.Audio;
+using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
 namespace PRR.UI;
 
-[PublicAPI]
+[PublicAPI, RequiresHead]
 public abstract class Element : IUpdatable {
     public virtual bool enabled { get; set; } = true;
     public virtual Vector2Int position { get; set; }

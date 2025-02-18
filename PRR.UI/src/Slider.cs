@@ -70,7 +70,6 @@ public class Slider : ClickableElement {
         PlaySound(audio, valueChangedSound, ValueChangedSoundId);
     }
 
-    [RequiresHead]
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
         Vector2Int position = new(this.position.x + x, this.position.y + y);
         char character = x < _relativeValue ? '─' : x == _relativeValue ? '█' : '-';
