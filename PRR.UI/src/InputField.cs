@@ -18,9 +18,9 @@ public class InputField : ClickableElement {
 
     protected override string type => "inputField";
 
-    public const string TypeSoundId = "inputFieldType";
-    public const string EraseSoundId = "inputFieldErase";
-    public const string SubmitSoundId = "inputFieldSubmit";
+    public static IPlayable? typeSound { get; set; }
+    public static IPlayable? eraseSound { get; set; }
+    public static IPlayable? submitSound { get; set; }
 
     public override bool enabled {
         get => base.enabled;
@@ -87,10 +87,6 @@ public class InputField : ClickableElement {
     }
 
     public float blinkRate { get; set; } = 1f;
-
-    public IPlayable? typeSound { get; set; }
-    public IPlayable? eraseSound { get; set; }
-    public IPlayable? submitSound { get; set; }
 
     public event EventHandler? onStartTyping;
     public event EventHandler? onTextChanged;
@@ -210,7 +206,7 @@ public class InputField : ClickableElement {
             onSubmit?.Invoke(this, EventArgs.Empty);
         else
             onCancel?.Invoke(this, EventArgs.Empty);
-        PlaySound(audio, submitSound, SubmitSoundId);
+        submitSound?.Play();
     }
 
     protected override void CustomUpdate(TimeSpan time) {
@@ -247,7 +243,7 @@ public class InputField : ClickableElement {
                 Cut();
 
             foreach (char character in _type.Read().SelectMany(x => x)) {
-                PlaySound(audio, typeSound, TypeSoundId);
+                typeSound?.Play();
                 TypeDrawable(character);
             }
         }
@@ -294,7 +290,7 @@ public class InputField : ClickableElement {
     }
 
     private void Paste() {
-        PlaySound(audio, typeSound, TypeSoundId);
+        typeSound?.Play();
         foreach(char character in input.Get<IClipboard>().value)
             TypeDrawable(character);
     }
@@ -321,7 +317,7 @@ public class InputField : ClickableElement {
     }
 
     private void EraseLeft() {
-        PlaySound(audio, eraseSound, EraseSoundId);
+        eraseSound?.Play();
         if(cursor <= 0)
             return;
         ReadOnlySpan<char> textSpan = value.AsSpan();
@@ -333,7 +329,7 @@ public class InputField : ClickableElement {
     }
 
     private void EraseRight() {
-        PlaySound(audio, eraseSound, EraseSoundId);
+        eraseSound?.Play();
         if(cursor >= (value?.Length ?? 0))
             return;
         ReadOnlySpan<char> textSpan = value.AsSpan();
@@ -345,7 +341,7 @@ public class InputField : ClickableElement {
     }
 
     private void EraseAll() {
-        PlaySound(audio, eraseSound, EraseSoundId);
+        eraseSound?.Play();
         value = null;
         cursor = 0;
         Animate();

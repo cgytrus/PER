@@ -2,7 +2,6 @@
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Input;
-using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 
@@ -11,7 +10,7 @@ namespace PRR.UI;
 [PublicAPI]
 public abstract class ClickableElement : Element {
     public enum State { None, Inactive, Idle, FakeHovered, Hovered, FakeClicked, Clicked, Hotkey }
-    public const string ClickSoundId = "buttonClick";
+    public static IPlayable? clickSound { get; set; }
 
     protected abstract string type { get; }
 
@@ -30,7 +29,6 @@ public abstract class ClickableElement : Element {
     public Color hoverColor { get; set; } = Color.white;
     public Color clickColor { get; set; } = new(0.4f, 0.4f, 0.4f);
 
-    public IPlayable? clickSound { get; set; }
     public event EventHandler? onClick;
     public event EventHandler? onHover;
     public event EventHandler? onPush;
@@ -145,7 +143,7 @@ public abstract class ClickableElement : Element {
     }
 
     protected virtual void Click() {
-        PlaySound(audio, clickSound, ClickSoundId);
+        clickSound?.Play();
         onClick?.Invoke(this, EventArgs.Empty);
     }
 

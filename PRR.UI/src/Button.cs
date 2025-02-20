@@ -46,8 +46,7 @@ public class Button : ClickableElement {
         inactiveColor = template.inactiveColor,
         idleColor = template.idleColor,
         hoverColor = template.hoverColor,
-        clickColor = template.clickColor,
-        clickSound = template.clickSound
+        clickColor = template.clickColor
     };
 
     public override Element Clone() => Clone(this);

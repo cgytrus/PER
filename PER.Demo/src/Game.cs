@@ -1,6 +1,7 @@
 ﻿using System;
 
 using PER.Abstractions;
+using PER.Abstractions.Audio;
 using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Abstractions.Resources;
@@ -10,6 +11,7 @@ using PER.Common.Resources;
 using PER.Demo.Resources;
 using PER.Demo.Screens;
 using PER.Util;
+using PRR.UI;
 
 namespace PER.Demo;
 
@@ -62,6 +64,19 @@ public class Game : IGame, ISetupable, IUpdatable {
             _fpsOkColor = Color.white;
         if (!colors.colors.TryGetValue("fps_bad", out _fpsBadColor))
             _fpsBadColor = Color.white;
+
+        if (resources.TryGetResource("audio", out AudioResources? audioRes)) {
+            if (audioRes.TryGetPlayable("buttonClick", out IPlayable? buttonClick))
+                ClickableElement.clickSound = buttonClick;
+            if (audioRes.TryGetPlayable("slider", out IPlayable? slider))
+                Slider.valueChangedSound = slider;
+            if (audioRes.TryGetPlayable("inputFieldType", out IPlayable? inputFieldType))
+                InputField.typeSound = inputFieldType;
+            if (audioRes.TryGetPlayable("inputFieldErase", out IPlayable? inputFieldErase))
+                InputField.eraseSound = inputFieldErase;
+            if (audioRes.TryGetPlayable("inputFieldSubmit", out IPlayable? inputFieldSubmit))
+                InputField.submitSound = inputFieldSubmit;
+        }
 
         _settings.Apply();
 

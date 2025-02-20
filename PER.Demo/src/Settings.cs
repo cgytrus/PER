@@ -3,11 +3,12 @@ using System.Text.Json;
 
 using PER.Abstractions.Audio;
 using PER.Abstractions.Meta;
+using PER.Demo.Resources;
 
 namespace PER.Demo;
 
 public class Settings {
-    public string[] packs { get; set; } = { "Default" };
+    public string[] packs { get; set; } = ["Default"];
     public float volume { get; set; } = 0.2f;
 
     public static Settings Load(string path) {
@@ -27,7 +28,9 @@ public class Settings {
 
     [RequiresHead]
     public void Apply() {
-        if (!audio.TryGetMixer("master", out IAudioMixer? mixer))
+        if (!resources.TryGetResource("audio", out AudioResources? audioRes))
+            return;
+        if (!audioRes.TryGetMixer("master", out IAudioMixer? mixer))
             return;
         mixer.volume = volume;
         audio.UpdateVolumes();

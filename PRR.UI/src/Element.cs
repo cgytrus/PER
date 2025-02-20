@@ -32,13 +32,6 @@ public abstract class Element : IUpdatable {
     public abstract void Input();
     public abstract void Update(TimeSpan time);
 
-    protected static void PlaySound(IAudio? audio, IPlayable? playable, string defaultId) {
-        if(playable is not null)
-            playable.status = PlaybackStatus.Playing;
-        else if(audio is not null && audio.TryGetPlayable(defaultId, out playable))
-            playable.status = PlaybackStatus.Playing;
-    }
-
     public abstract void UpdateColors(Dictionary<string, Color> colors, List<string> layoutNames, string id,
         string? special);
 

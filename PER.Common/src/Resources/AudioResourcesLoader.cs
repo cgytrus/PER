@@ -1,9 +1,9 @@
-﻿using JetBrains.Annotations;
+﻿using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 
 using NLog;
 
 using PER.Abstractions.Audio;
-using PER.Abstractions.Meta;
 using PER.Abstractions.Resources;
 
 namespace PER.Common.Resources;
@@ -19,22 +19,25 @@ public abstract class AudioResourcesLoader : HeadResource {
 
     protected abstract IReadOnlyDictionary<MixerDefinition, AudioResource[]> sounds { get; }
 
+    private readonly Dictionary<string, IAudioMixer> _mixers = new();
+    private readonly Dictionary<string, IPlayable> _playables = new();
+
     private static string GetAudioPath(MixerDefinition mixer, AudioResource audio) =>
         $"audio/{mixer.id}/{audio.directory}/{audio.id}.{audio.extension ?? mixer.defaultExtension}";
     public override void Preload() {
-        foreach((MixerDefinition mixerDefinition, AudioResource[] audioResources) in sounds)
-            foreach(AudioResource audioResource in audioResources)
+        foreach ((MixerDefinition mixerDefinition, AudioResource[] audioResources) in sounds)
+            foreach (AudioResource audioResource in audioResources)
                 AddPath(audioResource.id, GetAudioPath(mixerDefinition, audioResource));
     }
 
     public override void Load(string id) {
         IAudioMixer master = audio.CreateMixer();
 
-        foreach((MixerDefinition mixerDefinition, AudioResource[] audioResources) in sounds) {
+        foreach ((MixerDefinition mixerDefinition, AudioResource[] audioResources) in sounds) {
             IAudioMixer mixer = audio.CreateMixer(master);
 
-            foreach((string audioId, _, _, AudioType type) in audioResources)
-                switch(type == AudioType.Auto ? mixerDefinition.defaultType : type) {
+            foreach ((string audioId, _, _, AudioType type) in audioResources)
+                switch (type == AudioType.Auto ? mixerDefinition.defaultType : type) {
                     case AudioType.Sfx:
                         AddSound(audioId, mixer);
                         break;
@@ -43,29 +46,41 @@ public abstract class AudioResourcesLoader : HeadResource {
                         break;
                 }
 
-            audio.TryStoreMixer(mixerDefinition.id, mixer);
+            _mixers.TryAdd(mixerDefinition.id, mixer);
         }
 
-        audio.TryStoreMixer(nameof(master), master);
+        _mixers.TryAdd(nameof(master), master);
     }
 
-    public override void Unload(string id) => audio.Clear();
+    public override void Unload(string id) {
+        audio.Clear();
+        _playables.Clear();
+        _mixers.Clear();
+    }
+
+    public bool TryGetMixer(string id, [MaybeNullWhen(false)] out IAudioMixer mixer) =>
+        _mixers.TryGetValue(id, out mixer);
+
+    public bool TryGetPlayable(string id, [MaybeNullWhen(false)] out IPlayable playable) =>
+        _playables.TryGetValue(id, out playable);
 
     protected void AddSound(string id, IAudioMixer mixer) {
-        if(TryGetPath(id, out string? path)) {
+        if (TryGetPath(id, out string? path)) {
             logger.Info("Loading sound {Id}", id);
-            audio.TryStorePlayable(id, audio.CreateSound(path, mixer));
+            _playables.TryAdd(id, audio.CreateSound(path, mixer));
         }
-        else
+        else {
             logger.Info("Could not find sound {Id}", id);
+        }
     }
 
     protected void AddMusic(string id, IAudioMixer mixer) {
-        if(TryGetPath(id, out string? path)) {
+        if (TryGetPath(id, out string? path)) {
             logger.Info("Loading music {Id}", id);
-            audio.TryStorePlayable(id, audio.CreateMusic(path, mixer));
+            _playables.TryAdd(id, audio.CreateMusic(path, mixer));
         }
-        else
+        else {
             logger.Info("Could not find music {Id}", id);
+        }
     }
 }

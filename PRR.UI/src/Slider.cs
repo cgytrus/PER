@@ -16,7 +16,7 @@ public class Slider : ClickableElement {
 
     protected override string type => "slider";
 
-    public const string ValueChangedSoundId = "slider";
+    public static IPlayable? valueChangedSound { get; set; }
 
     public override Vector2Int size {
         get => base.size;
@@ -42,7 +42,6 @@ public class Slider : ClickableElement {
     public float minValue { get; set; }
     public float maxValue { get; set; }
 
-    public IPlayable? valueChangedSound { get; set; }
     public event EventHandler? onValueChanged;
 
     protected override InputReq<bool>? hotkeyPressed => null;
@@ -67,7 +66,7 @@ public class Slider : ClickableElement {
         tempValue = minValue + tempValue * (maxValue - minValue);
         value = Math.Clamp(tempValue, minValue, maxValue);
 
-        PlaySound(audio, valueChangedSound, ValueChangedSoundId);
+        valueChangedSound?.Play();
     }
 
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {
