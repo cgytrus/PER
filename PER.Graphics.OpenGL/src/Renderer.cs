@@ -8,7 +8,6 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
-using PER.Abstractions.Meta;
 using PER.Abstractions.Rendering;
 using PER.Util;
 using Color = PER.Util.Color;
@@ -71,6 +70,7 @@ uniform isampler2D styleTex;
 
 uniform sampler2D font;
 uniform sampler2D formatting;
+uniform isamplerBuffer charMap;
 
 flat in ivec2 position;
 in vec2 texCoord;
@@ -86,7 +86,7 @@ vec4 blend(vec4 bottom, vec4 top) {
 void main() {
     vec4 backgroundColor = texelFetch(backgroundTex, position, 0);
     vec4 foregroundColor = texelFetch(foregroundTex, position, 0);
-    ivec2 character = ivec2(texelFetch(characterTex, position, 0).xy + texCoord);
+    ivec2 character = ivec2(texelFetch(charMap, int(texelFetch(characterTex, position, 0).x)).xy + texCoord);
     ivec3 style = texelFetch(styleTex, position, 0).xyz;
     int bold = style.x;
     int underlineStrikethrough = style.y;
@@ -108,13 +108,13 @@ uniform isampler2D offsetTex;
 layout(location = 0) in ivec2 aPosition;
 layout(location = 1) in vec4 aBackground;
 layout(location = 2) in vec4 aForeground;
-layout(location = 3) in ivec2 aCharacter;
+layout(location = 3) in int aCharacter;
 layout(location = 4) in ivec3 aStyle;
 layout(location = 5) in ivec2 aOffset;
 
 out vec4 background;
 out vec4 foreground;
-flat out ivec2 character;
+flat out int character;
 flat out ivec3 style;
 flat out ivec2 offset;
 
@@ -138,7 +138,7 @@ uniform isampler2D offsetTex;
 
 in vec4 background;
 in vec4 foreground;
-flat in ivec2 character;
+flat in int character;
 flat in ivec3 style;
 flat in ivec2 offset;
 
@@ -151,7 +151,7 @@ layout(location = 4) out ivec2 off;
 void main() {
     bg = background;
     fg = foreground;
-    ch = character.x < 0 ? vec4(0.0) : vec4(character, 0.0, 1.0);
+    ch = character < 0 ? vec4(0.0) : vec4(character, 0.0, 0.0, 1.0);
     st = style;
     off = offset;
 }
@@ -167,9 +167,11 @@ void main() {
 
     private int _font;
     private int _formatting;
+    private int _charactersTex;
+    private int _charactersBuf;
     private int _vao;
     private int _vbo;
-    private Vector2i?[] _characters = Array.Empty<Vector2i?>();
+    private bool[] _characters = [];
 
     private bool _shouldClose;
     private bool _drawing;
@@ -181,23 +183,24 @@ void main() {
         public Vector2i position;
         public Color4 background;
         public Color4 foreground;
-        public Vector2i character;
+        public int character;
         public Vector3i style;
         public Vector2i offset;
 
         public static void VertexAttrib() {
+            int stride = Marshal.SizeOf<Pixel>();
             GL.EnableVertexAttribArray(0);
-            GL.VertexAttribIPointer(0, 2, VertexAttribIntegerType.Int, 4 * 17, 0);
+            GL.VertexAttribIPointer(0, 2, VertexAttribIntegerType.Int, stride, Marshal.OffsetOf<Pixel>(nameof(position)));
             GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 4 * 17, 4 * 2);
+            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, stride, Marshal.OffsetOf<Pixel>(nameof(background)));
             GL.EnableVertexAttribArray(2);
-            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, 4 * 17, 4 * 6);
+            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, stride, Marshal.OffsetOf<Pixel>(nameof(foreground)));
             GL.EnableVertexAttribArray(3);
-            GL.VertexAttribIPointer(3, 2, VertexAttribIntegerType.Int, 4 * 17, 4 * 10);
+            GL.VertexAttribIPointer(3, 1, VertexAttribIntegerType.Int, stride, Marshal.OffsetOf<Pixel>(nameof(character)));
             GL.EnableVertexAttribArray(4);
-            GL.VertexAttribIPointer(4, 3, VertexAttribIntegerType.Int, 4 * 17, 4 * 12);
+            GL.VertexAttribIPointer(4, 3, VertexAttribIntegerType.Int, stride, Marshal.OffsetOf<Pixel>(nameof(style)));
             GL.EnableVertexAttribArray(5);
-            GL.VertexAttribIPointer(5, 2, VertexAttribIntegerType.Int, 4 * 17, 4 * 15);
+            GL.VertexAttribIPointer(5, 2, VertexAttribIntegerType.Int, stride, Marshal.OffsetOf<Pixel>(nameof(offset)));
         }
     }
 
@@ -318,12 +321,17 @@ void main() {
         if(error != FramebufferErrorCode.FramebufferComplete)
             throw new InvalidOperationException(error.ToString());
 
-        _characters = new Vector2i?[0xFFFF];
-        foreach((char c, Vector2Int x) in font.characters)
-            _characters[c] = Converters.ToOtkVector2Int(x);
-
         _font = CreateTexture(font.image);
         _formatting = CreateTexture(font.formattingImage);
+
+        _characters = new bool[0xFFFF];
+        Vector2i[] characters = new Vector2i[0xFFFF];
+        for (int i = 0; i < 0xFFFF; i++) {
+            bool has = font.characters.TryGetValue((char)i, out Vector2Int x);
+            _characters[i] = has;
+            characters[i] = has ? Converters.ToOtkVector2Int(x) : Vector2i.Zero;
+        }
+        (_charactersTex, _charactersBuf) = CreateTextureBuffer(SizedInternalFormat.Rg32i, characters);
 
         _vao = GL.GenVertexArray();
         _vbo = GL.GenBuffer();
@@ -378,6 +386,19 @@ void main() {
         GL.BindTexture(TextureTarget.Texture2D, 0);
         return texture;
     }
+    private static (int texture, int buffer) CreateTextureBuffer<T>(SizedInternalFormat format, T[] data) where T : struct {
+        int buffer = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.TextureBuffer, buffer);
+        GL.BufferData(BufferTarget.TextureBuffer, Marshal.SizeOf<T>() * data.Length, data, BufferUsageHint.StaticRead);
+        GL.BindBuffer(BufferTarget.TextureBuffer, 0);
+
+        int texture = GL.GenTexture();
+        GL.BindTexture(TextureTarget.TextureBuffer, texture);
+        GL.TexBuffer(TextureBufferTarget.TextureBuffer, format, buffer);
+        GL.BindTexture(TextureTarget.TextureBuffer, 0);
+
+        return (texture, buffer);
+    }
     private static void SetTextureUniforms(Shader shader) {
         int backgroundTex = shader.GetUniformLocation("backgroundTex");
         int foregroundTex = shader.GetUniformLocation("foregroundTex");
@@ -386,6 +407,7 @@ void main() {
         int offsetTex = shader.GetUniformLocation("offsetTex");
         int font = shader.GetUniformLocation("font");
         int formatting = shader.GetUniformLocation("formatting");
+        int charMap = shader.GetUniformLocation("charMap");
         if(backgroundTex != -1)
             GL.Uniform1(backgroundTex, 0);
         if(foregroundTex != -1)
@@ -400,6 +422,8 @@ void main() {
             GL.Uniform1(font, 5);
         if(formatting != -1)
             GL.Uniform1(formatting, 6);
+        if(charMap != -1)
+            GL.Uniform1(charMap, 7);
     }
     private void BindAllTextures() {
         if(_displayTex is not null) {
@@ -418,6 +442,8 @@ void main() {
         GL.BindTexture(TextureTarget.Texture2D, _font);
         GL.ActiveTexture(TextureUnit.Texture6);
         GL.BindTexture(TextureTarget.Texture2D, _formatting);
+        GL.ActiveTexture(TextureUnit.Texture7);
+        GL.BindTexture(TextureTarget.TextureBuffer, _charactersTex);
     }
 
     protected override void UpdateVerticalSync() {
@@ -498,17 +524,16 @@ void main() {
         foreach(IModifierEffect modEffect in modEffects)
             modEffect.ApplyModifiers(position, ref offset, ref character);
 
-        bool bold = (character.style & RenderStyle.Bold) != 0;
-        bool underline = (character.style & RenderStyle.Underline) != 0;
-        bool strikethrough = (character.style & RenderStyle.Strikethrough) != 0;
-        bool italic = (character.style & RenderStyle.Italic) != 0;
+        int bold = (int)(character.style & RenderStyle.Bold) >> 0;
+        int underlineStrikethrough = (int)(character.style & (RenderStyle.Underline | RenderStyle.Strikethrough)) >> 1;
+        int italic = (int)(character.style & RenderStyle.Italic) >> 3;
 
         _pixels.Add(new Pixel {
             position = new Vector2i(position.x, position.y),
             background = Converters.ToOtkColor(character.background),
             foreground = Converters.ToOtkColor(character.foreground),
-            character = _characters[character.character] ?? new Vector2i(-1, -1),
-            style = new Vector3i(bold ? 1 : 0, (underline ? 1 : 0) + (strikethrough ? 2 : 0), italic ? 1 : 0),
+            character = _characters[character.character] ? character.character : -1,
+            style = new Vector3i(bold, underlineStrikethrough, italic),
             offset = Converters.ToOtkVector2Int(offset)
         });
 
@@ -533,6 +558,8 @@ void main() {
         _lastPixelsCapacity = 0;
         GL.DeleteTexture(_font);
         GL.DeleteTexture(_formatting);
+        GL.DeleteTexture(_charactersTex);
+        GL.DeleteBuffer(_charactersBuf);
         _shader?.Dispose();
         _pixelShader?.Dispose();
         window?.Dispose();

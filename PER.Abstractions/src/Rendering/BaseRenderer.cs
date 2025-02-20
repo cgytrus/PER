@@ -51,7 +51,6 @@ public abstract class BaseRenderer(Vector2Int size) : IRenderer {
 
     public abstract void DrawCharacter(Vector2Int position, RenderCharacter character, IEffect? effect = null);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public virtual void DrawText(Vector2Int position, ReadOnlySpan<char> text, Func<char, Formatting> formatter,
         HorizontalAlignment align = HorizontalAlignment.Left, int maxWidth = 0) {
         if(text.Length == 0)
@@ -80,7 +79,6 @@ public abstract class BaseRenderer(Vector2Int size) : IRenderer {
                     break;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
             void DrawCurrent(ReadOnlySpan<char> allText) {
                 int x = GetAlignOffset(align, width);
                 DrawTextCharacter(position, allText, startIndex, x, y, width, formatter, ref formattingFlag);
@@ -91,7 +89,6 @@ public abstract class BaseRenderer(Vector2Int size) : IRenderer {
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private void DrawTextCharacter(Vector2Int position, ReadOnlySpan<char> text, int startIndex, int x, int y,
         int width, Func<char, Formatting> formatter, ref char formattingFlag) {
         for(int i = startIndex; i < startIndex + width; i++) {
