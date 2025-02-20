@@ -203,17 +203,6 @@ public class Resources : IResources {
     public bool TryAddResource<TResource>(string id, TResource resource) where TResource : IResource =>
         !loaded && _resources.TryAdd(id, resource);
 
-    public IEnumerable<string> GetAllPaths(string relativePath) {
-        if(!loaded && !loading)
-            yield break;
-
-        for(int i = loadedPacks.Count - 1; i >= 0; i--) {
-            string resourcePath = Path.Combine(loadedPacks[i].fullPath, relativePath);
-            if(File.Exists(resourcePath))
-                yield return resourcePath;
-        }
-    }
-
     public bool TryGetResource<TResource>(string id, [NotNullWhen(true)] out TResource? resource)
         where TResource : class, IResource {
         resource = null;
@@ -223,5 +212,16 @@ public class Resources : IResources {
 
         resource = actualResource;
         return true;
+    }
+
+    public IEnumerable<string> GetAllPaths(string relativePath) {
+        if(!loaded && !loading)
+            yield break;
+
+        for(int i = loadedPacks.Count - 1; i >= 0; i--) {
+            string resourcePath = Path.Combine(loadedPacks[i].fullPath, relativePath);
+            if(File.Exists(resourcePath))
+                yield return resourcePath;
+        }
     }
 }

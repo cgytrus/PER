@@ -8,13 +8,9 @@ namespace PER.Abstractions.Resources;
 
 [PublicAPI, RequiresBody]
 public interface IResources {
-    public static IResources? current { get; protected set; }
+    public static abstract int currentVersion { get; }
 
-    public int currentVersion { get; }
-    public bool loaded { get; }
-    public bool loading { get; }
     public IReadOnlyList<ResourcePackData> loadedPacks { get; }
-    public string defaultPackName { get; }
 
     public void Load();
     public void Unload();
@@ -29,9 +25,8 @@ public interface IResources {
     public bool TryRemovePack(ResourcePackData data);
     public void RemoveAllPacks();
 
-    public bool TryAddResource<TResource>(string id, TResource resource) where TResource : IResource;
+    public void Preload<T>() where T : struct, IResource<T>;
+    public T LazyLoad<T>() where T : struct, IResource<T>;
 
     public IEnumerable<string> GetAllPaths(string relativePath);
-    public bool TryGetResource<TResource>(string id, [NotNullWhen(true)] out TResource? resource)
-        where TResource : class, IResource;
 }
