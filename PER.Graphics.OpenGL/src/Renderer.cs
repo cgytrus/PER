@@ -162,7 +162,7 @@ void main() {
 
     private int _pixelVao;
     private int _pixelVbo;
-    private readonly List<Pixel> _pixels = new();
+    private readonly List<Pixel> _pixels = [];
     private int _lastPixelsCapacity;
 
     private int _font;
@@ -285,13 +285,13 @@ void main() {
         window.FocusedChanged += _ => focusChanged?.Invoke(this, EventArgs.Empty);
         window.Closing += _ => closed?.Invoke(this, EventArgs.Empty);
 
-        _displayTex = new int[] {
+        _displayTex = [
             CreateDisplayTexture(PixelInternalFormat.Rgba32f, PixelFormat.Rgba, PixelType.Float),
             CreateDisplayTexture(PixelInternalFormat.Rgba32f, PixelFormat.Rgba, PixelType.Float),
             CreateDisplayTexture(PixelInternalFormat.Rgba32f, PixelFormat.Rgba, PixelType.Float),
             CreateDisplayTexture(PixelInternalFormat.Rgb32i, PixelFormat.RgbInteger, PixelType.Int),
             CreateDisplayTexture(PixelInternalFormat.Rg32i, PixelFormat.RgInteger, PixelType.Int)
-        };
+        ];
 
         _display = GL.GenFramebuffer();
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, _display);
@@ -305,11 +305,11 @@ void main() {
             TextureTarget.Texture2D, _displayTex[3], 0);
         GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment4,
             TextureTarget.Texture2D, _displayTex[4], 0);
-        GL.DrawBuffers(5, new DrawBuffersEnum[] {
+        GL.DrawBuffers(5, [
             DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1,
             DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3,
             DrawBuffersEnum.ColorAttachment4
-        });
+        ]);
         GL.Enable(IndexedEnableCap.Blend, 0);
         GL.Disable(IndexedEnableCap.Blend, 1);
         GL.Enable(IndexedEnableCap.Blend, 2);
@@ -375,7 +375,7 @@ void main() {
         GL.BindTexture(TextureTarget.Texture2D, 0);
         return texture;
     }
-    private static int CreateTexture(PER.Abstractions.Rendering.Image image) {
+    private static int CreateTexture(Abstractions.Rendering.Image image) {
         int texture = GL.GenTexture();
         GL.BindTexture(TextureTarget.Texture2D, texture);
         GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.width, image.height, 0,
