@@ -44,14 +44,14 @@ public static class Engine {
         running = true;
         while (running) {
             logger.Info("Loading");
-            game.Load();
-            audio.Setup();
+            game.PreLoad();
             resources.Load();
-            game.Loaded();
+            game.Load();
 
             logger.Info("Setting up");
             renderer.Setup(rendererSettings);
             input.Setup();
+            audio.Setup();
             (screens as ISetupable)?.Setup();
             (game as ISetupable)?.Setup();
 
@@ -60,7 +60,6 @@ public static class Engine {
             while (renderer.open)
                 Update();
 
-            resources.Unload();
             game.Unload();
 
             input.Finish();

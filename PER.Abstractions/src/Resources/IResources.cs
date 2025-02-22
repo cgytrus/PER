@@ -10,23 +10,21 @@ namespace PER.Abstractions.Resources;
 public interface IResources {
     public static abstract int currentVersion { get; }
 
-    public IReadOnlyList<ResourcePackData> loadedPacks { get; }
+    public bool needsReload { get; }
+
+    public IReadOnlyList<ResourcePack> loadedPacks { get; }
+
+    public IEnumerable<ResourcePack> GetAvailablePacks();
+    public IEnumerable<ResourcePack> GetUnloadedAvailablePacks();
+    public bool TryGetPackData(string pack, out ResourcePack data);
+
+    public void AddPack(ResourcePack data);
+    public void AddPacksByNames(params string[] names);
+    public void RemovePack(ResourcePack data);
+    public void RemoveAllPacks();
 
     public void Load();
-    public void Unload();
-    public void SoftReload();
-
-    public IEnumerable<ResourcePackData> GetAvailablePacks();
-    public IEnumerable<ResourcePackData> GetUnloadedAvailablePacks();
-    public bool TryGetPackData(string pack, out ResourcePackData data);
-
-    public bool TryAddPack(ResourcePackData data);
-    public bool TryAddPacksByNames(params string[] names);
-    public bool TryRemovePack(ResourcePackData data);
-    public void RemoveAllPacks();
 
     public void Preload<T>() where T : struct, IResource<T>;
     public T LazyLoad<T>() where T : struct, IResource<T>;
-
-    public IEnumerable<string> GetAllPaths(string relativePath);
 }

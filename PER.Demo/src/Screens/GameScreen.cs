@@ -26,8 +26,8 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
 
     private readonly List<Func<char, Formatting>> _styleFormatters = new();
 
-    private readonly List<ResourcePackData> _availablePacks = new();
-    private readonly HashSet<ResourcePackData> _loadedPacks = new();
+    private readonly List<ResourcePack> _availablePacks = new();
+    private readonly HashSet<ResourcePack> _loadedPacks = new();
 
     private ProgressBar? _testProgressBar;
 
@@ -55,7 +55,7 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
         AddElement<Button>("testButton6");
         AddElement<Text>("testSliderText");
         AddElement<Slider>("testSlider");
-        AddElement<ListBox<ResourcePackData>>("packs");
+        AddElement<ListBox<ResourcePack>>("packs");
         AddElement<Button>("packsButton");
         AddElement<Button>("applyButton");
         AddElement<Button>("reloadButton");
@@ -216,7 +216,7 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
         _loadedPacks.Clear();
         _availablePacks.Clear();
 
-        foreach(ResourcePackData data in resources.loadedPacks)
+        foreach(ResourcePack data in resources.loadedPacks)
             _loadedPacks.Add(data);
 
         _availablePacks.AddRange(_loadedPacks);
@@ -231,10 +231,10 @@ public class GameScreen : LayoutResource, IScreen, IUpdatable, ITickable {
     }
 
     private void GeneratePacksList() {
-        ListBox<ResourcePackData> packs = GetElement<ListBox<ResourcePackData>>("packs");
+        ListBox<ResourcePack> packs = GetElement<ListBox<ResourcePack>>("packs");
         packs.Clear();
-        foreach(ResourcePackData item in _availablePacks)
+        foreach(ResourcePack item in _availablePacks)
             packs.Add(item);
     }
-    private void ClearPacksList() => GetElement<ListBox<ResourcePackData>>("packs").Clear();
+    private void ClearPacksList() => GetElement<ListBox<ResourcePack>>("packs").Clear();
 }

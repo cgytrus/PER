@@ -5,8 +5,8 @@ namespace PER.Abstractions;
 
 [PublicAPI, RequiresBody]
 public interface IGame {
-    public void Unload();
+    public void PreLoad();
     public void Load();
-    public void Loaded();
+    public void Unload();
     public void Finish();
 }

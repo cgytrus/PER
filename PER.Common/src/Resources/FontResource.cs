@@ -6,10 +6,8 @@ using PER.Common.Rendering;
 namespace PER.Common.Resources;
 
 [PublicAPI]
-public class FontResource : HeadResource {
-    public const string GlobalId = "graphics/font";
-
-    public Font? font { get; private set; }
+public readonly struct FontResource : IResource<FontResource> {
+    public Font? font { get; private init; }
 
     public override void Preload() {
         AddPath("image", "graphics/font/font.qoi");

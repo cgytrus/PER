@@ -14,214 +14,107 @@ namespace PER.Common.Resources;
 public class Resources : IResources {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-    public int currentVersion => 0;
-    public bool loaded { get; private set; }
-    public bool loading { get; private set; }
-    public IReadOnlyList<ResourcePackData> loadedPacks => _loadedPacks;
-    public virtual string defaultPackName => "Default";
+    public static int currentVersion => 0;
+
+    public bool needsReload { get; private set; }
+
     protected virtual string resourcesRoot => "resources";
     protected virtual string resourcePackMeta => "metadata.json";
     protected virtual string resourcesInPack => "resources";
 
-    private readonly List<ResourcePackData> _loadedPacks = [];
-    private readonly List<ResourcePackData> _futureLoadedPacks = [];
-    private readonly Dictionary<string, IResource> _resources = new();
-    private readonly Dictionary<string, int> _resourcePathHashes = new();
+    private readonly List<ResourcePack> _loadedPacks = [];
+    private readonly List<ResourcePack> _queuedPacks = [];
+    private readonly Dictionary<Type, IResource> _resources = [];
 
-    public void Load() {
-        if(loading)
-            throw new InvalidOperationException("Already loading.");
-        if(loaded)
-            return;
-        loading = true;
+    public IReadOnlyList<ResourcePack> loadedPacks => _loadedPacks;
 
-        logger.Info("Loading resources");
-
-        _loadedPacks.Clear();
-        _loadedPacks.AddRange(_futureLoadedPacks);
-
-        foreach((string id, IResource resource) in _resources) {
-            logger.Info("Loading resource {Id}", id);
-            IResources.current = this;
-            resource.Preload();
-            IResources.current = null;
-            resource.Load(id);
-            _resourcePathHashes.Add(id, resource.GetPathsHash());
-        }
-
-        loading = false;
-        loaded = true;
-
-        logger.Info("Resources loaded");
-    }
-
-    public void Unload() {
-        if(!loaded)
-            return;
-
-        logger.Info("Unloading resources");
-
-        foreach((string id, IResource resource) in _resources) {
-            logger.Info("Unloading resource {Id}", id);
-            resource.Unload(id);
-            resource.PostUnload();
-        }
-
-        _loadedPacks.Clear();
-        _futureLoadedPacks.Clear();
-        _resources.Clear();
-        _resourcePathHashes.Clear();
-
-        loaded = false;
-
-        logger.Info("Resources unloaded");
-    }
-
-    public void SoftReload() {
-        if(loading)
-            throw new InvalidOperationException("Already loading.");
-        if(!loaded)
-            return;
-        loading = true;
-
-        logger.Info("Reloading resources");
-
-        _loadedPacks.Clear();
-        _loadedPacks.AddRange(_futureLoadedPacks);
-
-        logger.Info("Searching for changed resources");
-
-        HashSet<(string, IResource, int)> resourcesToNotReloadYet = new();
-        Dictionary<string, int> resourcesToReload = new();
-
-        foreach((string id, IResource resource) in _resources) {
-            int newHash = resource.GetPathsHash();
-            if(_resourcePathHashes.TryGetValue(id, out int prevHash) && prevHash == newHash) {
-                resourcesToNotReloadYet.Add((id, resource, newHash));
-                continue;
-            }
-            resourcesToReload.Add(id, newHash);
-        }
-
-        FindIndirectResourcesToReload(resourcesToNotReloadYet, resourcesToReload);
-
-        foreach((string id, IResource resource) in _resources) {
-            if(!resourcesToReload.TryGetValue(id, out int hash))
-                continue;
-
-            logger.Info("Reloading resource {Id}", id);
-            resource.Unload(id);
-            resource.PostUnload();
-            IResources.current = this;
-            resource.Preload();
-            IResources.current = null;
-            resource.Load(id);
-            _resourcePathHashes[id] = hash;
-        }
-
-        loading = false;
-
-        logger.Info("Resources reloaded");
-    }
-
-    private static void FindIndirectResourcesToReload(HashSet<(string, IResource, int)> resourcesToNotReloadYet,
-        Dictionary<string, int> resourcesToReload) {
-        foreach((string id, IResource resource, int hash) in resourcesToNotReloadYet) {
-            bool reload = false;
-            foreach((string reloadId, _) in resourcesToReload) {
-                if(!resource.HasDependency(reloadId))
-                    continue;
-                reload = true;
-                break;
-            }
-            if(reload)
-                resourcesToReload.Add(id, hash);
-        }
-    }
-
-    public IEnumerable<ResourcePackData> GetAvailablePacks() {
-        if(!Directory.Exists(resourcesRoot)) {
-            logger.Warn("Resources directory ({Directory}) missing", Path.GetFullPath(resourcesRoot));
+    public IEnumerable<ResourcePack> GetAvailablePacks() {
+        if (!Directory.Exists(resourcesRoot)) {
+            logger.Warn("Resources directory ({}) missing", Path.GetFullPath(resourcesRoot));
             yield break;
         }
 
-        foreach(string pack in Directory.GetDirectories(resourcesRoot)) {
-            if(!TryGetPackData(pack, out ResourcePackData data) || data.meta.version != currentVersion)
+        foreach (string pack in Directory.GetDirectories(resourcesRoot)) {
+            if (!TryGetPackData(pack, out ResourcePack data) || data.meta.version != currentVersion)
                 continue;
             yield return data;
         }
     }
 
-    public IEnumerable<ResourcePackData> GetUnloadedAvailablePacks() {
+    public IEnumerable<ResourcePack> GetUnloadedAvailablePacks() {
         IEnumerable<string> loadedPackNames = loadedPacks.Select(packData => packData.name);
         return GetAvailablePacks().Where(data => !loadedPackNames.Contains(data.name));
     }
 
-    public bool TryGetPackData(string pack, out ResourcePackData data) {
+    public bool TryGetPackData(string pack, out ResourcePack data) {
         string metaPath = Path.Combine(pack, resourcePackMeta);
-        data = default(ResourcePackData);
-        if(!File.Exists(metaPath))
+        data = default(ResourcePack);
+        if (!File.Exists(metaPath))
             return false;
 
         FileStream file = File.OpenRead(metaPath);
-        ResourcePackMeta meta = JsonSerializer.Deserialize<ResourcePackMeta>(file);
+        ResourcePack.Meta meta = JsonSerializer.Deserialize<ResourcePack.Meta>(file);
         file.Close();
 
-        data = new ResourcePackData(Path.GetFileName(pack), Path.Combine(pack, resourcesInPack), meta);
+        data = new ResourcePack(Path.GetFileName(pack), Path.Combine(pack, resourcesInPack), meta);
         return true;
     }
 
-    public bool TryAddPack(ResourcePackData data) {
-        if(loading)
-            return false;
-        _futureLoadedPacks.Add(data);
-        logger.Info("Enabled pack {Name}", data.name);
-        return true;
+    public void AddPack(ResourcePack data) {
+        _queuedPacks.Add(data);
+        UpdateNeedsReload();
+        logger.Info("Queued pack {}", data.name);
     }
 
-    public bool TryAddPacksByNames(params string[] names) {
-        bool success = true;
-        ImmutableDictionary<string, ResourcePackData> availablePacks =
+    public void AddPacksByNames(params string[] names) {
+        ImmutableDictionary<string, ResourcePack> availablePacks =
             GetAvailablePacks().ToImmutableDictionary(data => data.name);
-        foreach(string name in names) {
-            if(!availablePacks.TryGetValue(name, out ResourcePackData data))
+        foreach (string name in names) {
+            if (availablePacks.TryGetValue(name, out ResourcePack data))
+                AddPack(data);
+        }
+    }
+
+    public void RemovePack(ResourcePack data) {
+        if (!_queuedPacks.Remove(data))
+            return;
+        UpdateNeedsReload();
+        logger.Info("Unqueued pack {}", data.name);
+    }
+
+    public void RemoveAllPacks() {
+        _queuedPacks.Clear();
+        UpdateNeedsReload();
+        logger.Info("Unqueued all packs");
+    }
+
+    private void UpdateNeedsReload() => needsReload = _loadedPacks.Count != _queuedPacks.Count ||
+        _loadedPacks.Where((t, i) => t != _queuedPacks[i]).Any();
+
+    public void Load() {
+        _loadedPacks.Clear();
+        _loadedPacks.AddRange(_queuedPacks);
+    }
+
+    // preload is just lazy load but without the return value
+    public void Preload<T>() where T : struct, IResource<T> => LazyLoad<T>();
+
+    public T LazyLoad<T>() where T : struct, IResource<T> {
+        if (_resources.TryGetValue(typeof(T), out IResource? resource))
+            return (T)resource;
+        logger.Info("Loading resource {}", typeof(T).FullName);
+        T res = T.Missing();
+        if (Path.IsPathRooted(T.filePath))
+            throw new InvalidOperationException($"{nameof(T.filePath)} cannot be rooted.");
+        foreach (ResourcePack pack in loadedPacks) {
+            string resourcePath = Path.Combine(pack.fullPath, T.filePath);
+            if (!resourcePath.StartsWith(pack.fullPath))
+                throw new InvalidOperationException($"{nameof(T.filePath)} cannot escape the pack directory.");
+            if (!File.Exists(resourcePath))
                 continue;
-            success &= TryAddPack(data);
+            res = T.Merge(res, T.Load(resourcePath));
         }
-        return success;
-    }
-
-    public bool TryRemovePack(ResourcePackData data) {
-        if(loading || !_futureLoadedPacks.Remove(data))
-            return false;
-        logger.Info("Disabled pack {Name}", data.name);
-        return true;
-    }
-
-    public void RemoveAllPacks() => _futureLoadedPacks.Clear();
-
-    public bool TryAddResource<TResource>(string id, TResource resource) where TResource : IResource =>
-        !loaded && _resources.TryAdd(id, resource);
-
-    public bool TryGetResource<TResource>(string id, [NotNullWhen(true)] out TResource? resource)
-        where TResource : class, IResource {
-        resource = null;
-        if(!_resources.TryGetValue(id, out IResource? cachedResource) ||
-           cachedResource is not TResource actualResource)
-            return false;
-
-        resource = actualResource;
-        return true;
-    }
-
-    public IEnumerable<string> GetAllPaths(string relativePath) {
-        if(!loaded && !loading)
-            yield break;
-
-        for(int i = loadedPacks.Count - 1; i >= 0; i--) {
-            string resourcePath = Path.Combine(loadedPacks[i].fullPath, relativePath);
-            if(File.Exists(resourcePath))
-                yield return resourcePath;
-        }
+        _resources[typeof(T)] = res;
+        return res;
     }
 }

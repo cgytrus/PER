@@ -10,14 +10,14 @@ namespace PER.Demo.Screens.Templates;
 
 public class ResourcePackSelectorTemplate(
     GameScreen screen,
-    IList<ResourcePackData> availablePacks,
-    ISet<ResourcePackData> loadedPacks)
-    : ListBoxTemplateResource<ResourcePackData> {
+    IList<ResourcePack> availablePacks,
+    ISet<ResourcePack> loadedPacks)
+    : ListBoxTemplateResource<ResourcePack> {
     public const string GlobalId = "layouts/templates/resourcePackItem";
 
     private readonly GameScreen _screen = screen;
-    private readonly IList<ResourcePackData> _availablePacks = availablePacks;
-    private readonly ISet<ResourcePackData> _loadedPacks = loadedPacks;
+    private readonly IList<ResourcePack> _availablePacks = availablePacks;
+    private readonly ISet<ResourcePack> _loadedPacks = loadedPacks;
 
     public override void Preload() {
         base.Preload();
@@ -30,7 +30,7 @@ public class ResourcePackSelectorTemplate(
     private class Template : BasicTemplate {
         private readonly ResourcePackSelectorTemplate _resource;
         private int _index;
-        private ResourcePackData _item;
+        private ResourcePack _item;
         private bool _loaded;
 
         public Template(ResourcePackSelectorTemplate resource) : base(resource) {
@@ -63,7 +63,7 @@ public class ResourcePackSelectorTemplate(
             };
         }
 
-        public override void UpdateWithItem(int index, ResourcePackData item, int width) {
+        public override void UpdateWithItem(int index, ResourcePack item, int width) {
             _index = index;
             _item = item;
 
@@ -97,5 +97,5 @@ public class ResourcePackSelectorTemplate(
         }
     }
 
-    public override IListBoxTemplateFactory<ResourcePackData>.Template CreateTemplate() => new Template(this);
+    public override IListBoxTemplateFactory<ResourcePack>.Template CreateTemplate() => new Template(this);
 }
