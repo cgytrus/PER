@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 using JetBrains.Annotations;
@@ -92,29 +91,31 @@ public class Resources : IResources {
         _loadedPacks.Where((t, i) => t != _queuedPacks[i]).Any();
 
     public void Load() {
+        _resources.Clear();
         _loadedPacks.Clear();
         _loadedPacks.AddRange(_queuedPacks);
     }
-
-    // preload is just lazy load but without the return value
-    public void Preload<T>() where T : struct, IResource<T> => LazyLoad<T>();
 
     public T LazyLoad<T>() where T : struct, IResource<T> {
         if (_resources.TryGetValue(typeof(T), out IResource? resource))
             return (T)resource;
         logger.Info("Loading resource {}", typeof(T).FullName);
-        T res = T.Missing();
         if (Path.IsPathRooted(T.filePath))
             throw new InvalidOperationException($"{nameof(T.filePath)} cannot be rooted.");
+        T? res = null;
+        string? topPath = null;
         foreach (ResourcePack pack in loadedPacks) {
             string resourcePath = Path.Combine(pack.fullPath, T.filePath);
             if (!resourcePath.StartsWith(pack.fullPath))
                 throw new InvalidOperationException($"{nameof(T.filePath)} cannot escape the pack directory.");
             if (!File.Exists(resourcePath))
                 continue;
-            res = T.Merge(res, T.Load(resourcePath));
+            topPath = resourcePath;
+            if (!T.alwaysTop)
+                res = res.HasValue ? T.Merge(res.Value, T.Load(topPath)) : T.Load(topPath);
         }
+        res ??= topPath is null ? T.Missing() : T.Load(topPath);
         _resources[typeof(T)] = res;
-        return res;
+        return res.Value;
     }
 }

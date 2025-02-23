@@ -9,9 +9,10 @@ using QoiSharp;
 namespace PER.Common.Resources;
 
 [PublicAPI]
-public readonly struct IconResource : IResource<IconResource> {
-    public Image? icon { get; private init; }
+public readonly struct IconResource : IResource<IconResource, Image?> {
+    private Image? image { get; init; }
 
+    public Image? value => image;
     public static string filePath => "graphics/icon.qoi";
 
     public static IconResource Load(string path) {
@@ -25,10 +26,10 @@ public readonly struct IconResource : IResource<IconResource> {
             byte alpha = channels > 3 ? qoiImage.Data[i + 3] : byte.MaxValue;
             image[x, y] = new Color(qoiImage.Data[i], qoiImage.Data[i + 1], qoiImage.Data[i + 2], alpha);
         }
-        return new IconResource { icon = image };
+        return new IconResource { image = image };
     }
 
     public static IconResource Merge(IconResource bottom, IconResource top) => top;
 
-    public static IconResource Missing() => new() { icon = null };
+    public static IconResource Missing() => new() { image = null };
 }

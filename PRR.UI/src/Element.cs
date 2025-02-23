@@ -10,6 +10,8 @@ namespace PRR.UI;
 
 [PublicAPI, RequiresHead]
 public abstract class Element : IUpdatable {
+    public static IAudioMixer mixer { get; set; } = null!;
+
     public virtual bool enabled { get; set; } = true;
     public virtual Vector2Int position { get; set; }
     public virtual Vector2Int size { get; set; }

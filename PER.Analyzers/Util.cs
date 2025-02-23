@@ -115,6 +115,16 @@ public static class Util {
             invalid.heads = invalid.heads.Concat(inherited.invalid.heads);
             usedInherited = true;
         }
+        if (symbol is IMethodSymbol method) {
+            foreach ((Reqs bodies, Reqs heads, (Reqs bodies, Reqs heads) invalid) inherited in
+                method.TypeArguments.Select(GetRequires)) {
+                bodies = bodies.Concat(inherited.bodies);
+                heads = heads.Concat(inherited.heads);
+                invalid.bodies = invalid.bodies.Concat(inherited.invalid.bodies);
+                invalid.heads = invalid.heads.Concat(inherited.invalid.heads);
+                usedInherited = true;
+            }
+        }
 
         (BodyHeadSource? body, BodyHeadSource? head) = GetRequiresSelf(symbol);
 

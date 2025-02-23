@@ -10,7 +10,10 @@ namespace PRR.UI;
 [PublicAPI]
 public abstract class ClickableElement : Element {
     public enum State { None, Inactive, Idle, FakeHovered, Hovered, FakeClicked, Clicked, Hotkey }
-    public static IPlayable? clickSound { get; set; }
+    public readonly struct ClickResource : IUiSoundResource<ClickResource> {
+        public IPlayable? playable { get; init; }
+        public static string filePath => "audio/ui/buttonClick.wav";
+    }
 
     protected abstract string type { get; }
 
@@ -143,7 +146,7 @@ public abstract class ClickableElement : Element {
     }
 
     protected virtual void Click() {
-        clickSound?.Play();
+        resources.LazyLoad<ClickResource, IPlayable?>()?.Play();
         onClick?.Invoke(this, EventArgs.Empty);
     }
 

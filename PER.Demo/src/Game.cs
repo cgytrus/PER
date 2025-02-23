@@ -33,13 +33,16 @@ public class Game : IGame, ISetupable, IUpdatable {
 
     public void Unload() => _settings.Save(SettingsPath);
 
-    public void Load() {
+    public void PreLoad() {
         _settings = Settings.Load(SettingsPath);
+        resources.AddPacksByNames(_settings.packs);
+    }
 
-        resources.TryAddPacksByNames(_settings.packs);
+    public void Load() {
+        Mixers.Load();
 
         resources.TryAddResource("audio", new AudioResources());
-        resources.TryAddResource(FontResource.GlobalId, new FontResource());
+        resources.TryAddResource(FontResources.GlobalId, new FontResources());
         resources.TryAddResource(ColorsResource.GlobalId, new ColorsResource());
 
         renderer.formattingEffects.Clear();
@@ -50,7 +53,7 @@ public class Game : IGame, ISetupable, IUpdatable {
     }
 
     public void Loaded() {
-        if (!resources.TryGetResource(FontResource.GlobalId, out FontResource? font) || font.font is null)
+        if (!resources.TryGetResource(FontResources.GlobalId, out FontResources? font) || font.font is null)
             throw new InvalidOperationException("Missing font.");
         resources.TryGetResource(IconResource.GlobalId, out IconResource? icon);
 

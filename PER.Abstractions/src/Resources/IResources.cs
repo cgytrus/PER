@@ -25,6 +25,8 @@ public interface IResources {
 
     public void Load();
 
-    public void Preload<T>() where T : struct, IResource<T>;
+    // preload is just lazy load but without the return value
+    public void Preload<T>() where T : struct, IResource<T> => LazyLoad<T>();
+    public TValue LazyLoad<T, TValue>() where T : struct, IResource<T, TValue> => LazyLoad<T>().value;
     public T LazyLoad<T>() where T : struct, IResource<T>;
 }
