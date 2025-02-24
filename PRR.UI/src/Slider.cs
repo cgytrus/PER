@@ -16,7 +16,10 @@ public class Slider : ClickableElement {
 
     protected override string type => "slider";
 
-    public static IPlayable? valueChangedSound { get; set; }
+    public readonly struct ValueChangedResource : IUiSoundResource<ValueChangedResource> {
+        public IPlayable? playable { get; init; }
+        public static string filePath => "audio/ui/slider.wav";
+    }
 
     public override Vector2Int size {
         get => base.size;
@@ -66,7 +69,7 @@ public class Slider : ClickableElement {
         tempValue = minValue + tempValue * (maxValue - minValue);
         value = Math.Clamp(tempValue, minValue, maxValue);
 
-        valueChangedSound?.Play();
+        resources.LazyLoad<ValueChangedResource, IPlayable?>()?.Play();
     }
 
     protected override void DrawCharacter(int x, int y, Color backgroundColor, Color foregroundColor) {

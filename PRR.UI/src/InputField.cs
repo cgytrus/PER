@@ -18,9 +18,18 @@ public class InputField : ClickableElement {
 
     protected override string type => "inputField";
 
-    public static IPlayable? typeSound { get; set; }
-    public static IPlayable? eraseSound { get; set; }
-    public static IPlayable? submitSound { get; set; }
+    public readonly struct TypeResource : IUiSoundResource<TypeResource> {
+        public IPlayable? playable { get; init; }
+        public static string filePath => "audio/ui/inputFieldType.wav";
+    }
+    public readonly struct EraseResource : IUiSoundResource<EraseResource> {
+        public IPlayable? playable { get; init; }
+        public static string filePath => "audio/ui/inputFieldErase.wav";
+    }
+    public readonly struct SubmitResource : IUiSoundResource<SubmitResource> {
+        public IPlayable? playable { get; init; }
+        public static string filePath => "audio/ui/inputFieldSubmit.wav";
+    }
 
     public override bool enabled {
         get => base.enabled;
@@ -206,7 +215,7 @@ public class InputField : ClickableElement {
             onSubmit?.Invoke(this, EventArgs.Empty);
         else
             onCancel?.Invoke(this, EventArgs.Empty);
-        submitSound?.Play();
+        resources.LazyLoad<SubmitResource, IPlayable?>()?.Play();
     }
 
     protected override void CustomUpdate(TimeSpan time) {
@@ -243,7 +252,7 @@ public class InputField : ClickableElement {
                 Cut();
 
             foreach (char character in _type.Read().SelectMany(x => x)) {
-                typeSound?.Play();
+                resources.LazyLoad<TypeResource, IPlayable?>()?.Play();
                 TypeDrawable(character);
             }
         }
@@ -290,7 +299,7 @@ public class InputField : ClickableElement {
     }
 
     private void Paste() {
-        typeSound?.Play();
+        resources.LazyLoad<TypeResource, IPlayable?>()?.Play();
         foreach(char character in input.Get<IClipboard>().value)
             TypeDrawable(character);
     }
@@ -317,7 +326,7 @@ public class InputField : ClickableElement {
     }
 
     private void EraseLeft() {
-        eraseSound?.Play();
+        resources.LazyLoad<EraseResource, IPlayable?>()?.Play();
         if(cursor <= 0)
             return;
         ReadOnlySpan<char> textSpan = value.AsSpan();
@@ -329,7 +338,7 @@ public class InputField : ClickableElement {
     }
 
     private void EraseRight() {
-        eraseSound?.Play();
+        resources.LazyLoad<EraseResource, IPlayable?>()?.Play();
         if(cursor >= (value?.Length ?? 0))
             return;
         ReadOnlySpan<char> textSpan = value.AsSpan();
@@ -341,7 +350,7 @@ public class InputField : ClickableElement {
     }
 
     private void EraseAll() {
-        eraseSound?.Play();
+        resources.LazyLoad<EraseResource, IPlayable?>()?.Play();
         value = null;
         cursor = 0;
         Animate();
