@@ -35,9 +35,9 @@ public static class Engine {
         logger.Info("RUNNING IN HEADLESS MODE");
         logger.Info("Loading");
 
-        game.Load();
+        game.PreLoad();
         resources.Load();
-        game.Loaded();
+        game.Load();
 
         logger.Info("Setting up");
         (game as ISetupable)?.Setup();
@@ -56,7 +56,6 @@ public static class Engine {
         }
 
         logger.Info("Unloading");
-        resources.Unload();
         game.Unload();
 
         game.Finish();
@@ -67,8 +66,8 @@ public static class Engine {
     [RequiresBody]
     public static void SoftReload() {
         logger.Info("Starting soft reload");
-        resources.SoftReload();
-        game.Loaded();
+        resources.Load();
+        game.Load();
     }
 
     [RequiresBody]

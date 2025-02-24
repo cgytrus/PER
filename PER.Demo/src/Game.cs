@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Collections.Generic;
 using PER.Abstractions;
 using PER.Abstractions.Audio;
 using PER.Abstractions.Meta;
@@ -41,52 +41,30 @@ public class Game : IGame, ISetupable, IUpdatable {
     public void Load() {
         Mixers.Load();
 
-        resources.TryAddResource("audio", new AudioResources());
-        resources.TryAddResource(FontResources.GlobalId, new FontResources());
-        resources.TryAddResource(ColorsResource.GlobalId, new ColorsResource());
-
         renderer.formattingEffects.Clear();
         renderer.formattingEffects.Add("none", null);
         renderer.formattingEffects.Add("glitch", new GlitchEffect());
 
         resources.TryAddResource(GameScreen.GlobalId, new GameScreen(_settings));
-    }
 
-    public void Loaded() {
-        if (!resources.TryGetResource(FontResources.GlobalId, out FontResources? font) || font.font is null)
-            throw new InvalidOperationException("Missing font.");
-        resources.TryGetResource(IconResource.GlobalId, out IconResource? icon);
-
-        if (!resources.TryGetResource(ColorsResource.GlobalId, out ColorsResource? colors) ||
-            !colors.colors.TryGetValue("background", out Color backgroundColor))
+        IReadOnlyDictionary<string, Color> colors = resources.LazyLoad<ColorsResource>().value;
+        if (!colors.TryGetValue("background", out Color backgroundColor))
             throw new InvalidOperationException("Missing colors or background color.");
         renderer.background = backgroundColor;
-        if (!colors.colors.TryGetValue("fps_good", out _fpsGoodColor))
+        if (!colors.TryGetValue("fps_good", out _fpsGoodColor))
             _fpsGoodColor = Color.white;
-        if  (!colors.colors.TryGetValue("fps_ok", out _fpsOkColor))
+        if  (!colors.TryGetValue("fps_ok", out _fpsOkColor))
             _fpsOkColor = Color.white;
-        if (!colors.colors.TryGetValue("fps_bad", out _fpsBadColor))
+        if (!colors.TryGetValue("fps_bad", out _fpsBadColor))
             _fpsBadColor = Color.white;
-
-        if (resources.TryGetResource("audio", out AudioResources? audioRes)) {
-            if (audioRes.TryGetPlayable("buttonClick", out IPlayable? buttonClick))
-                ClickableElement.clickSound = buttonClick;
-            if (audioRes.TryGetPlayable("slider", out IPlayable? slider))
-                Slider.valueChangedSound = slider;
-            if (audioRes.TryGetPlayable("inputFieldType", out IPlayable? inputFieldType))
-                InputField.typeSound = inputFieldType;
-            if (audioRes.TryGetPlayable("inputFieldErase", out IPlayable? inputFieldErase))
-                InputField.eraseSound = inputFieldErase;
-            if (audioRes.TryGetPlayable("inputFieldSubmit", out IPlayable? inputFieldSubmit))
-                InputField.submitSound = inputFieldSubmit;
-        }
 
         _settings.Apply();
 
         Engine.rendererSettings = new RendererSettings {
             fullscreen = false,
-            font = font.font,
-            icon = icon?.icon
+            font = new FontResources(resources.LazyLoad<FontResources.Image, Image>(),
+                resources.LazyLoad<FontResources.Mappings>()).font,
+            icon = resources.LazyLoad<IconResource, Image?>()
         };
         renderer.verticalSync = false;
     }

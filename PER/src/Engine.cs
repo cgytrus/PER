@@ -84,8 +84,8 @@ public static class Engine {
         logger.Info("Starting soft reload");
         renderer.Finish();
         input.Finish();
-        resources.SoftReload();
-        game.Loaded();
+        resources.Load();
+        game.Load();
         renderer.Setup(rendererSettings);
         input.Setup();
     }

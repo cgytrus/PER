@@ -1,9 +1,7 @@
 ﻿using System.IO;
 using System.Text.Json;
 
-using PER.Abstractions.Audio;
 using PER.Abstractions.Meta;
-using PER.Demo.Resources;
 
 namespace PER.Demo;
 
