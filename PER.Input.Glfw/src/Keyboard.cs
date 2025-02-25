@@ -8,15 +8,13 @@ using PER.Graphics.OpenGL;
 
 namespace PER.Input.Glfw;
 
-public class Keyboard : Keyboard<Keyboard> {
-    private static NativeWindow? window => (renderer as Renderer)?.window;
+public class Keyboard : Keyboard<Keyboard>, IDisposable {
+    private NativeWindow window => _renderer.window;
 
     private readonly Dictionary<(KeyCode, ModifierKey, bool), int> _downKeys = [];
     private readonly List<string> _textInputs = [];
 
     protected override bool ProcKey(KeyCode key) {
-        if (window is null)
-            return false;
         Keys otkKey = Converters.ToOtkKey(key);
         return otkKey != Keys.Unknown && window.IsKeyDown(otkKey);
     }
@@ -27,18 +25,18 @@ public class Keyboard : Keyboard<Keyboard> {
 
     protected override IEnumerable<string> ProcText() => _textInputs;
 
-    public override void Setup() {
-        if (window is null)
-            return;
+    private readonly Renderer _renderer;
+
+    public Keyboard(Renderer renderer) {
+        _renderer = renderer;
         window.KeyDown += OnKeyDown;
         window.TextInput += OnTextInput;
     }
 
-    public override void Finish() {
-        if (window is null)
-            return;
+    public void Dispose() {
         window.KeyDown -= OnKeyDown;
         window.TextInput -= OnTextInput;
+        GC.SuppressFinalize(this);
     }
 
     private readonly List<KeyboardKeyEventArgs> _keyDownEvents = [];

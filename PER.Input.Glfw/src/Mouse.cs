@@ -11,8 +11,8 @@ using MouseButton = PER.Abstractions.Input.MouseButton;
 
 namespace PER.Input.Glfw;
 
-public class Mouse : Mouse<Mouse> {
-    private static NativeWindow? window => (renderer as Renderer)?.window;
+public class Mouse : Mouse<Mouse>, IDisposable {
+    private NativeWindow window => _renderer.window;
 
     private Vector2Int _mousePosition = new(-1, -1);
     private Vector2 _accurateMousePosition = new(-1f, -1f);
@@ -24,23 +24,23 @@ public class Mouse : Mouse<Mouse> {
     protected override IMouse.Position position => new(_mousePosition, _accurateMousePosition);
     protected override IMouse.Position prevPosition => new(_previousMousePosition, _previousAccurateMousePosition);
 
-    protected override bool ProcButton(MouseButton button) => window is not null &&
+    protected override bool ProcButton(MouseButton button) =>
         window.IsMouseButtonDown(Converters.ToOtkMouseButton(button));
 
     protected override float ProcScroll() => _scroll;
 
-    public override void Setup() {
-        if (window is null)
-            return;
+    private readonly Renderer _renderer;
+
+    public Mouse(Renderer renderer) {
+        _renderer = renderer;
         window.MouseMove += OnMouseMove;
         window.MouseWheel += OnMouseWheel;
     }
 
-    public override void Finish() {
-        if (window is null)
-            return;
+    public void Dispose() {
         window.MouseMove -= OnMouseMove;
         window.MouseWheel -= OnMouseWheel;
+        GC.SuppressFinalize(this);
     }
 
     private readonly List<MouseMoveEventArgs> _mouseMoveEvents = [];
@@ -56,18 +56,18 @@ public class Mouse : Mouse<Mouse> {
         _previousAccurateMousePosition = _accurateMousePosition;
 
         foreach (MouseMoveEventArgs mouse in _mouseMoveEvents) {
-            if (!renderer.focused) {
+            if (!_renderer.focused) {
                 _mousePosition = new Vector2Int(-1, -1);
                 _accurateMousePosition = new Vector2(-1f, -1f);
                 continue;
             }
 
             Vector2 pixelMousePosition = new(
-                mouse.X - window?.ClientSize.X * 0.5f + renderer.size.x * renderer.font.size.x * 0.5f ?? 0f,
-                mouse.Y - window?.ClientSize.Y * 0.5f + renderer.size.y * renderer.font.size.y * 0.5f ?? 0f);
+                mouse.X - window?.ClientSize.X * 0.5f + _renderer.size.x * _renderer.font.size.x * 0.5f ?? 0f,
+                mouse.Y - window?.ClientSize.Y * 0.5f + _renderer.size.y * _renderer.font.size.y * 0.5f ?? 0f);
             _accurateMousePosition = new Vector2(
-                pixelMousePosition.X / renderer.font.size.x,
-                pixelMousePosition.Y / renderer.font.size.y);
+                pixelMousePosition.X / _renderer.font.size.x,
+                pixelMousePosition.Y / _renderer.font.size.y);
             _mousePosition = new Vector2Int((int)_accurateMousePosition.X, (int)_accurateMousePosition.Y);
         }
 

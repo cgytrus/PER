@@ -17,7 +17,5 @@ public class Clipboard : Device<Clipboard>, IClipboard {
         }
     }
 
-    public override void Setup() { }
     public override void Update(TimeSpan time) { }
-    public override void Finish() { }
 }

@@ -5,11 +5,11 @@ using PER.Abstractions.Audio;
 namespace PER.Audio.Raylib;
 
 [PublicAPI]
-public class Audio : IAudio {
+public class Audio : IAudio, IDisposable {
     private readonly List<IPlayable> _allPlayables = [];
     private object _playablesLock = new();
     private bool _shouldStop;
-    private Thread? _thread;
+    private Thread _thread;
 
     public IAudioMixer CreateMixer(IAudioMixer? parent = null) => new AudioMixer(parent);
     public IPlayable CreateSound(string filename, IAudioMixer mixer) => AddPlayable(new Sound(filename, mixer));
@@ -28,25 +28,20 @@ public class Audio : IAudio {
         }
     }
 
-    public void Clear() {
-        lock (_playablesLock) {
-            foreach (IPlayable? playable in _allPlayables)
-                (playable as IDisposable)?.Dispose();
-            _allPlayables.Clear();
-        }
-    }
-
-    public void Setup() {
+    public Audio(IAudio.IHandler handler) {
         Raylib_cs.Raylib.InitAudioDevice();
+        handler.Audio(this);
         _thread = new Thread(AudioThread);
         _thread.Start();
     }
 
-    public void Finish() {
+    public void Dispose() {
         _shouldStop = true;
-        Clear();
+        _thread.Join();
+        foreach (IPlayable? playable in _allPlayables)
+            (playable as IDisposable)?.Dispose();
         Raylib_cs.Raylib.CloseAudioDevice();
-        _thread!.Join();
+        GC.SuppressFinalize(this);
     }
 
     private void AudioThread() {
